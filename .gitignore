@@ -1,0 +1,18 @@
+# IntelliJ
+.idea/
+
+# Gradle / Backend
+backend/.gradle/
+backend/build/
+
+# Frontend (cuando lo agregues, ej si usas Node)
+frontend/node_modules/
+frontend/dist/
+
+# Archivos de entorno / credenciales
+.env
+*.env.local
+application-local.properties
+
+# Sistema
+.DS_Store
