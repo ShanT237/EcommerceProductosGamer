@@ -24,7 +24,6 @@ public class GamaTest {
         assertTrue(g1.esSuperiorA(g3));
         assertTrue(g2.esSuperiorA(g3));
     }
-
     @Test
     void gamaInferiorALaOtra() {
         Gama g1 = Gama.ALTA;
