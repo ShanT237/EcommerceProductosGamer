@@ -34,4 +34,5 @@ public class GamaTest {
         assertFalse(g3.esSuperiorA(g2));
         assertFalse(g3.esSuperiorA(g1));
     }
+    
 }
