@@ -123,6 +123,20 @@ public class Producto {
         this.eliminado = true;
     }
 
+    /**
+     * Regla 9: un producto exclusivo solo puede ser comprado una vez por el mismo usuario.
+     * Quien invoca este método (el caso de uso) es responsable de averiguar, vía el
+     * repositorio, si el usuario ya tiene una compra de este producto; el Producto
+     * solo decide qué hacer con ese dato.
+     */
+    public void validarCompraExclusiva(boolean usuarioYaTieneEsteProducto) {
+        if (esExclusivo() && usuarioYaTieneEsteProducto) {
+            throw new ReglaDominioException(
+                    "El usuario ya compró este producto exclusivo anteriormente"
+            );
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
