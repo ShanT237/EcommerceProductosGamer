@@ -5,6 +5,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
+import com.uniquindio.backend.domain.valueobject.Precio;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -35,7 +36,7 @@ public class RealizarCompraUseCase {
         producto.validarCompraExclusiva(usuarioYaTieneEsteProducto); // Regla 9
         producto.reducirStock(cantidad);                             // Regla 1
 
-        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha);
+        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, new Precio(producto.getPrecio()));
 
         productoRepository.guardar(producto);
         compraRepository.guardar(compra);
