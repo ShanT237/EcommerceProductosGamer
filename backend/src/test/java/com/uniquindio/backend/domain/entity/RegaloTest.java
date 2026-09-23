@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,85 +12,77 @@ import static org.junit.jupiter.api.Assertions.*;
 class RegaloTest {
 
     @Test
-    @DisplayName("Crea un regalo válido no entregado, y falla con datos inválidos")
+    @DisplayName("Crea un regalo disponible y falla si no tiene producto ni combo")
     void creaRegaloValidoYValidaDatos() {
         UUID id = UUID.randomUUID();
-        Regalo regalo = new Regalo(id, "Mouse gamer edición especial", 100);
+        UUID idProducto = UUID.randomUUID();
+
+        Regalo regalo = Regalo.crear(id, idProducto, null);
 
         assertEquals(id, regalo.getId());
-        assertEquals("Mouse gamer edición especial", regalo.getDescripcion());
-        assertEquals(100, regalo.getPuntosRequeridos());
-        assertFalse(regalo.isEntregado());
-        assertNull(regalo.getUsuarioId());
+        assertEquals(EstadoRegalo.DISPONIBLE, regalo.getEstado());
+        assertNull(regalo.getIdUsuario());
 
         assertThrows(ReglaDominioException.class,
-                () -> new Regalo(id, "", 100));
-        assertThrows(ReglaDominioException.class,
-                () -> new Regalo(id, "   ", 100));
-        assertThrows(ReglaDominioException.class,
-                () -> new Regalo(id, "Regalo válido", 0));
-        assertThrows(ReglaDominioException.class,
-                () -> new Regalo(id, "Regalo válido", -5));
+                () -> Regalo.crear(UUID.randomUUID(), null, null));
     }
 
     @Test
-    @DisplayName("Entrega el regalo cuando el usuario cumple la meta de puntos")
-    void entregarConMetaCumplida() {
-        UUID regaloId = UUID.randomUUID();
-        UUID usuarioId = UUID.randomUUID();
-        Regalo regalo = new Regalo(regaloId, "Teclado mecánico", 50);
+    @DisplayName("Elige, envía y confirma la entrega en el orden correcto")
+    void flujoCompletoDeEntrega() {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        UUID idUsuario = UUID.randomUUID();
 
-        regalo.entregar(usuarioId, 50);
+        regalo.elegir(idUsuario, false);
+        assertEquals(EstadoRegalo.ELEGIDO, regalo.getEstado());
 
-        assertTrue(regalo.isEntregado());
-        assertEquals(usuarioId, regalo.getUsuarioId());
+        regalo.enviar();
+        assertEquals(EstadoRegalo.ENVIADO, regalo.getEstado());
+
+        regalo.confirmarEntrega();
+        assertEquals(EstadoRegalo.ENTREGADO, regalo.getEstado());
+        assertNotNull(regalo.getFechaEntrega());
+    }
+
+    @Test   
+    @DisplayName("Rechaza enviar un regalo que no ha sido elegido, y el estado no cambia")
+    void rechazaEnviarSinElegir() {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+
+        assertThrows(ReglaDominioException.class, regalo::enviar);
+        assertEquals(EstadoRegalo.DISPONIBLE, regalo.getEstado());
     }
 
     @Test
-    @DisplayName("Entrega el regalo cuando el usuario supera la meta de puntos")
-    void entregarConPuntosSuperados() {
-        UUID regaloId = UUID.randomUUID();
-        UUID usuarioId = UUID.randomUUID();
-        Regalo regalo = new Regalo(regaloId, "Audífonos gamer", 30);
+    @DisplayName("Rechaza elegir un regalo a un usuario que ya posee el producto, y el estado no cambia")
+    void rechazaElegirSiUsuarioYaPoseeElProducto() {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        UUID idUsuario = UUID.randomUUID();
 
-        regalo.entregar(usuarioId, 100);
-
-        assertTrue(regalo.isEntregado());
-        assertEquals(usuarioId, regalo.getUsuarioId());
+        assertThrows(ReglaDominioException.class, () -> regalo.elegir(idUsuario, true));
+        assertEquals(EstadoRegalo.DISPONIBLE, regalo.getEstado());
+        assertNull(regalo.getIdUsuario());
     }
 
     @Test
-    @DisplayName("Rechaza entregar el regalo si el usuario no cumple la meta de puntos")
-    void rechazaEntregarSinMetaCumplida() {
-        Regalo regalo = new Regalo(UUID.randomUUID(), "Mousepad XL", 100);
-        UUID usuarioId = UUID.randomUUID();
+    @DisplayName("Un regalo entregado no puede cambiar de estado nunca más")
+    void rechazaCambiarEstadoDespuesDeEntregado() {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        regalo.elegir(UUID.randomUUID(), false);
+        regalo.enviar();
+        regalo.confirmarEntrega();
 
-        assertThrows(ReglaDominioException.class,
-                () -> regalo.entregar(usuarioId, 99));
-        assertFalse(regalo.isEntregado());
-        assertNull(regalo.getUsuarioId());
-    }
-
-    @Test
-    @DisplayName("Rechaza entregar un regalo que ya fue entregado")
-    void rechazaEntregarDosVeces() {
-        Regalo regalo = new Regalo(UUID.randomUUID(), "Silla gamer", 50);
-        UUID usuario1 = UUID.randomUUID();
-        UUID usuario2 = UUID.randomUUID();
-
-        regalo.entregar(usuario1, 50);
-
-        assertThrows(ReglaDominioException.class,
-                () -> regalo.entregar(usuario2, 200));
+        assertThrows(ReglaDominioException.class, regalo::cancelarRegalo);
+        assertEquals(EstadoRegalo.ENTREGADO, regalo.getEstado());
     }
 
     @Test
     @DisplayName("La identidad del regalo depende solo del id")
     void identidadPorId() {
         UUID id = UUID.randomUUID();
-        Regalo regalo1 = new Regalo(id, "Regalo A", 10);
-        Regalo regalo2 = new Regalo(id, "Regalo B", 20);
-        Regalo regalo3 = new Regalo(UUID.randomUUID(), "Regalo A", 10);
+        Regalo regalo1 = Regalo.crear(id, UUID.randomUUID(), null);
+        Regalo regalo2 = Regalo.crear(id, UUID.randomUUID(), null);
+        Regalo regalo3 = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
 
         assertEquals(regalo1, regalo2);
         assertEquals(regalo1.hashCode(), regalo2.hashCode());
