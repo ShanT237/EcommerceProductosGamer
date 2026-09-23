@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,33 +14,46 @@ class CompraTest {
 
     private Compra crearCompraValida() {
         return new Compra(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                2, LocalDate.of(2026, 9, 17));
+                2, LocalDate.of(2026, 9, 17), new Precio(50000));
     }
 
     @Test
-    @DisplayName("Crea una compra válida sin reseña ni puntos, y falla con datos inválidos")
+    @DisplayName("Crea una compra válida con su precio unitario, y falla con datos inválidos")
     void creaCompraValidaYValidaDatos() {
         UUID id = UUID.randomUUID();
         UUID usuarioId = UUID.randomUUID();
         UUID productoId = UUID.randomUUID();
         LocalDate fecha = LocalDate.of(2026, 9, 17);
+        Precio precio = new Precio(50000);
 
-        Compra compra = new Compra(id, usuarioId, productoId, 3, fecha);
+        Compra compra = new Compra(id, usuarioId, productoId, 3, fecha, precio);
 
         assertEquals(id, compra.getId());
         assertEquals(usuarioId, compra.getUsuarioId());
         assertEquals(productoId, compra.getProductoId());
         assertEquals(3, compra.getCantidad());
         assertEquals(fecha, compra.getFecha());
+        assertEquals(precio, compra.getPrecioUnitario());
         assertFalse(compra.isResenada());
         assertFalse(compra.isPuntosAsignados());
 
         assertThrows(ReglaDominioException.class,
-                () -> new Compra(id, usuarioId, productoId, 0, fecha));
+                () -> new Compra(id, usuarioId, productoId, 0, fecha, precio));
         assertThrows(ReglaDominioException.class,
-                () -> new Compra(id, usuarioId, productoId, -1, fecha));
+                () -> new Compra(id, usuarioId, productoId, -1, fecha, precio));
         assertThrows(NullPointerException.class,
-                () -> new Compra(id, usuarioId, productoId, 1, null));
+                () -> new Compra(id, usuarioId, productoId, 1, null, precio));
+        assertThrows(NullPointerException.class,
+                () -> new Compra(id, usuarioId, productoId, 1, fecha, null));
+    }
+
+    @Test
+    @DisplayName("El subtotal se calcula con el precio guardado en la compra, no con el actual del producto")
+    void calculaSubtotalConElPrecioGuardado() {
+        Compra compra = new Compra(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                3, LocalDate.of(2026, 9, 17), new Precio(10000));
+
+        assertEquals(new Precio(30000), compra.getSubtotal());
     }
 
     @Test
@@ -99,10 +113,11 @@ class CompraTest {
     void identidadPorId() {
         UUID id = UUID.randomUUID();
         LocalDate fecha = LocalDate.of(2026, 9, 17);
-        Compra compra1 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 1, fecha);
-        Compra compra2 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 5, fecha);
+        Precio precio = new Precio(50000);
+        Compra compra1 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 1, fecha, precio);
+        Compra compra2 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 5, fecha, precio);
         Compra compra3 = new Compra(UUID.randomUUID(), UUID.randomUUID(),
-                UUID.randomUUID(), 1, fecha);
+                UUID.randomUUID(), 1, fecha, precio);
 
         assertEquals(compra1, compra2);
         assertEquals(compra1.hashCode(), compra2.hashCode());
