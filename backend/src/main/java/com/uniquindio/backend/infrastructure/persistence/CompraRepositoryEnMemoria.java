@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.repository.CompraRepository;
+import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +26,8 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
     @Override
     public boolean existeCompraDe(UUID usuarioId, UUID productoId) {
         return compras.values().stream()
-                .anyMatch(compra -> compra.getUsuarioId().equals(usuarioId)
-                        && compra.getProductoId().equals(productoId));
+                .anyMatch(c -> c.getUsuarioId().equals(usuarioId)
+                        && c.getProductoId().equals(productoId)
+                        && c.getEstado() != EstadoCompra.REEMBOLSADA);
     }
 }

@@ -8,6 +8,7 @@ import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ResenaRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
+import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 
 import java.util.UUID;
 
@@ -48,8 +49,7 @@ public class SubirResenaUseCase {
         // 2. Crear el VO y la entidad (El dominio valida el contenido)
         Calificacion calificacion = new Calificacion(valorCalificacion);
 
-        // Asumimos que si la compra existe, está completada a efectos de este modelo base
-        boolean compraCompletada = true;
+        boolean compraCompletada = compra.getEstado() == EstadoCompra.COMPLETADA;
 
         Resena resena = Resena.crear(
                 idResena,
