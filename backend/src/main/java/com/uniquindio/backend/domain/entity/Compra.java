@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import com.uniquindio.backend.domain.valueobject.Precio;
 
 import java.time.LocalDate;
@@ -10,11 +11,12 @@ import java.util.UUID;
 /**
  * Entidad Compra.
  *  - Identidad: cada compra tiene un id único.
- *  - Ciclo de vida: se crea al realizarse, puede recibir una reseña, y luego asignar puntos.
+ *  - Ciclo de vida: PENDIENTE -> COMPLETADA -> (reseñada -> puntos asignados) | REEMBOLSADA.
  *  - Guarda el precio unitario vigente al momento de la compra (no una referencia al
  *    precio actual del producto), para que cambios futuros de precio no alteren compras pasadas.
  *  - Regla 2: un comprador no puede calificar un producto sin haberlo comprado.
  *  - Regla 6: los puntos solo se asignan después de realizar una reseña.
+ *  - Reembolso: solo dentro de un plazo definido y antes de haber descargado el archivo.
  */
 public class Compra {
 
@@ -24,8 +26,10 @@ public class Compra {
     private final int cantidad;
     private final LocalDate fecha;
     private final Precio precioUnitario;
+    private EstadoCompra estado;
     private boolean resenada;
     private boolean puntosAsignados;
+    private boolean descargado;
 
     public Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha, Precio precioUnitario) {
         this.id = Objects.requireNonNull(id, "El id de la compra es obligatorio");
@@ -39,8 +43,10 @@ public class Compra {
         }
 
         this.cantidad = cantidad;
+        this.estado = EstadoCompra.PENDIENTE;
         this.resenada = false;
         this.puntosAsignados = false;
+        this.descargado = false;
     }
 
     public UUID getId() { return id; }
@@ -49,8 +55,10 @@ public class Compra {
     public int getCantidad() { return cantidad; }
     public LocalDate getFecha() { return fecha; }
     public Precio getPrecioUnitario() { return precioUnitario; }
+    public EstadoCompra getEstado() { return estado; }
     public boolean isResenada() { return resenada; }
     public boolean isPuntosAsignados() { return puntosAsignados; }
+    public boolean isDescargado() { return descargado; }
 
     /**
      * Subtotal de la compra: precio unitario guardado en el momento de comprar,
@@ -60,18 +68,67 @@ public class Compra {
         return new Precio(precioUnitario.valor() * cantidad);
     }
 
+    /**
+     * Confirma el pago de la compra (simulación de pago exitosa).
+     */
+    public void confirmar() {
+        if (estado != EstadoCompra.PENDIENTE) {
+            throw new ReglaDominioException("Solo se puede confirmar una compra pendiente");
+        }
+        this.estado = EstadoCompra.COMPLETADA;
+    }
+
+    /**
+     * Marca el archivo/producto como descargado. Una vez descargado,
+     * ya no se puede solicitar reembolso.
+     */
+    public void marcarDescargado() {
+        if (estado != EstadoCompra.COMPLETADA) {
+            throw new ReglaDominioException("No se puede descargar el producto de una compra no completada");
+        }
+        this.descargado = true;
+    }
+
+    /**
+     * Regla: una compra solo puede reembolsarse dentro de un plazo definido
+     * y antes de haber descargado el archivo.
+     */
+    public void solicitarReembolso(LocalDate fechaSolicitud, int plazoDias) {
+        Objects.requireNonNull(fechaSolicitud, "La fecha de solicitud es obligatoria");
+
+        if (estado != EstadoCompra.COMPLETADA) {
+            throw new ReglaDominioException("Solo se puede reembolsar una compra completada");
+        }
+        if (descargado) {
+            throw new ReglaDominioException("No se puede reembolsar una compra cuyo archivo ya fue descargado");
+        }
+        if (fechaSolicitud.isAfter(fecha.plusDays(plazoDias))) {
+            throw new ReglaDominioException("El plazo para solicitar el reembolso ha expirado");
+        }
+
+        this.estado = EstadoCompra.REEMBOLSADA;
+    }
+
+    /**
+     * Regla 2: un comprador no puede calificar un producto sin haberlo
+     * comprado y sin que la compra esté completada.
+     */
     public void registrarResena() {
+        if (estado != EstadoCompra.COMPLETADA) {
+            throw new ReglaDominioException("Solo se puede reseñar una compra completada");
+        }
         if (this.resenada) {
             throw new ReglaDominioException("La compra ya fue reseñada");
         }
         this.resenada = true;
     }
 
+    /**
+     * Regla 6: los puntos solo se asignan después de realizar una reseña.
+     */
     public int asignarPuntos(int puntosPorCompra) {
         if (!this.resenada) {
-            throw new ReglaDominioException(
-                    "No se pueden asignar puntos sin haber reseñado el producto"
-            );
+            throw new ReglaDominioException("No se pueden asignar puntos sin haber reseñado el producto");
         }
         if (this.puntosAsignados) {
             throw new ReglaDominioException("Los puntos de esta compra ya fueron asignados");
@@ -79,7 +136,6 @@ public class Compra {
         if (puntosPorCompra <= 0) {
             throw new ReglaDominioException("Los puntos por compra deben ser positivos");
         }
-
         this.puntosAsignados = true;
         return puntosPorCompra;
     }
