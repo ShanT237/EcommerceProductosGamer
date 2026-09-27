@@ -18,11 +18,11 @@ public class Combo {
     @Getter
     private final UUID id;
     @Getter
-    private String nombre;
+    private final String nombre;
     @Getter
-    private String descripcion;
+    private final String descripcion;
     @Getter
-    private double descuento;
+    private final double descuento;
     private final List<UUID> productos;
 
     public Combo(UUID id, String nombre, String descripcion, double descuento, List<UUID> productosIniciales) {

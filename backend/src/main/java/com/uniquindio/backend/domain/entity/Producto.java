@@ -20,9 +20,9 @@ import java.util.UUID;
 public class Producto {
 
     private final UUID id;
-    private String nombre;
-    private String descripcion;
-    private double precio;
+    private final String nombre;
+    private final String descripcion;
+    private final double precio;
     private int stock;
     private final Gama gama;
     private final Exclusividad exclusividad;

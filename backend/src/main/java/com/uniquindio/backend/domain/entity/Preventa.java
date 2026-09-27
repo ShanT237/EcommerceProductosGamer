@@ -19,7 +19,7 @@ public class Preventa {
     private final UUID id;
     private final UUID productoId;
     private final LocalDate fechaLanzamiento;
-    private String descripcion;
+    private final String descripcion;
 
     public Preventa(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
         this.id = Objects.requireNonNull(id, "El id de la preventa es obligatorio");

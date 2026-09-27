@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Usuario {
 
     private final UUID id;
-    private String nombre;
+    private final String nombre;
     private String correo;
     private int puntos;
 
