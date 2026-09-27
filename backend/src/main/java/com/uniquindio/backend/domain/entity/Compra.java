@@ -3,6 +3,7 @@ package com.uniquindio.backend.domain.entity;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import com.uniquindio.backend.domain.valueobject.Precio;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -18,6 +19,7 @@ import java.util.UUID;
  *  - Regla 6: los puntos solo se asignan después de realizar una reseña.
  *  - Reembolso: solo dentro de un plazo definido y antes de haber descargado el archivo.
  */
+@Getter
 public class Compra {
 
     private final UUID id;
@@ -48,17 +50,6 @@ public class Compra {
         this.puntosAsignados = false;
         this.descargado = false;
     }
-
-    public UUID getId() { return id; }
-    public UUID getUsuarioId() { return usuarioId; }
-    public UUID getProductoId() { return productoId; }
-    public int getCantidad() { return cantidad; }
-    public LocalDate getFecha() { return fecha; }
-    public Precio getPrecioUnitario() { return precioUnitario; }
-    public EstadoCompra getEstado() { return estado; }
-    public boolean isResenada() { return resenada; }
-    public boolean isPuntosAsignados() { return puntosAsignados; }
-    public boolean isDescargado() { return descargado; }
 
     /**
      * Subtotal de la compra: precio unitario guardado en el momento de comprar,
@@ -143,8 +134,7 @@ public class Compra {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Compra)) return false;
-        Compra compra = (Compra) o;
+        if (!(o instanceof Compra compra)) return false;
         return id.equals(compra.id);
     }
 

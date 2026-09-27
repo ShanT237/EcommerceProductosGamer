@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -12,6 +13,7 @@ import java.util.UUID;
  *  - Ciclo de vida: se crea con una fecha de lanzamiento futura, se puede consultar su disponibilidad.
  *  - Regla 4: un usuario no puede tener acceso a un producto de preventa antes de la fecha estipulada.
  */
+@Getter
 public class Preventa {
 
     private final UUID id;
@@ -29,22 +31,6 @@ public class Preventa {
         }
 
         this.descripcion = descripcion;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getProductoId() {
-        return productoId;
-    }
-
-    public LocalDate getFechaLanzamiento() {
-        return fechaLanzamiento;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
     }
 
     /**
@@ -69,8 +55,7 @@ public class Preventa {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Preventa)) return false;
-        Preventa preventa = (Preventa) o;
+        if (!(o instanceof Preventa preventa)) return false;
         return id.equals(preventa.id);
     }
 

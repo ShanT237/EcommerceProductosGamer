@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,9 @@ import java.util.UUID;
  */
 public class Wishlist {
 
+    @Getter
     private final UUID id;
+    @Getter
     private final UUID usuarioId;
     private final List<UUID> productos;
 
@@ -23,14 +26,6 @@ public class Wishlist {
         this.id = Objects.requireNonNull(id, "El id de la wishlist es obligatorio");
         this.usuarioId = Objects.requireNonNull(usuarioId, "La wishlist debe pertenecer a un usuario");
         this.productos = new ArrayList<>();
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getUsuarioId() {
-        return usuarioId;
     }
 
     public List<UUID> getProductos() {
@@ -57,8 +52,7 @@ public class Wishlist {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Wishlist)) return false;
-        Wishlist wishlist = (Wishlist) o;
+        if (!(o instanceof Wishlist wishlist)) return false;
         return id.equals(wishlist.id);
     }
 

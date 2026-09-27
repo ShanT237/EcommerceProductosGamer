@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import java.util.UUID;
  *  - Controla EstadoRegalo (dentro del límite del agregado).
  *  - Usuario, Producto y Combo están FUERA del agregado: solo se referencian por id.
  */
+@Getter
 public class Regalo {
 
     private final UUID id;
@@ -88,19 +90,10 @@ public class Regalo {
         this.estado = EstadoRegalo.CANCELADO;
     }
 
-    public UUID getId() { return id; }
-    public EstadoRegalo getEstado() { return estado; }
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public LocalDateTime getFechaEntrega() { return fechaEntrega; }
-    public UUID getIdProducto() { return idProducto; }
-    public UUID getIdUsuario() { return idUsuario; }
-    public UUID getIdCombo() { return idCombo; }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Regalo)) return false;
-        Regalo regalo = (Regalo) o;
+        if (!(o instanceof Regalo regalo)) return false;
         return id.equals(regalo.id);
     }
 

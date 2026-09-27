@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -10,11 +11,11 @@ import java.util.Objects;
  * Entidad: Reseña.
  * Tiene identidad propia (id), pasa por estados (sin respuesta -> respondida)
  * y está ligada a una compra concreta y completada.
- *
  * Sin setters: toda modificación de estado pasa por un método de negocio
  * con su propia validación (responder()).
  *
  */
+@Getter
 public class Resena {
 
     private static final int MAX_CARACTERES_COMENTARIO = 500;
@@ -84,42 +85,6 @@ public class Resena {
 
     public boolean tieneRespuesta() {
         return respuestaVendedor != null;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getIdCompra() {
-        return idCompra;
-    }
-
-    public String getIdProducto() {
-        return idProducto;
-    }
-
-    public String getIdUsuario() {
-        return idUsuario;
-    }
-
-    public Calificacion getCalificacion() {
-        return calificacion;
-    }
-
-    public String getComentario() {
-        return comentario;
-    }
-
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
-
-    public String getRespuestaVendedor() {
-        return respuestaVendedor;
-    }
-
-    public LocalDateTime getFechaRespuesta() {
-        return fechaRespuesta;
     }
 
     @Override

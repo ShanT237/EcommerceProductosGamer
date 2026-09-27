@@ -30,7 +30,7 @@ De esta manera, **no todos los vendedores tienen que ofrecer los mismos producto
 
 
 | Término          | Significado                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+|------------------|--------------------------------------------------------------------------------------------------------------------|
 | **Gama**         | Clasificación de un producto según sus características y nivel, por ejemplo, gama baja, media o alta.              |
 | **Preventa**     | Producto que puede ser adquirido antes de su fecha oficial de lanzamiento o disponibilidad.                        |
 | **Unidades**     | Cantidad disponible de un producto para su venta.                                                                  |

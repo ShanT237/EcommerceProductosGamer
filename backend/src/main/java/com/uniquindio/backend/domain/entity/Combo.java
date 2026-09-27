@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +15,13 @@ import java.util.UUID;
  */
 public class Combo {
 
+    @Getter
     private final UUID id;
+    @Getter
     private String nombre;
+    @Getter
     private String descripcion;
+    @Getter
     private double descuento;
     private final List<UUID> productos;
 
@@ -40,22 +45,6 @@ public class Combo {
         this.descripcion = descripcion;
         this.descuento = descuento;
         this.productos = new ArrayList<>(productosIniciales);
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public double getDescuento() {
-        return descuento;
     }
 
     public List<UUID> getProductos() {
@@ -83,8 +72,7 @@ public class Combo {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Combo)) return false;
-        Combo combo = (Combo) o;
+        if (!(o instanceof Combo combo)) return false;
         return id.equals(combo.id);
     }
 

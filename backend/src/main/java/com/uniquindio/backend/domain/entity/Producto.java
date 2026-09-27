@@ -3,6 +3,7 @@ package com.uniquindio.backend.domain.entity;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import lombok.Getter;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import java.util.UUID;
  *  - Regla 3: no se puede eliminar un producto con compras activas (eliminación lógica).
  *  - Regla 9: un producto exclusivo solo puede ser comprado una vez por usuario.
  */
+@Getter
 public class Producto {
 
     private final UUID id;
@@ -52,38 +54,6 @@ public class Producto {
         this.gama = gama;
         this.exclusividad = exclusividad;
         this.eliminado = false;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public double getPrecio() {
-        return precio;
-    }
-
-    public int getStock() {
-        return stock;
-    }
-
-    public Gama getGama() {
-        return gama;
-    }
-
-    public Exclusividad getExclusividad() {
-        return exclusividad;
-    }
-
-    public boolean isEliminado() {
-        return eliminado;
     }
 
     public boolean esExclusivo() {
@@ -140,8 +110,7 @@ public class Producto {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Producto)) return false;
-        Producto producto = (Producto) o;
+        if (!(o instanceof Producto producto)) return false;
         return id.equals(producto.id);
     }
 
