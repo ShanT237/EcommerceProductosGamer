@@ -8,11 +8,15 @@ El marketplace está dirigido principalmente a usuarios interesados en productos
 * **Streamers:** buscan productos funcionales y visualmente atractivos que complementen sus espacios de streaming.
 * **Jugadores casuales:** buscan productos que proporcionen mayor comodidad y una mejor experiencia de juego.
 
+En la plataforma, quien compra es el **Usuario** (comprador). Los usuarios no venden: la venta la realizan los **Vendedores**, que son una entidad independiente.
+
 ---
 
 ## 2. ¿Qué hace único a sus vendedores?
 
 El sistema funciona como un **marketplace**, por lo que diferentes vendedores independientes pueden registrarse y publicar su propio catálogo de productos.
+
+El **Vendedor** es una entidad aparte del Usuario comprador y se registra según su **tipo**: **persona natural** (identificada con cédula) o **empresa** (identificada con NIT).
 
 Los vendedores pueden ofrecer diferentes categorías dentro del nicho gaming, entre ellas:
 
@@ -22,24 +26,26 @@ Los vendedores pueden ofrecer diferentes categorías dentro del nicho gaming, en
 * 💻 **Licencias digitales:** códigos y licencias para videojuegos o servicios relacionados.
 * 🎁 **Combos:** conjuntos de dos o más productos ofrecidos como una unidad comercial.
 
-De esta manera, **no todos los vendedores tienen que ofrecer los mismos productos**, sino que cada uno puede especializarse en diferentes categorías o manejar un catálogo variado.
+De esta manera, **no todos los vendedores tienen que ofrecer los mismos productos**, sino que cada uno puede especializarse en diferentes categorías o manejar un catálogo variado. Todo producto publicado pertenece a un vendedor.
 
 ---
 
 ## 3. Lenguaje ubicuo
 
 
-| Término          | Significado                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Gama**         | Clasificación de un producto según sus características y nivel, por ejemplo, gama baja, media o alta.              |
-| **Preventa**     | Producto que puede ser adquirido antes de su fecha oficial de lanzamiento o disponibilidad.                        |
-| **Unidades**     | Cantidad disponible de un producto para su venta.                                                                  |
-| **Wishlist**     | Lista personal donde el usuario guarda productos que desea comprar posteriormente.                                 |
-| **Combo**        | Conjunto de dos o más productos vendidos como una oferta o paquete.                                                |
-| **Usuario**      | Persona registrada en la plataforma que puede realizar compras y utilizar las funcionalidades del marketplace.     |
-| **Puntos**       | Beneficios acumulables que el usuario obtiene al cumplir determinadas acciones dentro de la plataforma.            |
-| **Regalo**       | Producto o beneficio que un usuario puede recibir como recompensa por cumplir determinadas metas.                  |
-| **Exclusividad** | Condición aplicada a productos especiales que limita su compra a una determinada cantidad o condición por usuario. |
+| Término              | Significado                                                                                                        |
+|----------------------|--------------------------------------------------------------------------------------------------------------------|
+| **Gama**             | Clasificación de un producto según sus características y nivel, por ejemplo, gama baja, media o alta.              |
+| **Preventa**         | Producto que puede ser adquirido antes de su fecha oficial de lanzamiento o disponibilidad.                        |
+| **Unidades**         | Cantidad disponible de un producto para su venta.                                                                  |
+| **Wishlist**         | Lista personal donde el usuario guarda productos que desea comprar posteriormente.                                 |
+| **Combo**            | Conjunto de dos o más productos vendidos como una oferta o paquete.                                                |
+| **Usuario**          | Comprador registrado en la plataforma que puede realizar compras y utilizar las funcionalidades del marketplace.   |
+| **Vendedor**         | Persona natural o empresa registrada en la plataforma que publica y vende sus propios productos.                   |
+| **Tipo de vendedor** | Clasificación del vendedor como persona natural (cédula) o empresa (NIT).                                          |
+| **Puntos**           | Beneficios acumulables que el usuario obtiene al cumplir determinadas acciones dentro de la plataforma.            |
+| **Regalo**           | Producto o beneficio que un usuario puede recibir como recompensa por cumplir determinadas metas.                  |
+| **Exclusividad**     | Condición aplicada a productos especiales que limita su compra a una determinada cantidad o condición por usuario. |
 
 ---
 
@@ -76,3 +82,9 @@ Las siguientes reglas representan condiciones que el sistema **nunca debe permit
 
 10. **Un usuario que complete una meta de compras podrá ser seleccionado para recibir un regalo.**
     Al alcanzar una meta establecida por el marketplace, el usuario podrá participar en el mecanismo de selección de recompensas correspondiente.
+
+11. **Todo producto debe pertenecer a un vendedor.**
+    No es válido crear un producto sin un vendedor asociado.
+
+12. **Un vendedor dado de baja no puede publicar productos.**
+    La baja del vendedor es lógica, de modo que se conserva el historial de sus ventas.
