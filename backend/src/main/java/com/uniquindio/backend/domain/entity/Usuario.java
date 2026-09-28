@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import lombok.Getter;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -11,10 +12,11 @@ import java.util.UUID;
  *  - Ciclo de vida: se crea, acumula puntos con el tiempo, se puede eliminar.
  *  - No se reemplaza por otro usuario aunque cambien sus datos.
  */
+@Getter
 public class Usuario {
 
     private final UUID id;
-    private String nombre;
+    private final String nombre;
     private String correo;
     private int puntos;
 
@@ -31,22 +33,6 @@ public class Usuario {
         this.nombre = nombre;
         this.correo = correo;
         this.puntos = 0;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getCorreo() {
-        return correo;
-    }
-
-    public int getPuntos() {
-        return puntos;
     }
 
     public void acumularPuntos(int cantidad) {
@@ -66,8 +52,7 @@ public class Usuario {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Usuario)) return false;
-        Usuario usuario = (Usuario) o;
+        if (!(o instanceof Usuario usuario)) return false;
         return id.equals(usuario.id);
     }
 
