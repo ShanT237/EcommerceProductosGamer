@@ -4,14 +4,30 @@
 
 **Raíz de agregado:** `Producto`
 **Dentro del límite:** `Gama` (enum), `Exclusividad` (enum)
-**Fuera del agregado:** ninguna referencia directa (es referenciado por otros, ej. `Combo`, `Regalo`, `Compra`)
+**Fuera del agregado:** `Vendedor` (referenciado por `vendedorId`). Además, `Producto` es referenciado por otros agregados, ej. `Combo`, `Regalo`, `Compra`, `Preventa`, `Wishlist`.
 
 ### Invariantes
 
+- Todo producto pertenece a un vendedor: el `vendedorId` es obligatorio y no cambia.
 - El stock de un producto no puede ser negativo.
 - Un producto no puede eliminarse si tiene compras activas sujetas a reembolso — solo eliminación lógica (soft delete).
 - Un producto exclusivo solo puede ser comprado una vez por el mismo usuario.
 - El precio de un producto debe ser siempre positivo.
+
+---
+
+## Agregado: Vendedor
+
+**Raíz de agregado:** `Vendedor`
+**Dentro del límite:** `TipoVendedor` (enum: persona natural o empresa)
+**Fuera del agregado:** ninguna referencia directa (es referenciado por otros, ej. `Producto`, por `vendedorId`). Es independiente de `Usuario` (comprador).
+
+### Invariantes
+
+- Un vendedor siempre tiene un tipo (persona natural o empresa) y un documento de identificación (cédula o NIT según el tipo).
+- El nombre del vendedor no puede estar vacío y su correo siempre debe ser válido.
+- Un vendedor dado de baja no puede publicar productos.
+- Un vendedor solo puede darse de baja una vez — la baja es lógica, para conservar el historial de sus ventas.
 
 ---
 
