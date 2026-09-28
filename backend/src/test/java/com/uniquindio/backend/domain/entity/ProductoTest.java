@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProductoTest {
 
     private Producto crearProductoValido() {
-        return new Producto(UUID.randomUUID(), "Mouse Gamer", "Mouse con RGB",
+        return new Producto(UUID.randomUUID(), UUID.randomUUID(), "Mouse Gamer", "Mouse con RGB",
                 59.99, 10, Gama.MEDIA, Exclusividad.NORMAL);
     }
 
@@ -21,10 +21,12 @@ class ProductoTest {
     @DisplayName("Crea un producto válido con todos sus atributos, y falla con datos inválidos")
     void creaProductoValidoYValidaDatos() {
         UUID id = UUID.randomUUID();
-        Producto producto = new Producto(id, "Teclado Mecánico", "Switches Cherry MX",
+        UUID vendedorId = UUID.randomUUID();
+        Producto producto = new Producto(id, vendedorId, "Teclado Mecánico", "Switches Cherry MX",
                 129.99, 5, Gama.ALTA, Exclusividad.EXCLUSIVO);
 
         assertEquals(id, producto.getId());
+        assertEquals(vendedorId, producto.getVendedorId());
         assertEquals("Teclado Mecánico", producto.getNombre());
         assertEquals("Switches Cherry MX", producto.getDescripcion());
         assertEquals(129.99, producto.getPrecio());
@@ -35,21 +37,29 @@ class ProductoTest {
         assertTrue(producto.esExclusivo());
 
         assertThrows(ReglaDominioException.class,
-                () -> new Producto(id, "", "Desc", 10, 5, Gama.BAJA, Exclusividad.NORMAL));
+                () -> new Producto(id, vendedorId, "", "Desc", 10, 5, Gama.BAJA, Exclusividad.NORMAL));
         assertThrows(ReglaDominioException.class,
-                () -> new Producto(id, "Nombre", "", 10, 5, Gama.BAJA, Exclusividad.NORMAL));
+                () -> new Producto(id, vendedorId, "Nombre", "", 10, 5, Gama.BAJA, Exclusividad.NORMAL));
         assertThrows(ReglaDominioException.class,
-                () -> new Producto(id, "Nombre", "Desc", 0, 5, Gama.BAJA, Exclusividad.NORMAL));
+                () -> new Producto(id, vendedorId, "Nombre", "Desc", 0, 5, Gama.BAJA, Exclusividad.NORMAL));
         assertThrows(ReglaDominioException.class,
-                () -> new Producto(id, "Nombre", "Desc", -1, 5, Gama.BAJA, Exclusividad.NORMAL));
+                () -> new Producto(id, vendedorId, "Nombre", "Desc", -1, 5, Gama.BAJA, Exclusividad.NORMAL));
         assertThrows(ReglaDominioException.class,
-                () -> new Producto(id, "Nombre", "Desc", 10, -1, Gama.BAJA, Exclusividad.NORMAL));
+                () -> new Producto(id, vendedorId, "Nombre", "Desc", 10, -1, Gama.BAJA, Exclusividad.NORMAL));
+    }
+
+    @Test
+    @DisplayName("Rechaza crear un producto sin vendedor (todo producto pertenece a un vendedor)")
+    void rechazaProductoSinVendedor() {
+        assertThrows(NullPointerException.class,
+                () -> new Producto(UUID.randomUUID(), null, "Mouse", "Desc",
+                        30, 10, Gama.BAJA, Exclusividad.NORMAL));
     }
 
     @Test
     @DisplayName("Permite crear un producto con stock cero (agotado)")
     void creaProductoConStockCero() {
-        Producto producto = new Producto(UUID.randomUUID(), "Edición Limitada",
+        Producto producto = new Producto(UUID.randomUUID(), UUID.randomUUID(), "Edición Limitada",
                 "Sin stock", 200, 0, Gama.ALTA, Exclusividad.EXCLUSIVO);
 
         assertEquals(0, producto.getStock());
@@ -112,9 +122,9 @@ class ProductoTest {
     @Test
     @DisplayName("esExclusivo delega correctamente al value object Exclusividad")
     void esExclusivo() {
-        Producto normal = new Producto(UUID.randomUUID(), "Mouse", "Desc",
+        Producto normal = new Producto(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Desc",
                 30, 10, Gama.BAJA, Exclusividad.NORMAL);
-        Producto exclusivo = new Producto(UUID.randomUUID(), "Mouse Pro", "Desc",
+        Producto exclusivo = new Producto(UUID.randomUUID(), UUID.randomUUID(), "Mouse Pro", "Desc",
                 100, 2, Gama.ALTA, Exclusividad.EXCLUSIVO);
 
         assertFalse(normal.esExclusivo());
@@ -125,11 +135,11 @@ class ProductoTest {
     @DisplayName("La identidad del producto depende solo del id")
     void identidadPorId() {
         UUID id = UUID.randomUUID();
-        Producto producto1 = new Producto(id, "Nombre A", "Desc A",
+        Producto producto1 = new Producto(id, UUID.randomUUID(), "Nombre A", "Desc A",
                 10, 5, Gama.BAJA, Exclusividad.NORMAL);
-        Producto producto2 = new Producto(id, "Nombre B", "Desc B",
+        Producto producto2 = new Producto(id, UUID.randomUUID(), "Nombre B", "Desc B",
                 20, 10, Gama.ALTA, Exclusividad.EXCLUSIVO);
-        Producto producto3 = new Producto(UUID.randomUUID(), "Nombre A", "Desc A",
+        Producto producto3 = new Producto(UUID.randomUUID(), producto1.getVendedorId(), "Nombre A", "Desc A",
                 10, 5, Gama.BAJA, Exclusividad.NORMAL);
 
         assertEquals(producto1, producto2);

@@ -21,7 +21,7 @@ class RepositoriosEnMemoriaTest {
     @DisplayName("ProductoRepositoryEnMemoria guarda y devuelve el mismo producto por id")
     void guardaYRecuperaProductoPorId() {
         ProductoRepositoryEnMemoria repository = new ProductoRepositoryEnMemoria();
-        Producto producto = new Producto(UUID.randomUUID(), "Mouse Gamer", "Mouse RGB 16000dpi",
+        Producto producto = new Producto(UUID.randomUUID(), UUID.randomUUID(), "Mouse Gamer", "Mouse RGB 16000dpi",
                 150000, 10, Gama.ALTA, Exclusividad.NORMAL);
 
         repository.guardar(producto);
@@ -29,6 +29,7 @@ class RepositoriosEnMemoriaTest {
 
         assertTrue(encontrado.isPresent());
         assertEquals(producto, encontrado.get());
+        assertEquals(producto.getVendedorId(), encontrado.get().getVendedorId());
         assertTrue(repository.obtenerPorId(UUID.randomUUID()).isEmpty());
     }
 

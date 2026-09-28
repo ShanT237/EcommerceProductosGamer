@@ -11,6 +11,7 @@ import java.util.UUID;
 /**
  * Entidad Producto.
  *  - Identidad: dos productos son el mismo solo si comparten el mismo id.
+ *  - Pertenece a un Vendedor, que está FUERA del agregado: solo se referencia por id.
  *  - Ciclo de vida: se crea, se vende (reduce stock), puede eliminarse lógicamente.
  *  - Regla 1: el stock no puede ser negativo.
  *  - Regla 3: no se puede eliminar un producto con compras activas (eliminación lógica).
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class Producto {
 
     private final UUID id;
+    private final UUID vendedorId;
     private final String nombre;
     private final String descripcion;
     private final double precio;
@@ -28,9 +30,10 @@ public class Producto {
     private final Exclusividad exclusividad;
     private boolean eliminado;
 
-    public Producto(UUID id, String nombre, String descripcion, double precio,
+    public Producto(UUID id, UUID vendedorId, String nombre, String descripcion, double precio,
                     int stock, Gama gama, Exclusividad exclusividad) {
         this.id = Objects.requireNonNull(id, "El id del producto es obligatorio");
+        this.vendedorId = Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
         Objects.requireNonNull(gama, "La gama del producto es obligatoria");
         Objects.requireNonNull(exclusividad, "La exclusividad del producto es obligatoria");
 
