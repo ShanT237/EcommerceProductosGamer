@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Wishlist;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
@@ -12,9 +13,8 @@ import java.util.UUID;
 /**
  * Caso de uso: AñadirAWishlist.
  * Recibe la intención de un usuario de guardar un producto en su wishlist.
- * Verifica que el usuario y el producto existan, obtiene la wishlist
+ * Verifica que el usuario y el producto existan (y no esté eliminado), obtiene la wishlist
  * del usuario y delega en ella la regla de no duplicados (Regla 7).
- * No contiene ningún if de decisión de negocio: solo coordina.
  */
 @Service
 public class AnadirAWishlistUseCase {
@@ -36,8 +36,12 @@ public class AnadirAWishlistUseCase {
         usuarioRepository.obtenerPorId(usuarioId)
                 .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
 
-        productoRepository.obtenerPorId(productoId)
+        Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
+
+        if (producto.isEliminado()) {
+            throw new ReglaDominioException("No se puede agregar a la wishlist un producto eliminado");
+        }
 
         // 2. Obtener la wishlist del usuario, o crearla si aún no tiene una
         Wishlist wishlist = wishlistRepository.obtenerPorUsuarioId(usuarioId)
