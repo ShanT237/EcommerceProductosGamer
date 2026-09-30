@@ -23,4 +23,11 @@ public interface CompraRepository {
      * el caso de uso tenga que decidir nada por su cuenta.
      */
     boolean existeCompraDe(UUID usuarioId, UUID productoId);
+
+    /**
+     * Indica si el producto tiene compras activas (PENDIENTE o COMPLETADA, es decir,
+     * no reembolsadas). La usa EliminarProductoUseCase para poder validar la Regla 3
+     * sin que el caso de uso tenga que decidir nada por su cuenta.
+     */
+    boolean existeCompraActivaDeProducto(UUID productoId);
 }
