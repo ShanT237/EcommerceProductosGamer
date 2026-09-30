@@ -48,6 +48,10 @@ public class SubirResenaUseCase {
         Usuario usuario = usuarioRepository.obtenerPorId(idUsuario)
                 .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
 
+        if (resenaRepository.existeResenaDeUsuarioYProducto(idUsuario.toString(), compra.getProductoId().toString())) {
+            throw new ReglaDominioException("El usuario ya publicó una reseña para este producto");
+        }
+
         // 2. Crear el VO y la entidad (El dominio valida el contenido)
         Calificacion calificacion = new Calificacion(valorCalificacion);
 
