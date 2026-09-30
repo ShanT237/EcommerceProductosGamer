@@ -3,6 +3,7 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import java.util.UUID;
  *
  * No contiene ningún if de decisión de negocio: solo coordina.
  */
+@Service
 public class ConfirmarCompraUseCase {
 
     private final CompraRepository compraRepository;

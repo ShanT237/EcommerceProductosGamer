@@ -5,6 +5,7 @@ import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.repository.WishlistRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
  * del usuario y delega en ella la regla de no duplicados (Regla 7).
  * No contiene ningún if de decisión de negocio: solo coordina.
  */
+@Service
 public class AnadirAWishlistUseCase {
 
     private final UsuarioRepository usuarioRepository;

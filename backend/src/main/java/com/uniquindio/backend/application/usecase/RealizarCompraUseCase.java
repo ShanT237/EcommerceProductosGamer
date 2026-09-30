@@ -6,6 +6,7 @@ import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.valueobject.Precio;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * del dominio (Producto, Compra) para que las reglas se apliquen solas.
  * No contiene ningún if de decisión de negocio: solo coordina.
  */
+@Service
 public class RealizarCompraUseCase {
 
     private final ProductoRepository productoRepository;

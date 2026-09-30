@@ -9,6 +9,7 @@ import com.uniquindio.backend.domain.repository.ResenaRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
  * Coordina los repositorios para obtener Usuario y Compra, y delega en el dominio
  * las reglas: validar reseña, marcar compra como reseñada y acumular puntos.
  */
+@Service
 public class SubirResenaUseCase {
 
     private final CompraRepository compraRepository;
