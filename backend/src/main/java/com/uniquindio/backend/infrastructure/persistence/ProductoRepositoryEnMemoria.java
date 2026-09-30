@@ -1,5 +1,6 @@
 package com.uniquindio.backend.infrastructure.persistence;
 
+import org.springframework.stereotype.Repository;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@Repository
 public class ProductoRepositoryEnMemoria implements ProductoRepository {
 
     private final Map<UUID, Producto> productos = new HashMap<>();
