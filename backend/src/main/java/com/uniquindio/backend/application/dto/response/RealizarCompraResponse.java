@@ -1,4 +1,4 @@
-package com.uniquindio.backend.application.dto;
+package com.uniquindio.backend.application.dto.response;
 
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
@@ -6,7 +6,7 @@ import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record RealizarCompraResponseDTO(
+public record RealizarCompraResponse(
         UUID id,
         UUID usuarioId,
         UUID productoId,
@@ -16,8 +16,8 @@ public record RealizarCompraResponseDTO(
         LocalDate fecha,
         EstadoCompra estado
 ) {
-    public static RealizarCompraResponseDTO desde(Compra compra) {
-        return new RealizarCompraResponseDTO(
+    public static RealizarCompraResponse desde(Compra compra) {
+        return new RealizarCompraResponse(
                 compra.getId(),
                 compra.getUsuarioId(),
                 compra.getProductoId(),
