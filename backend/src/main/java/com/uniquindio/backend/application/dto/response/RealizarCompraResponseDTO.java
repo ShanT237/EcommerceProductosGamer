@@ -1,4 +1,4 @@
-package com.uniquindio.backend.application.dto;
+package com.uniquindio.backend.application.dto.response;
 
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;

@@ -1,4 +1,4 @@
-package com.uniquindio.backend.application.dto;
+package com.uniquindio.backend.application.dto.request;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
