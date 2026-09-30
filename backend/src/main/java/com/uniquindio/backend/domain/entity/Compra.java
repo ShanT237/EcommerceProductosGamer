@@ -69,6 +69,20 @@ public class Compra {
         this.estado = EstadoCompra.COMPLETADA;
     }
 
+    public void cancelar() {
+        if (estado != EstadoCompra.PENDIENTE) {
+            throw new ReglaDominioException("Solo se puede cancelar una compra pendiente");
+        }
+        this.estado = EstadoCompra.CANCELADA;
+    }
+
+    public void expirar() {
+        if (estado != EstadoCompra.PENDIENTE) {
+            throw new ReglaDominioException("Solo se puede expirar una compra pendiente");
+        }
+        this.estado = EstadoCompra.EXPIRADA;
+    }
+
     /**
      * Marca el archivo/producto como descargado. Una vez descargado,
      * ya no se puede solicitar reembolso.
