@@ -24,6 +24,13 @@ public class Notificacion {
     private final LocalDateTime fecha;
     private boolean leida;
 
+    public static Notificacion porCambioEnWishlist(UUID usuarioId, Producto producto,
+                                                   TipoNotificacion tipo, String detalle) {
+        String mensaje = String.format("El producto '%s' en tu lista de deseos ha cambiado: %s",
+                producto.getNombre(), detalle);
+        return new Notificacion(UUID.randomUUID(), usuarioId, producto.getId(), tipo, mensaje, LocalDateTime.now());
+    }
+
     public Notificacion(UUID id, UUID usuarioId, UUID productoId, TipoNotificacion tipo, String mensaje, LocalDateTime fecha) {
         this.id = Objects.requireNonNull(id, "El id de la notificación es obligatorio");
         this.usuarioId = Objects.requireNonNull(usuarioId, "El usuarioId es obligatorio");

@@ -54,6 +54,12 @@ public class Usuario {
         this.puntos -= cantidad;
     }
 
+    public void asegurarActivo() {
+        if (!activo) {
+            throw new ReglaDominioException("El usuario se encuentra inactivo");
+        }
+    }
+
     public void desactivar() {
         this.activo = false;
     }
