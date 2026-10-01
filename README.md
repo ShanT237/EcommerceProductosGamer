@@ -15,7 +15,7 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 2. [¿Qué hace único a sus vendedores?](#2-qué-hace-único-a-sus-vendedores)
 3. [Lenguaje Ubicuo (DDD)](#3-lenguaje-ubicuo-ddd)
 4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
-5. [Casos de Uso del Sistema](#5-casos-de-uso-del-sistema)
+5. [Casos de Uso del Sistema (36 Casos de Uso)](#5-casos-de-uso-del-sistema-36-casos-de-uso)
 6. [Diseño de Agregados y Dominio (DDD)](#6-diseño-de-agregados-y-dominio-ddd)
 7. [Arquitectura del Software (Clean Architecture)](#7-arquitectura-del-software-clean-architecture)
 8. [Guía de Instalación y Ejecución](#8-guía-de-instalación-y-ejecución)
@@ -54,7 +54,7 @@ Categorías habilitadas en el catálogo:
 | **Preventa** | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
 | **Stock / Inventario** | Unidades físicas o licencias digitales disponibles en inventario (`stock >= 0`). |
 | **Wishlist** | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
-| **Notificación** | Alerta generada para el comprador sobre cambios de precio o stock en productos guardados en su Wishlist. |
+| **Notificación** | Alerta generada para el comprador sobre cambios de precio o reposición de stock en productos guardados en su Wishlist. |
 | **Combo** | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
 | **Comprador / Usuario** | Entidad compradora registrada que realiza transacciones, evalúa productos, redime y acumula puntos. |
 | **Vendedor** | Entidad comercial (Persona Natural o Empresa) registrada para publicar y vender productos. |
@@ -81,38 +81,35 @@ Categorías habilitadas en el catálogo:
 
 ---
 
-## 5. Casos de Uso del Sistema
-
-> [!NOTE]
-> **Nota de Diseño de Notificaciones:** En los requerimientos funcionales originales se separaron `CU-14` (*Notificar Descuento*) y `CU-32` (*Notificar Stock Available*). En el código backend se implementó de forma unificada mediante `NotificarCambioWishlistUseCase` (Regla 8) usando la entidad `Notificacion` y el Value Object `TipoNotificacion` (`CAMBIO_PRECIO`, `CAMBIO_STOCK`), manteniendo la cobertura completa de ambos casos de uso sin duplicar lógica.
+## 5. Casos de Uso del Sistema (36 Casos de Uso)
 
 ### 🛒 Módulo 1: Compras y Checkout
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-01` | **Realizar Compra** | ✅ Implementado | Comprador | Registra orden `PENDIENTE`, reserva stock y valida producto no eliminado, usuario activo y vendedor activo (`RealizarCompraUseCase`). |
 | `CU-09` | **Confirmar Compra** | ✅ Implementado | Comprador / Sistema | Valida el pago y pasa la orden a `COMPLETADA` (`ConfirmarCompraUseCase`). |
-| `CU-12` | **Cancelar Compra Pendiente** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`). |
-| `CU-12b`| **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro del plazo legal, pasa a `REEMBOLSADA` y restituye el stock al inventario (`SolicitarReembolsoUseCase`). |
-| `CU-18` | **Comprar Combo** | ⏳ Especificado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes. |
-| `CU-30` | **Aplicar Cupón de Descuento** | ⏳ Especificado | Comprador | Aplica un código promocional al total del pago previo al checkout. |
+| `CU-12` | **Cancelar Compra** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`). |
+| `CU-13` | **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro del plazo legal, pasa a `REEMBOLSADA` y restituye el stock al inventario (`SolicitarReembolsoUseCase`). |
+| `CU-16` | **Comprar Combo** | ⏳ Especificado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes. |
+| `CU-17` | **Aplicar Cupón de Descuento** | ⏳ Especificado | Comprador | Aplica un código promocional al total del pago previo al checkout. |
 
 ### 📦 Módulo 2: Productos y Catálogo
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-04` | **Publicar Producto** | ✅ Implementado | Vendedor | Crea un nuevo producto especificando gama, precio, stock y atributos (`PublicarProductoUseCase`). |
-| `CU-06` | **Eliminar Producto** | ✅ Implementado | Vendedor | Desactiva producto preservando trazabilidad; rechaza baja si hay compras activas (`EliminarProductoUseCase`). |
 | `CU-05` | **Modificar Producto** | ⏳ Especificado | Vendedor | Actualiza precio, descripción o disponibilidad de preventa. |
-| `CU-15` | **Gestionar / Aumentar Stock** | ✅ Implementado | Vendedor | Incrementa el número de unidades disponibles en inventario (`Producto.aumentarStock`). |
-| `CU-16` | **Editar Información General** | ⏳ Especificado | Vendedor | Actualiza detalles secundarios e imágenes del producto. |
-| `CU-31` | **Filtrar y Buscar Productos** | ⏳ Especificado | Comprador | Búsqueda avanzada por gama, categoría, precio y preventas. |
-| `CU-33` | **Activar / Pausar Publicación** | ⏳ Especificado | Vendedor | Alterna visibilidad del producto en el catálogo sin borrarlo. |
-| `CU-34` | **Configurar Descuento Promocional** | ⏳ Especificado | Vendedor | Establece porcentajes de descuento temporales en un producto. |
+| `CU-06` | **Eliminar Producto** | ✅ Implementado | Vendedor | Desactiva producto preservando trazabilidad; rechaza baja si hay compras activas (`EliminarProductoUseCase`). |
+| `CU-18` | **Gestionar / Aumentar Stock** | ✅ Implementado | Vendedor | Incrementa el número de unidades disponibles en inventario (`Producto.aumentarStock`). |
+| `CU-19` | **Editar Información General** | ⏳ Especificado | Vendedor | Actualiza detalles secundarios e imágenes del producto. |
+| `CU-20` | **Filtrar y Buscar Productos** | ⏳ Especificado | Comprador | Búsqueda avanzada por gama, categoría, precio y preventas. |
+| `CU-21` | **Activar / Pausar Publicación** | ⏳ Especificado | Vendedor | Alterna visibilidad del producto en el catálogo sin borrarlo. |
+| `CU-22` | **Configurar Descuento Promocional** | ⏳ Especificado | Vendedor | Establece porcentajes de descuento temporales en un producto. |
 
 ### 🎁 Módulo 3: Combos Promocionales
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-07` | **Crear Combo Gamer** | ✅ Implementado (Dominio) | Vendedor | Agrupa 2 o más productos sin duplicados y con descuento en la entidad `Combo`. |
-| `CU-17` | **Modificar Productos de Combo**| ✅ Implementado (Dominio) | Vendedor | Añade o remueve productos garantizando el mínimo de 2 unidades. |
+| `CU-23` | **Modificar Productos de Combo**| ✅ Implementado (Dominio) | Vendedor | Añade o remueve productos garantizando el mínimo de 2 unidades. |
 
 ### ⭐ Módulo 4: Reseñas, Puntos y Recompensas
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -120,34 +117,34 @@ Categorías habilitadas en el catálogo:
 | `CU-02` | **Subir Reseña y Asignar Puntos** | ✅ Implementado | Comprador | Publica reseña sobre compra completada, valida 1 reseña por usuario/producto y asigna puntos (`SubirResenaUseCase`). |
 | `CU-08` | **Redimir Puntos por Beneficios** | ✅ Implementado (Dominio) | Comprador | Canjea puntos acumulados con validación de saldo positivo (`Usuario.redimirPuntos`). |
 | `CU-10` | **Asignar Regalo por Meta** | ⏳ Especificado | Admin / Sistema | Concede regalos del catálogo al cumplir metas acumuladas de compra. |
-| `CU-35` | **Enviar / Confirmar Entrega Regalo**| ⏳ Especificado | Admin / Sistema | Administra la logística y cambio de estado del regalo asignado. |
+| `CU-24` | **Enviar / Confirmar Entrega Regalo**| ⏳ Especificado | Admin / Sistema | Administra la logística y cambio de estado del regalo asignado. |
 
 ### ❤️ Módulo 5: Lista de Deseos (Wishlist) y Notificaciones
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-03` | **Añadir a Wishlist** | ✅ Implementado | Comprador | Guarda productos en wishlist evitando duplicados y rechazando eliminados (`AnadirAWishlistUseCase`). |
-| `CU-13` | **Quitar de Wishlist** | ✅ Implementado (Dominio) | Comprador | Elimina un producto específico de la lista de deseos (`Wishlist.quitarProducto`). |
-| `CU-14` / `CU-32` | **Notificar Cambio en Wishlist (Regla 8)** | ✅ Implementado | Sistema | Genera notificaciones automáticas por cambio de precio o reabastecimiento de stock (`NotificarCambioWishlistUseCase`). |
+| `CU-14` | **Notificar Cambio Wish List** | ✅ Implementado | Sistema | Genera notificaciones automáticas por cambio de precio o reabastecimiento de stock (`NotificarCambioWishlistUseCase`). |
+| `CU-15` | **Quitar de Wishlist** | ✅ Implementado (Dominio) | Comprador | Elimina un producto específico de la lista de deseos (`Wishlist.quitarProducto`). |
 
 ### 👤 Módulo 6: Usuarios, Vendedores y Autenticación
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-11` | **Registrar Usuario / Vendedor** | ⏳ Especificado | Público | Registro de cuentas de compradores o perfiles de vendedor. |
-| `CU-19` | **Dar de Baja Vendedor** | ✅ Implementado (Dominio) | Admin / Vendedor | Desactiva la cuenta del vendedor conservando la historia comercial (`Vendedor.darDeBaja`). |
-| `CU-20` | **Editar Perfil y Seguridad** | ⏳ Especificado | Usuario | Modificación de datos personales, dirección y contraseña. |
-| `CU-21` | **Iniciar Sesión (JWT)** | ⏳ Especificado | Todos | Autenticación con token JWT seguro para el acceso a las APIs. |
-| `CU-29` | **Valorar Vendedor** | ⏳ Especificado | Comprador | Calificación directa del servicio y atención brindada por el vendedor. |
+| `CU-25` | **Dar de Baja Vendedor** | ✅ Implementado (Dominio) | Admin / Vendedor | Desactiva la cuenta del vendedor conservando la historia comercial (`Vendedor.darDeBaja`). |
+| `CU-26` | **Editar Perfil y Seguridad** | ⏳ Especificado | Usuario | Modificación de datos personales, dirección y contraseña. |
+| `CU-27` | **Iniciar Sesión (JWT)** | ⏳ Especificado | Todos | Autenticación con token JWT seguro para el acceso a las APIs. |
+| `CU-28` | **Valorar Vendedor** | ⏳ Especificado | Comprador | Calificación directa del servicio y atención brindada por el vendedor. |
 
 ### 📊 Módulo 7: Consultas, Métricas y Reportes
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `CU-22` | **Reporte de Ventas por Vendedor** | ⏳ Especificado | Vendedor | Balance de ingresos, unidades vendidas y comisiones. |
-| `CU-23` | **Reporte de Productos Más Vendidos**| ⏳ Especificado | Admin / Vendedor | Escalafón de productos con mayor volumen de venta y calificación. |
-| `CU-24` | **Consultar Historial de Compras** | ⏳ Especificado | Comprador | Muestra órdenes históricas, comprobantes y estados de entrega. |
-| `CU-25` | **Consultar Historial de Puntos** | ⏳ Especificado | Comprador | Detalle de saldo de puntos ganados y redimidos. |
-| `CU-26` | **Gestionar Metas de Recompensas** | ⏳ Especificado | Admin | Configura umbrales de compras para desbloquear regalos. |
-| `CU-27` | **Alertas de Stock Bajo** | ⏳ Especificado | Vendedor | Reporte de inventario crítico o agotado para reabastecimiento. |
-| `CU-28` | **Métricas de Reseñas** | ⏳ Especificado | Admin / Vendedor | Dashboard de satisfacción del cliente y calificaciones. |
+| `CU-29` | **Reporte de Ventas por Vendedor** | ⏳ Especificado | Vendedor | Balance de ingresos, unidades vendidas y comisiones. |
+| `CU-30` | **Reporte de Productos Más Vendidos**| ⏳ Especificado | Admin / Vendedor | Escalafón de productos con mayor volumen de venta y calificación. |
+| `CU-31` | **Consultar Historial de Compras** | ⏳ Especificado | Comprador | Muestra órdenes históricas, comprobantes y estados de entrega. |
+| `CU-32` | **Consultar Historial de Puntos** | ⏳ Especificado | Comprador | Detalle de saldo de puntos ganados y redimidos. |
+| `CU-33` | **Gestionar Metas de Recompensas** | ⏳ Especificado | Admin | Configura umbrales de compras para desbloquear regalos. |
+| `CU-34` | **Alertas de Stock Bajo** | ⏳ Especificado | Vendedor | Reporte de inventario crítico o agotado para reabastecimiento. |
+| `CU-35` | **Métricas de Reseñas** | ⏳ Especificado | Admin / Vendedor | Dashboard de satisfacción del cliente y calificaciones. |
 | `CU-36` | **Reporte Global del Marketplace** | ⏳ Especificado | Admin | Consolidado ejecutivo del volumen total de operaciones. |
 
 ---
