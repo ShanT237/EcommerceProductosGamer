@@ -22,4 +22,10 @@ public class ResenaRepositoryEnMemoria implements ResenaRepository {
     public void guardar(Resena resena) {
         resenas.put(resena.getId(), resena);
     }
+
+    @Override
+    public boolean existeResenaDeUsuarioYProducto(String usuarioId, String productoId) {
+        return resenas.values().stream()
+                .anyMatch(r -> r.getIdUsuario().equals(usuarioId) && r.getIdProducto().equals(productoId));
+    }
 }

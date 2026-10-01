@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Wishlist;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +16,6 @@ public interface WishlistRepository {
     Optional<Wishlist> obtenerPorUsuarioId(UUID usuarioId);
 
     void guardar(Wishlist wishlist);
+
+    List<Wishlist> obtenerTodasQueContengan(UUID productoId);
 }
