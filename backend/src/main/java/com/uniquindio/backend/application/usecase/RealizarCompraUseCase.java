@@ -10,19 +10,19 @@ import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.repository.VendedorRepository;
 import com.uniquindio.backend.domain.valueobject.Precio;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Caso de uso: RealizarCompra.
- * Recibe la intención (quién compra, qué producto, cuánto), usa los
- * repositorios para obtener/guardar datos, e invoca el comportamiento
- * del dominio (Producto, Compra) para que las reglas se apliquen solas.
+ * Orquesta la compra: valida usuario, producto y vendedor, aplica las reglas
+ * de la entidad y persiste a través de los repositorios.
  */
 @Service
+@RequiredArgsConstructor
 public class RealizarCompraUseCase {
 
     private final ProductoRepository productoRepository;
@@ -30,47 +30,23 @@ public class RealizarCompraUseCase {
     private final UsuarioRepository usuarioRepository;
     private final VendedorRepository vendedorRepository;
 
-    public RealizarCompraUseCase(ProductoRepository productoRepository,
-                                  CompraRepository compraRepository,
-                                  UsuarioRepository usuarioRepository,
-                                  VendedorRepository vendedorRepository) {
-        this.productoRepository = productoRepository;
-        this.compraRepository = compraRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.vendedorRepository = vendedorRepository;
-    }
-
-    public RealizarCompraUseCase(ProductoRepository productoRepository, CompraRepository compraRepository) {
-        this(productoRepository, compraRepository, null, null);
-    }
-
     public Compra ejecutar(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha) {
-        if (usuarioRepository != null) {
-            Usuario usuario = usuarioRepository.obtenerPorId(usuarioId)
-                    .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
-            if (!usuario.isActivo()) {
-                throw new ReglaDominioException("El usuario se encuentra inactivo");
-            }
-        }
+        Usuario usuario = usuarioRepository.obtenerPorId(usuarioId)
+                .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
+        usuario.asegurarActivo();
 
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
+        producto.asegurarNoEliminado();
 
-        if (producto.isEliminado()) {
-            throw new ReglaDominioException("El producto no se encuentra disponible (eliminado)");
-        }
-
-        if (vendedorRepository != null) {
-            Optional<Vendedor> vendedorOpt = vendedorRepository.obtenerPorId(producto.getVendedorId());
-            if (vendedorOpt.isPresent() && !vendedorOpt.get().isActivo()) {
-                throw new ReglaDominioException("El vendedor del producto no se encuentra activo");
-            }
-        }
+        Vendedor vendedor = vendedorRepository.obtenerPorId(producto.getVendedorId())
+                .orElseThrow(() -> new ReglaDominioException("El vendedor del producto no existe"));
+        vendedor.asegurarActivo();
 
         boolean usuarioYaTieneEsteProducto = compraRepository.existeCompraDe(usuarioId, productoId);
+        producto.validarCompraExclusiva(usuarioYaTieneEsteProducto);
 
-        producto.validarCompraExclusiva(usuarioYaTieneEsteProducto); // Regla 9
-        producto.reducirStock(cantidad);                             // Regla 1
+        producto.reducirStock(cantidad);
 
         Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, new Precio(producto.getPrecio()));
 

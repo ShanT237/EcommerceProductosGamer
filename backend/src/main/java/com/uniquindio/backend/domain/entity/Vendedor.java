@@ -73,6 +73,12 @@ public class Vendedor {
         }
     }
 
+    public void asegurarActivo() {
+        if (!activo) {
+            throw new ReglaDominioException("El vendedor del producto no se encuentra activo");
+        }
+    }
+
     private static void validarCorreo(String correo) {
         if (correo == null || !correo.contains("@")) {
             throw new ReglaDominioException("El correo del vendedor no es válido");
