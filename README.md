@@ -52,7 +52,6 @@ Categorías habilitadas en el catálogo:
 | :--- | :--- |
 | **Gama** | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
 | **Preventa** | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
-| **Stock / Inventario** | Unidades físicas o licencias digitales disponibles en inventario (`stock >= 0`). |
 | **Wishlist** | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
 | **Notificación** | Alerta generada para el comprador sobre cambios de precio o reposición de stock en productos guardados en su Wishlist. |
 | **Combo** | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
@@ -61,7 +60,6 @@ Categorías habilitadas en el catálogo:
 | **Puntos de Fidelización** | Unidades de beneficio otorgadas a compradores tras publicar reseñas de compras completadas. |
 | **Regalo / Recompensa** | Beneficio otorgado por el sistema al usuario tras alcanzar metas de compra acumuladas. |
 | **Exclusividad** | Restricción de compra que limita la adquisición a máximo una unidad por comprador. |
-| **Eliminación Lógica** | Desactivación del estado visible de una entidad preservando la trazabilidad histórica de transacciones. |
 
 ---
 
