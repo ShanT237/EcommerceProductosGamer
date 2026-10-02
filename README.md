@@ -50,7 +50,7 @@ Categorías habilitadas en el catálogo:
 
 | Término | Definición en el Dominio |
 | :--- | :--- |
-| **Gama** | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`, `ENTUSIASTA`). |
+| **Gama** | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
 | **Preventa** | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
 | **Stock / Inventario** | Unidades físicas o licencias digitales disponibles en inventario (`stock >= 0`). |
 | **Wishlist** | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
