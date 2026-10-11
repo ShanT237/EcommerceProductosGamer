@@ -146,4 +146,31 @@ class ProductoTest {
         assertEquals(producto1.hashCode(), producto2.hashCode());
         assertNotEquals(producto1, producto3);
     }
+
+    @Test
+    @DisplayName("Un exclusivo no se puede comprar si el usuario ya lo tiene (Regla 9)")
+    void rechazaExclusivoYaComprado() {
+        Producto exclusivo = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse Pro",
+                "Desc", 100, 5, Gama.ALTA, Exclusividad.EXCLUSIVO);
+
+        assertThrows(ReglaDominioException.class, () -> exclusivo.validarCompraExclusiva(true, 1));
+        assertDoesNotThrow(() -> exclusivo.validarCompraExclusiva(false, 1));
+    }
+
+    @Test
+    @DisplayName("Un exclusivo solo se compra de a una unidad (Regla 9)")
+    void rechazaExclusivoConCantidadMayorAUno() {
+        Producto exclusivo = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse Pro",
+                "Desc", 100, 5, Gama.ALTA, Exclusividad.EXCLUSIVO);
+
+        assertThrows(ReglaDominioException.class, () -> exclusivo.validarCompraExclusiva(false, 2));
+    }
+
+    @Test
+    @DisplayName("Un producto normal no tiene restricción de compra ni de cantidad")
+    void productoNormalSinRestriccion() {
+        Producto normal = crearProductoValido();
+
+        assertDoesNotThrow(() -> normal.validarCompraExclusiva(true, 3));
+    }
 }

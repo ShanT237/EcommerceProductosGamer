@@ -114,11 +114,17 @@ public class Producto {
      * repositorio, si el usuario ya tiene una compra de este producto; el Producto
      * solo decide qué hacer con ese dato.
      */
-    public void validarCompraExclusiva(boolean usuarioYaTieneEsteProducto) {
-        if (esExclusivo() && usuarioYaTieneEsteProducto) {
+    public void validarCompraExclusiva(boolean usuarioYaTieneEsteProducto, int cantidad) {
+        if (!esExclusivo()) {
+            return;
+        }
+        if (usuarioYaTieneEsteProducto) {
             throw new ReglaDominioException(
-                    "El usuario ya compró este producto exclusivo anteriormente"
-            );
+                    "El usuario ya compró este producto exclusivo anteriormente");
+        }
+        if (cantidad > 1) {
+            throw new ReglaDominioException(
+                    "Un producto exclusivo solo puede comprarse en cantidad de una unidad");
         }
     }
 

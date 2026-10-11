@@ -44,7 +44,7 @@ public class RealizarCompraUseCase {
         vendedor.asegurarActivo();
 
         boolean usuarioYaTieneEsteProducto = compraRepository.existeCompraDe(usuarioId, productoId);
-        producto.validarCompraExclusiva(usuarioYaTieneEsteProducto);
+        producto.validarCompraExclusiva(usuarioYaTieneEsteProducto, cantidad);
 
         producto.reducirStock(cantidad);
 
