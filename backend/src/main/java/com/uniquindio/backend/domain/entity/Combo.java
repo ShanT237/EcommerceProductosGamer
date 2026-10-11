@@ -30,10 +30,21 @@ public class Combo {
     private final double descuento;
     private final List<UUID> productos;
 
-    public Combo(UUID id, UUID vendedorId, String nombre, String descripcion, double descuento, List<UUID> productosIniciales) {
-        this.id = Objects.requireNonNull(id, "El id del combo es obligatorio");
-        this.vendedorId = Objects.requireNonNull(vendedorId, "El id del vendedor es obligatorio");
+    // Combo
+    private Combo(UUID id, UUID vendedorId, String nombre, String descripcion,
+                  double descuento, List<UUID> productosIniciales) {
+        this.id = id;
+        this.vendedorId = vendedorId;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.descuento = descuento;
+        this.productos = new ArrayList<>(productosIniciales);
+    }
 
+    public static Combo crear(UUID id, UUID vendedorId, String nombre, String descripcion,
+                              double descuento, List<UUID> productosIniciales) {
+        Objects.requireNonNull(id, "El id del combo es obligatorio");
+        Objects.requireNonNull(vendedorId, "El id del vendedor es obligatorio");
         if (nombre == null || nombre.isBlank()) {
             throw new ReglaDominioException("El nombre del combo no puede estar vacío");
         }
@@ -46,18 +57,11 @@ public class Combo {
         if (productosIniciales == null || productosIniciales.size() < 2) {
             throw new ReglaDominioException("Un combo debe estar formado por dos o más productos");
         }
-
-        Set<UUID> sinDuplicados = new HashSet<>(productosIniciales);
-        if (sinDuplicados.size() < productosIniciales.size()) {
+        if (new HashSet<>(productosIniciales).size() < productosIniciales.size()) {
             throw new ReglaDominioException("Un combo no puede contener productos duplicados");
         }
-
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.descuento = descuento;
-        this.productos = new ArrayList<>(productosIniciales);
+        return new Combo(id, vendedorId, nombre, descripcion, descuento, productosIniciales);
     }
-
     public List<UUID> getProductos() {
         return List.copyOf(productos);
     }
