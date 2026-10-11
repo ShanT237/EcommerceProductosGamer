@@ -30,10 +30,23 @@ public class Producto {
     private final Exclusividad exclusividad;
     private boolean eliminado;
 
-    public Producto(UUID id, UUID vendedorId, String nombre, String descripcion, double precio,
-                    int stock, Gama gama, Exclusividad exclusividad) {
-        this.id = Objects.requireNonNull(id, "El id del producto es obligatorio");
-        this.vendedorId = Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
+    private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
+                     double precio, int stock, Gama gama, Exclusividad exclusividad) {
+        this.id = id;
+        this.vendedorId = vendedorId;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.stock = stock;
+        this.gama = gama;
+        this.exclusividad = exclusividad;
+        this.eliminado = false;
+    }
+
+    public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                    double precio, int stock, Gama gama, Exclusividad exclusividad) {
+        Objects.requireNonNull(id, "El id del producto es obligatorio");
+        Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
         Objects.requireNonNull(gama, "La gama del producto es obligatoria");
         Objects.requireNonNull(exclusividad, "La exclusividad del producto es obligatoria");
 
@@ -49,14 +62,7 @@ public class Producto {
         if (stock < 0) {
             throw new ReglaDominioException("El stock del producto no puede ser negativo");
         }
-
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.stock = stock;
-        this.gama = gama;
-        this.exclusividad = exclusividad;
-        this.eliminado = false;
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad);
     }
 
     public boolean esExclusivo() {

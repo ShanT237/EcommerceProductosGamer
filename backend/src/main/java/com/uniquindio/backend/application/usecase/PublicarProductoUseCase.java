@@ -31,7 +31,7 @@ public class PublicarProductoUseCase {
 
         vendedor.validarPuedePublicar();
 
-        Producto producto = new Producto(id, vendedor.getId(), nombre, descripcion,
+        Producto producto = Producto.publicar(id, vendedor.getId(), nombre, descripcion,
                 precio, stock, gama, exclusividad);
 
         productoRepository.guardar(producto);
