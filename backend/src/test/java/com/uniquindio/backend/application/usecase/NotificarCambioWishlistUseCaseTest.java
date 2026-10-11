@@ -40,17 +40,17 @@ class NotificarCambioWishlistUseCaseTest {
     @DisplayName("Regla 8: Notifica a los usuarios cuando un producto de su wishlist cambia de precio o stock")
     void notificaAUsuariosConProductoEnWishlist() {
         UUID vendedorId = UUID.randomUUID();
-        Producto producto = new Producto(UUID.randomUUID(), vendedorId, "Teclado RGB", "Mecánico", 120.0, 5, Gama.ALTA, Exclusividad.NORMAL);
+        Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Teclado RGB", "Mecánico", 120.0, 5, Gama.ALTA, Exclusividad.NORMAL);
         productoRepository.guardar(producto);
 
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
 
-        Wishlist w1 = new Wishlist(UUID.randomUUID(), user1);
+        Wishlist w1 = Wishlist.crear(UUID.randomUUID(), user1);
         w1.agregarProducto(producto.getId());
         wishlistRepository.guardar(w1);
 
-        Wishlist w2 = new Wishlist(UUID.randomUUID(), user2);
+        Wishlist w2 = Wishlist.crear(UUID.randomUUID(), user2);
         w2.agregarProducto(producto.getId());
         wishlistRepository.guardar(w2);
 
