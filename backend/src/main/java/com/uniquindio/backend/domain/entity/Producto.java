@@ -100,10 +100,11 @@ public class Producto {
      * Cuando no tiene compras activas se marca como eliminado lógicamente.
      */
     public void eliminar(boolean tieneComprasActivas) {
+        if (eliminado) {
+            throw new ReglaDominioException("El producto ya está eliminado");
+        }
         if (tieneComprasActivas) {
-            throw new ReglaDominioException(
-                    "No se puede eliminar un producto que tiene compras activas"
-            );
+            throw new ReglaDominioException("No se puede eliminar un producto que tiene compras activas");
         }
         this.eliminado = true;
     }

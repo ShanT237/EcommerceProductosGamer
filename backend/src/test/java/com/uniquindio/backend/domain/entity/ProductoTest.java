@@ -111,6 +111,15 @@ class ProductoTest {
     }
 
     @Test
+    @DisplayName("Rechaza eliminar un producto que ya está eliminado")
+    void rechazaEliminarDosVeces() {
+        Producto producto = crearProductoValido();
+        producto.eliminar(false);
+
+        assertThrows(ReglaDominioException.class, () -> producto.eliminar(false));
+    }
+
+    @Test
     @DisplayName("Rechaza eliminar un producto con compras activas (Regla 3)")
     void rechazaEliminarConComprasActivas() {
         Producto producto = crearProductoValido();
