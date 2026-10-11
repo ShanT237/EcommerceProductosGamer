@@ -63,6 +63,12 @@ public class Producto {
         return exclusividad.esExclusivo();
     }
 
+    public void asegurarNoEliminado() {
+        if (eliminado) {
+            throw new ReglaDominioException("El producto no se encuentra disponible (eliminado)");
+        }
+    }
+
     /**
      * Regla 1: el stock no puede ser negativo.
      */

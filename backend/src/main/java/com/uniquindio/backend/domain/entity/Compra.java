@@ -33,6 +33,8 @@ public class Compra {
     private boolean puntosAsignados;
     private boolean descargado;
 
+    private static final int PUNTOS_POR_RESENA = 10;
+
     public Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha, Precio precioUnitario) {
         this.id = Objects.requireNonNull(id, "El id de la compra es obligatorio");
         this.usuarioId = Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
@@ -59,6 +61,16 @@ public class Compra {
         return new Precio(precioUnitario.valor() * cantidad);
     }
 
+    public boolean estaCompletada() {
+        return estado == EstadoCompra.COMPLETADA;
+    }
+
+    public void asegurarPerteneceA(UUID usuarioId) {
+        if (!this.usuarioId.equals(usuarioId)) {
+            throw new ReglaDominioException("La compra no pertenece a este usuario");
+        }
+    }
+
     /**
      * Confirma el pago de la compra (simulación de pago exitosa).
      */
@@ -67,6 +79,20 @@ public class Compra {
             throw new ReglaDominioException("Solo se puede confirmar una compra pendiente");
         }
         this.estado = EstadoCompra.COMPLETADA;
+    }
+
+    public void cancelar() {
+        if (estado != EstadoCompra.PENDIENTE) {
+            throw new ReglaDominioException("Solo se puede cancelar una compra pendiente");
+        }
+        this.estado = EstadoCompra.CANCELADA;
+    }
+
+    public void expirar() {
+        if (estado != EstadoCompra.PENDIENTE) {
+            throw new ReglaDominioException("Solo se puede expirar una compra pendiente");
+        }
+        this.estado = EstadoCompra.EXPIRADA;
     }
 
     /**
@@ -129,6 +155,10 @@ public class Compra {
         }
         this.puntosAsignados = true;
         return puntosPorCompra;
+    }
+
+    public int asignarPuntosPorResena() {
+        return asignarPuntos(PUNTOS_POR_RESENA);
     }
 
     @Override

@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface ResenaRepository {
     Optional<Resena> obtenerPorId(String id);
     void guardar(Resena resena);
+    boolean existeResenaDeUsuarioYProducto(String usuarioId, String productoId);
 }
