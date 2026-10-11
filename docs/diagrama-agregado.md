@@ -62,4 +62,4 @@
 - Máximo una reseña por compra.
 - Los puntos de una compra solo se asignan después de haber registrado la reseña, y solo una vez.
 - Una compra solo puede reembolsarse si está COMPLETADA, dentro de un plazo definido y antes de haber descargado el archivo.
-- Una compra REEMBOLSADA no puede volver a confirmarse, reseñarse ni reembolsarse de nuevo.
+- Una compra REEMBOLSADA, CANCELADA o EXPIRADA es final: no admite ningún cambio de estado.
