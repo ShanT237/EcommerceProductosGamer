@@ -30,13 +30,17 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
         return compras.values().stream()
                 .anyMatch(c -> c.getUsuarioId().equals(usuarioId)
                         && c.getProductoId().equals(productoId)
-                        && c.getEstado() != EstadoCompra.REEMBOLSADA);
+                        && esActiva(c));
     }
 
     @Override
     public boolean existeCompraActivaDeProducto(UUID productoId) {
         return compras.values().stream()
-                .anyMatch(c -> c.getProductoId().equals(productoId)
-                        && c.getEstado() != EstadoCompra.REEMBOLSADA);
+                .anyMatch(c -> c.getProductoId().equals(productoId) && esActiva(c));
+    }
+
+    private static boolean esActiva(Compra c) {
+        return c.getEstado() == EstadoCompra.PENDIENTE
+                || c.getEstado() == EstadoCompra.COMPLETADA;
     }
 }

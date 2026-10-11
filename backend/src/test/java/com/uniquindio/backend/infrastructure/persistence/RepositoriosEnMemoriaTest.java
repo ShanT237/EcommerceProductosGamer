@@ -80,4 +80,19 @@ class RepositoriosEnMemoriaTest {
         assertTrue(encontrada.isPresent());
         assertEquals(5, encontrada.get().getCantidad());
     }
+
+    @Test
+    @DisplayName("Una compra CANCELADA no cuenta como compra activa del usuario ni del producto")
+    void compraCanceladaNoCuentaComoActiva() {
+        CompraRepositoryEnMemoria repository = new CompraRepositoryEnMemoria();
+        UUID usuarioId = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId,
+                1, LocalDate.of(2026, 9, 22), new Precio(50000));
+        compra.cancelar();
+        repository.guardar(compra);
+
+        assertFalse(repository.existeCompraDe(usuarioId, productoId));
+        assertFalse(repository.existeCompraActivaDeProducto(productoId));
+    }
 }
