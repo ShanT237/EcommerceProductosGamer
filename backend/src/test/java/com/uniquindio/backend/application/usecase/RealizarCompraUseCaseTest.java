@@ -2,10 +2,7 @@ package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.*;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
-import com.uniquindio.backend.domain.repository.PreventaRepository;
-import com.uniquindio.backend.domain.repository.ProductoRepository;
-import com.uniquindio.backend.domain.repository.UsuarioRepository;
-import com.uniquindio.backend.domain.repository.VendedorRepository;
+import com.uniquindio.backend.domain.repository.*;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -15,7 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,9 +24,10 @@ class RealizarCompraUseCaseTest {
     private static final LocalDate HOY = LocalDate.of(2026, 10, 1);
 
     private ProductoRepository productoRepository;
+    private CompraRepository compraRepository;
     private PreventaRepository preventaRepository;
     private UsuarioRepository usuarioRepository;
-    private RealizarCompraUseCase useCase;
+    private VendedorRepository vendedorRepository;
     private UUID usuarioId;
     private UUID vendedorId;
     private Producto producto;
@@ -35,11 +35,10 @@ class RealizarCompraUseCaseTest {
     @BeforeEach
     void setUp() {
         productoRepository = new ProductoRepositoryEnMemoria();
+        compraRepository = new CompraRepositoryEnMemoria();
         preventaRepository = new PreventaRepositoryEnMemoria();
         usuarioRepository = new UsuarioRepositoryEnMemoria();
-        VendedorRepository vendedorRepository = new VendedorRepositoryEnMemoria();
-        useCase = new RealizarCompraUseCase(productoRepository, new CompraRepositoryEnMemoria(),
-                usuarioRepository, vendedorRepository, preventaRepository);
+        vendedorRepository = new VendedorRepositoryEnMemoria();
 
         vendedorId = UUID.randomUUID();
         vendedorRepository.guardar(Vendedor.registrar(vendedorId, "GamerZone", "v@gamerzone.com",
@@ -57,7 +56,11 @@ class RealizarCompraUseCaseTest {
     }
 
     private Compra comprar(Producto p, int cantidad, LocalDate fecha) {
-        return useCase.ejecutar(UUID.randomUUID(), usuarioId, p.getId(), cantidad, fecha);
+        ZoneId zona = ZoneId.systemDefault();
+        Clock reloj = Clock.fixed(fecha.atTime(10, 0).atZone(zona).toInstant(), zona);
+        RealizarCompraUseCase useCase = new RealizarCompraUseCase(productoRepository,
+                compraRepository, usuarioRepository, vendedorRepository, preventaRepository, reloj);
+        return useCase.ejecutar(usuarioId, p.getId(), cantidad);
     }
 
     @Test

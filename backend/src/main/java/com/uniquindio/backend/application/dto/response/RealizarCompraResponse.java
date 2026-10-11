@@ -3,7 +3,7 @@ package com.uniquindio.backend.application.dto.response;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record RealizarCompraResponse(
@@ -13,7 +13,7 @@ public record RealizarCompraResponse(
         int cantidad,
         double precioUnitario,
         double subtotal,
-        LocalDate fecha,
+        LocalDateTime fecha,
         EstadoCompra estado
 ) {
     public static RealizarCompraResponse desde(Compra compra) {

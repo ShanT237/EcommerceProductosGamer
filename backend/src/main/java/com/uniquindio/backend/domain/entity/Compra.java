@@ -5,7 +5,8 @@ import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,17 +27,18 @@ public class Compra {
     private final UUID usuarioId;
     private final UUID productoId;
     private final int cantidad;
-    private final LocalDate fecha;
+    private final LocalDateTime fecha;
     private final Precio precioUnitario;
     private EstadoCompra estado;
     private boolean resenada;
     private boolean puntosAsignados;
     private boolean descargado;
 
+    public static final Duration PLAZO_REEMBOLSO = Duration.ofHours(48);
     private static final int PUNTOS_POR_RESENA = 10;
 
     private Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad,
-                   LocalDate fecha, Precio precioUnitario) {
+                   LocalDateTime fecha, Precio precioUnitario) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.productoId = productoId;
@@ -50,7 +52,7 @@ public class Compra {
     }
 
     public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
-                                  LocalDate fecha, Precio precioUnitario) {
+                                  LocalDateTime fecha, Precio precioUnitario) {
         Objects.requireNonNull(id, "El id de la compra es obligatorio");
         Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
         Objects.requireNonNull(productoId, "El id del producto es obligatorio");
@@ -119,8 +121,8 @@ public class Compra {
      * Regla: una compra solo puede reembolsarse dentro de un plazo definido
      * y antes de haber descargado el archivo.
      */
-    public void solicitarReembolso(LocalDate fechaSolicitud, int plazoDias) {
-        Objects.requireNonNull(fechaSolicitud, "La fecha de solicitud es obligatoria");
+    public void solicitarReembolso(LocalDateTime ahora) {
+        Objects.requireNonNull(ahora, "La fecha de solicitud es obligatoria");
 
         if (estado != EstadoCompra.COMPLETADA) {
             throw new ReglaDominioException("Solo se puede reembolsar una compra completada");
@@ -129,13 +131,11 @@ public class Compra {
             throw new ReglaDominioException("No se puede reembolsar una compra cuyo archivo ya fue descargado");
         }
         if (puntosAsignados) {
-            throw new ReglaDominioException(
-                    "No se puede reembolsar una compra cuyos puntos ya fueron asignados");
+            throw new ReglaDominioException("No se puede reembolsar una compra cuyos puntos ya fueron asignados");
         }
-        if (fechaSolicitud.isAfter(fecha.plusDays(plazoDias))) {
+        if (ahora.isAfter(fecha.plus(PLAZO_REEMBOLSO))) {
             throw new ReglaDominioException("El plazo para solicitar el reembolso ha expirado");
         }
-
         this.estado = EstadoCompra.REEMBOLSADA;
     }
 

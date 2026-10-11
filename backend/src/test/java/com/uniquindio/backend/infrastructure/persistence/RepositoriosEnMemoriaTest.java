@@ -9,7 +9,7 @@ import com.uniquindio.backend.domain.valueobject.Precio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +40,7 @@ class RepositoriosEnMemoriaTest {
         UUID usuarioId = UUID.randomUUID();
         UUID productoId = UUID.randomUUID();
         Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId,
-                1, LocalDate.of(2026, 9, 22), new Precio(50000));
+                1, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(50000));
 
         assertFalse(repository.existeCompraDe(usuarioId, productoId));
 
@@ -69,9 +69,9 @@ class RepositoriosEnMemoriaTest {
         CompraRepositoryEnMemoria repository = new CompraRepositoryEnMemoria();
         UUID id = UUID.randomUUID();
         Compra compraOriginal = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(),
-                1, LocalDate.of(2026, 9, 22), new Precio(30000));
+                1, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(30000));
         Compra compraActualizada = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(),
-                5, LocalDate.of(2026, 9, 22), new Precio(30000));
+                5, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(30000));
 
         repository.guardar(compraOriginal);
         repository.guardar(compraActualizada);
@@ -88,7 +88,7 @@ class RepositoriosEnMemoriaTest {
         UUID usuarioId = UUID.randomUUID();
         UUID productoId = UUID.randomUUID();
         Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId,
-                1, LocalDate.of(2026, 9, 22), new Precio(50000));
+                1, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(50000));
         compra.cancelar();
         repository.guardar(compra);
 

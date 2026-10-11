@@ -10,7 +10,9 @@ import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -27,8 +29,11 @@ public class RealizarCompraUseCase {
     private final UsuarioRepository usuarioRepository;
     private final VendedorRepository vendedorRepository;
     private final PreventaRepository preventaRepository;
+    private final Clock clock;
 
-    public Compra ejecutar(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha) {
+    public Compra ejecutar(UUID usuarioId, UUID productoId, int cantidad) {
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
         Usuario usuario = usuarioRepository.obtenerPorId(usuarioId)
                 .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
         usuario.asegurarActivo();
@@ -38,23 +43,22 @@ public class RealizarCompraUseCase {
         producto.asegurarNoEliminado();
 
         preventaRepository.obtenerPorProductoId(productoId)
-                .ifPresent(preventa -> preventa.validarAcceso(fecha));
+                .ifPresent(preventa -> preventa.validarAcceso(ahora.toLocalDate()));
 
         Vendedor vendedor = vendedorRepository.obtenerPorId(producto.getVendedorId())
                 .orElseThrow(() -> new ReglaDominioException("El vendedor del producto no existe"));
         vendedor.asegurarActivo();
 
-        boolean usuarioYaTieneEsteProducto = compraRepository.existeCompraDe(usuarioId, productoId);
-        producto.validarCompraExclusiva(usuarioYaTieneEsteProducto, cantidad);
+        boolean yaLoTiene = compraRepository.existeCompraDe(usuarioId, productoId);
+        producto.validarCompraExclusiva(yaLoTiene, cantidad);
 
         producto.reducirStock(cantidad);
 
-        Compra compra = Compra.realizar(id, usuarioId, productoId, cantidad, fecha,
-                new Precio(producto.getPrecio()));
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId, cantidad,
+                ahora, new Precio(producto.getPrecio()));
 
         productoRepository.guardar(producto);
         compraRepository.guardar(compra);
-
         return compra;
     }
 }
