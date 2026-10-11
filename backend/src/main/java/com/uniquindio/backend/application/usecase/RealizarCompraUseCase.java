@@ -5,10 +5,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
-import com.uniquindio.backend.domain.repository.CompraRepository;
-import com.uniquindio.backend.domain.repository.ProductoRepository;
-import com.uniquindio.backend.domain.repository.UsuarioRepository;
-import com.uniquindio.backend.domain.repository.VendedorRepository;
+import com.uniquindio.backend.domain.repository.*;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +26,7 @@ public class RealizarCompraUseCase {
     private final CompraRepository compraRepository;
     private final UsuarioRepository usuarioRepository;
     private final VendedorRepository vendedorRepository;
+    private final PreventaRepository preventaRepository;
 
     public Compra ejecutar(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha) {
         Usuario usuario = usuarioRepository.obtenerPorId(usuarioId)
@@ -38,6 +36,9 @@ public class RealizarCompraUseCase {
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
         producto.asegurarNoEliminado();
+
+        preventaRepository.obtenerPorProductoId(productoId)
+                .ifPresent(preventa -> preventa.validarAcceso(fecha));
 
         Vendedor vendedor = vendedorRepository.obtenerPorId(producto.getVendedorId())
                 .orElseThrow(() -> new ReglaDominioException("El vendedor del producto no existe"));
