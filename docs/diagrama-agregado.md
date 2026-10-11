@@ -13,6 +13,8 @@
 - Un producto no puede eliminarse si tiene compras activas sujetas a reembolso — solo eliminación lógica (soft delete).
 - Un producto exclusivo solo puede ser comprado una vez por el mismo usuario.
 - El precio de un producto debe ser siempre positivo.
+- Un producto exclusivo solo puede comprarse una vez por usuario y de a una unidad.
+- Un descuento debe ser mayor a 0 y menor a 100, y no puede aplicarse a un producto eliminado.
 
 ---
 
@@ -39,12 +41,11 @@
 
 ### Invariantes
 
-- Un regalo no podrá ser enviado si no se ha elegido el usuario al que se envía.
-- Un regalo no podrá ser elegido varias veces a un usuario.
-- Un regalo no podrá ser entregado si no se ha enviado.
-- Un regalo no podrá ser enviado si el usuario no confirma la recepción del mismo.
-- Cuando un regalo sea entregado no podrá cambiar de estado.
-- Un regalo no puede ser elegido a un usuario que ya posea ese producto.
+- Un regalo no puede enviarse si no se ha elegido el usuario destinatario.
+- Un regalo solo puede elegirse una vez, y nunca para un usuario que ya posee ese producto.
+- Un regalo no puede marcarse como entregado si no fue enviado, ni sin la confirmación de su destinatario.
+- Un regalo ENTREGADO o CANCELADO no puede cambiar de estado.
+- Un regalo está asociado a un producto o a un combo, nunca a ambos ni a ninguno.
 
 ---
 
@@ -56,10 +57,9 @@
 
 ### Invariantes
 
-- Una compra nace en estado PENDIENTE y solo puede confirmarse una vez (pasa a COMPLETADA).
-- El precio unitario de una compra queda fijo al momento de crearla — cambios futuros en el precio del producto no afectan compras ya realizadas.
-- Un comprador no puede calificar (reseñar) un producto sin haberlo comprado y sin que la compra esté COMPLETADA.
-- Máximo una reseña por compra.
-- Los puntos de una compra solo se asignan después de haber registrado la reseña, y solo una vez.
-- Una compra solo puede reembolsarse si está COMPLETADA, dentro de un plazo definido y antes de haber descargado el archivo.
-- Una compra REEMBOLSADA, CANCELADA o EXPIRADA es final: no admite ningún cambio de estado.
+- Una compra nace PENDIENTE y solo puede confirmarse una vez.
+- El precio unitario queda fijo al crear la compra; cambios posteriores del producto no la afectan.
+- Solo se reseña una compra COMPLETADA, y máximo una vez.
+- Los puntos solo se asignan después de reseñar, y una sola vez.
+- Una compra solo se reembolsa si está COMPLETADA, dentro de 48 horas, sin descarga y sin puntos asignados.
+- Una compra REEMBOLSADA, CANCELADA o EXPIRADA no puede cambiar de estado.
