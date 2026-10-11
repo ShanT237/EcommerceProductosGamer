@@ -101,6 +101,19 @@ class ProductoTest {
     }
 
     @Test
+    @DisplayName("aplicarDescuento reduce el precio y rechaza porcentajes inválidos")
+    void aplicarDescuento() {
+        Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Desc",
+                100, 5, Gama.MEDIA, Exclusividad.NORMAL);
+
+        producto.aplicarDescuento(10);
+        assertEquals(90.0, producto.getPrecio(), 0.001);
+
+        assertThrows(ReglaDominioException.class, () -> producto.aplicarDescuento(0));
+        assertThrows(ReglaDominioException.class, () -> producto.aplicarDescuento(100));
+    }
+
+    @Test
     @DisplayName("Elimina lógicamente un producto sin compras activas (Regla 3)")
     void eliminarSinComprasActivas() {
         Producto producto = crearProductoValido();

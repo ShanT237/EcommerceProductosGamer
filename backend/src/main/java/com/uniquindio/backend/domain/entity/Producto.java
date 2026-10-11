@@ -3,6 +3,7 @@ package com.uniquindio.backend.domain.entity;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -24,7 +25,7 @@ public class Producto {
     private final UUID vendedorId;
     private final String nombre;
     private final String descripcion;
-    private final double precio;
+    private double precio;
     private int stock;
     private final Gama gama;
     private final Exclusividad exclusividad;
@@ -127,6 +128,14 @@ public class Producto {
             throw new ReglaDominioException(
                     "Un producto exclusivo solo puede comprarse en cantidad de una unidad");
         }
+    }
+
+    public void aplicarDescuento(double porcentaje) {
+        asegurarNoEliminado();
+        if (porcentaje <= 0) {
+            throw new ReglaDominioException("El descuento debe ser mayor a cero");
+        }
+        this.precio = new Precio(this.precio).aplicarDescuento(porcentaje).valor();
     }
 
     @Override
