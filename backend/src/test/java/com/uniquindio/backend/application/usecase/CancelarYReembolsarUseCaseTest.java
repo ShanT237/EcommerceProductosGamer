@@ -39,11 +39,11 @@ class CancelarYReembolsarUseCaseTest {
     void cancelarCompraRestituyeStock() {
         UUID usuarioId = UUID.randomUUID();
         UUID vendedorId = UUID.randomUUID();
-        Producto producto = new Producto(UUID.randomUUID(), vendedorId, "Silla Gamer", "Ergonómica", 200.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Silla Gamer", "Ergonómica", 200.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
         producto.reducirStock(2); // Quedan 8
         productoRepository.guardar(producto);
 
-        Compra compra = new Compra(UUID.randomUUID(), usuarioId, producto.getId(), 2, LocalDate.now(), new Precio(200.0));
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), 2, LocalDate.now(), new Precio(200.0));
         compraRepository.guardar(compra);
 
         Compra compraCancelada = cancelarUseCase.ejecutar(compra.getId(), usuarioId);
@@ -57,11 +57,11 @@ class CancelarYReembolsarUseCaseTest {
     void reembolsarCompraRestituyeStock() {
         UUID usuarioId = UUID.randomUUID();
         UUID vendedorId = UUID.randomUUID();
-        Producto producto = new Producto(UUID.randomUUID(), vendedorId, "Headset Gamer", "7.1 Surround", 80.0, 5, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Headset Gamer", "7.1 Surround", 80.0, 5, Gama.MEDIA, Exclusividad.NORMAL);
         producto.reducirStock(1); // Quedan 4
         productoRepository.guardar(producto);
 
-        Compra compra = new Compra(UUID.randomUUID(), usuarioId, producto.getId(), 1, LocalDate.now(), new Precio(80.0));
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), 1, LocalDate.now(), new Precio(80.0));
         compra.confirmar(); // PENDIENTE -> COMPLETADA
         compraRepository.guardar(compra);
 

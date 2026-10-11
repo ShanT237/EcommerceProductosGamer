@@ -24,26 +24,30 @@ public class Notificacion {
     private final LocalDateTime fecha;
     private boolean leida;
 
-    public static Notificacion porCambioEnWishlist(UUID usuarioId, Producto producto,
-                                                   TipoNotificacion tipo, String detalle) {
-        String mensaje = String.format("El producto '%s' en tu lista de deseos ha cambiado: %s",
-                producto.getNombre(), detalle);
-        return new Notificacion(UUID.randomUUID(), usuarioId, producto.getId(), tipo, mensaje, LocalDateTime.now());
+    private Notificacion(UUID id, UUID usuarioId, UUID productoId, TipoNotificacion tipo,
+                         String mensaje, LocalDateTime fecha) {
+        this.id = id;
+        this.usuarioId = usuarioId;
+        this.productoId = productoId;
+        this.tipo = tipo;
+        this.mensaje = mensaje;
+        this.fecha = fecha;
+        this.leida = false;
     }
 
-    public Notificacion(UUID id, UUID usuarioId, UUID productoId, TipoNotificacion tipo, String mensaje, LocalDateTime fecha) {
-        this.id = Objects.requireNonNull(id, "El id de la notificación es obligatorio");
-        this.usuarioId = Objects.requireNonNull(usuarioId, "El usuarioId es obligatorio");
-        this.productoId = Objects.requireNonNull(productoId, "El productoId es obligatorio");
-        this.tipo = Objects.requireNonNull(tipo, "El tipo de notificación es obligatorio");
-        this.fecha = Objects.requireNonNull(fecha, "La fecha es obligatoria");
-
-        if (mensaje == null || mensaje.isBlank()) {
+    public static Notificacion porCambioEnWishlist(UUID usuarioId, Producto producto,
+                                                   TipoNotificacion tipo, String detalle) {
+        Objects.requireNonNull(usuarioId, "El usuarioId es obligatorio");
+        Objects.requireNonNull(producto, "El producto es obligatorio");
+        Objects.requireNonNull(tipo, "El tipo de notificación es obligatorio");
+        if (detalle == null || detalle.isBlank()) {
             throw new ReglaDominioException("El mensaje de la notificación no puede estar vacío");
         }
 
-        this.mensaje = mensaje;
-        this.leida = false;
+        String mensaje = String.format("El producto '%s' en tu lista de deseos ha cambiado: %s",
+                producto.getNombre(), detalle);
+        return new Notificacion(UUID.randomUUID(), usuarioId, producto.getId(), tipo,
+                mensaje, LocalDateTime.now());
     }
 
     public void marcarComoLeida() {
