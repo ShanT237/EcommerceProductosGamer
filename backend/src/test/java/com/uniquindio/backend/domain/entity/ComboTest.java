@@ -43,6 +43,25 @@ class ComboTest {
     }
 
     @Test
+    @DisplayName("Rechaza un descuento del 100%")
+    void rechazaDescuentoDelCienPorCiento() {
+        assertThrows(ReglaDominioException.class, () -> Combo.crear(UUID.randomUUID(), UUID.randomUUID(),
+                "Combo", "Gratis", 100.0, List.of(UUID.randomUUID(), UUID.randomUUID())));
+    }
+
+    @Test
+    @DisplayName("Rechaza calcular el precio con productos que no son los del combo")
+    void rechazaProductosQueNoCoinciden() {
+        UUID vendedorId = UUID.randomUUID();
+        Producto p1 = Producto.publicar(UUID.randomUUID(), vendedorId, "Teclado", "Mecánico", 100.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto p2 = Producto.publicar(UUID.randomUUID(), vendedorId, "Mouse", "Óptico", 50.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto ajeno = Producto.publicar(UUID.randomUUID(), vendedorId, "Silla", "Ergonómica", 200.0, 10, Gama.ALTA, Exclusividad.NORMAL);
+        Combo combo = Combo.crear(UUID.randomUUID(), vendedorId, "Combo", "Setup", 10.0, List.of(p1.getId(), p2.getId()));
+
+        assertThrows(ReglaDominioException.class, () -> combo.calcularPrecioTotal(List.of(p1, ajeno)));
+    }
+
+    @Test
     @DisplayName("Rechaza crear un combo con menos de dos productos (Regla 5) o con productos duplicados")
     void rechazaComboInvalidoOConDuplicados() {
         UUID id = UUID.randomUUID();

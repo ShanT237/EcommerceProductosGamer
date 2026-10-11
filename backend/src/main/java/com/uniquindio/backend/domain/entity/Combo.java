@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Entidad Combo.
@@ -51,8 +53,8 @@ public class Combo {
         if (descripcion == null || descripcion.isBlank()) {
             throw new ReglaDominioException("La descripción del combo no puede estar vacía");
         }
-        if (descuento < 0 || descuento > 100) {
-            throw new ReglaDominioException("El porcentaje de descuento debe estar entre 0 y 100");
+        if (descuento < 0 || descuento >= 100) {
+            throw new ReglaDominioException("El descuento debe ser mayor o igual a 0 y menor que 100");
         }
         if (productosIniciales == null || productosIniciales.size() < 2) {
             throw new ReglaDominioException("Un combo debe estar formado por dos o más productos");
@@ -88,11 +90,14 @@ public class Combo {
      * Calcula el precio total del combo con descuento aplicado sobre la suma de sus productos.
      */
     public double calcularPrecioTotal(List<Producto> productosDelCombo) {
-        if (productosDelCombo == null || productosDelCombo.size() != productos.size()) {
-            throw new ReglaDominioException("Debe proporcionar la lista completa de productos que conforman el combo");
+        if (productosDelCombo == null
+                || productosDelCombo.size() != productos.size()
+                || !productosDelCombo.stream().map(Producto::getId).collect(Collectors.toSet())
+                .equals(new HashSet<>(productos))) {
+            throw new ReglaDominioException("Los productos recibidos no coinciden con los del combo");
         }
-        double sumaPrecios = productosDelCombo.stream().mapToDouble(Producto::getPrecio).sum();
-        return sumaPrecios * (1.0 - (descuento / 100.0));
+        double suma = productosDelCombo.stream().mapToDouble(Producto::getPrecio).sum();
+        return new Precio(suma).aplicarDescuento(descuento).valor();
     }
 
     @Override
