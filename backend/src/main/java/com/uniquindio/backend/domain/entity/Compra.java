@@ -128,6 +128,10 @@ public class Compra {
         if (descargado) {
             throw new ReglaDominioException("No se puede reembolsar una compra cuyo archivo ya fue descargado");
         }
+        if (puntosAsignados) {
+            throw new ReglaDominioException(
+                    "No se puede reembolsar una compra cuyos puntos ya fueron asignados");
+        }
         if (fechaSolicitud.isAfter(fecha.plusDays(plazoDias))) {
             throw new ReglaDominioException("El plazo para solicitar el reembolso ha expirado");
         }

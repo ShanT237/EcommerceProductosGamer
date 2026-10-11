@@ -142,6 +142,17 @@ class CompraTest {
     }
 
     @Test
+    @DisplayName("Rechaza reembolsar una compra cuyos puntos ya fueron asignados")
+    void rechazaReembolsarSiYaSeAsignaronPuntos() {
+        Compra compra = crearCompraCompletada();
+        compra.registrarResena();
+        compra.asignarPuntosPorResena();
+
+        assertThrows(ReglaDominioException.class,
+                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2));
+        assertEquals(EstadoCompra.COMPLETADA, compra.getEstado());
+    }
+    @Test
     @DisplayName("Rechaza reembolsar una compra cuyo archivo ya fue descargado")
     void rechazaReembolsarSiYaFueDescargado() {
         Compra compra = crearCompraCompletada();
