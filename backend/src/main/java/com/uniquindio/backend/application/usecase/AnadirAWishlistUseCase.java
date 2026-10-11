@@ -33,7 +33,7 @@ public class AnadirAWishlistUseCase {
         producto.asegurarNoEliminado();
 
         Wishlist wishlist = wishlistRepository.obtenerPorUsuarioId(usuarioId)
-                .orElse(new Wishlist(wishlistId, usuarioId));
+                .orElseGet(() -> Wishlist.crear(wishlistId, usuarioId));
 
         wishlist.agregarProducto(productoId);
 
