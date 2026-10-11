@@ -48,7 +48,8 @@ public class RealizarCompraUseCase {
 
         producto.reducirStock(cantidad);
 
-        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, new Precio(producto.getPrecio()));
+        Compra compra = Compra.realizar(id, usuarioId, productoId, cantidad, fecha,
+                new Precio(producto.getPrecio()));
 
         productoRepository.guardar(producto);
         compraRepository.guardar(compra);

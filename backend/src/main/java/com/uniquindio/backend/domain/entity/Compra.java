@@ -35,22 +35,31 @@ public class Compra {
 
     private static final int PUNTOS_POR_RESENA = 10;
 
-    public Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha, Precio precioUnitario) {
-        this.id = Objects.requireNonNull(id, "El id de la compra es obligatorio");
-        this.usuarioId = Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
-        this.productoId = Objects.requireNonNull(productoId, "El id del producto es obligatorio");
-        this.fecha = Objects.requireNonNull(fecha, "La fecha de la compra es obligatoria");
-        this.precioUnitario = Objects.requireNonNull(precioUnitario, "El precio unitario de la compra es obligatorio");
-
-        if (cantidad <= 0) {
-            throw new ReglaDominioException("La cantidad de la compra debe ser positiva");
-        }
-
+    private Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                   LocalDate fecha, Precio precioUnitario) {
+        this.id = id;
+        this.usuarioId = usuarioId;
+        this.productoId = productoId;
         this.cantidad = cantidad;
+        this.fecha = fecha;
+        this.precioUnitario = precioUnitario;
         this.estado = EstadoCompra.PENDIENTE;
         this.resenada = false;
         this.puntosAsignados = false;
         this.descargado = false;
+    }
+
+    public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                  LocalDate fecha, Precio precioUnitario) {
+        Objects.requireNonNull(id, "El id de la compra es obligatorio");
+        Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
+        Objects.requireNonNull(productoId, "El id del producto es obligatorio");
+        Objects.requireNonNull(fecha, "La fecha de la compra es obligatoria");
+        Objects.requireNonNull(precioUnitario, "El precio unitario de la compra es obligatorio");
+        if (cantidad <= 0) {
+            throw new ReglaDominioException("La cantidad de la compra debe ser positiva");
+        }
+        return new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario);
     }
 
     /**

@@ -16,7 +16,7 @@ class CompraTest {
     private static final LocalDate FECHA_COMPRA = LocalDate.of(2026, 9, 17);
 
     private Compra crearCompraValida() {
-        return new Compra(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        return Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 2, FECHA_COMPRA, new Precio(50000));
     }
 
@@ -38,7 +38,7 @@ class CompraTest {
         UUID productoId = UUID.randomUUID();
         Precio precio = new Precio(50000);
 
-        Compra compra = new Compra(id, usuarioId, productoId, 3, FECHA_COMPRA, precio);
+        Compra compra = Compra.realizar(id, usuarioId, productoId, 3, FECHA_COMPRA, precio);
 
         assertEquals(id, compra.getId());
         assertEquals(usuarioId, compra.getUsuarioId());
@@ -52,19 +52,19 @@ class CompraTest {
         assertFalse(compra.isDescargado());
 
         assertThrows(ReglaDominioException.class,
-                () -> new Compra(id, usuarioId, productoId, 0, FECHA_COMPRA, precio));
+                () -> Compra.realizar(id, usuarioId, productoId, 0, FECHA_COMPRA, precio));
         assertThrows(ReglaDominioException.class,
-                () -> new Compra(id, usuarioId, productoId, -1, FECHA_COMPRA, precio));
+                () -> Compra.realizar(id, usuarioId, productoId, -1, FECHA_COMPRA, precio));
         assertThrows(NullPointerException.class,
-                () -> new Compra(id, usuarioId, productoId, 1, null, precio));
+                () -> Compra.realizar(id, usuarioId, productoId, 1, null, precio));
         assertThrows(NullPointerException.class,
-                () -> new Compra(id, usuarioId, productoId, 1, FECHA_COMPRA, null));
+                () -> Compra.realizar(id, usuarioId, productoId, 1, FECHA_COMPRA, null));
     }
 
     @Test
     @DisplayName("El subtotal se calcula con el precio guardado en la compra, no con el actual del producto")
     void calculaSubtotalConElPrecioGuardado() {
-        Compra compra = new Compra(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        Compra compra = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 3, FECHA_COMPRA, new Precio(10000));
 
         assertEquals(new Precio(30000), compra.getSubtotal());
@@ -254,9 +254,9 @@ class CompraTest {
     void identidadPorId() {
         UUID id = UUID.randomUUID();
         Precio precio = new Precio(50000);
-        Compra compra1 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 1, FECHA_COMPRA, precio);
-        Compra compra2 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 5, FECHA_COMPRA, precio);
-        Compra compra3 = new Compra(UUID.randomUUID(), UUID.randomUUID(),
+        Compra compra1 = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(), 1, FECHA_COMPRA, precio);
+        Compra compra2 = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(), 5, FECHA_COMPRA, precio);
+        Compra compra3 = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(),
                 UUID.randomUUID(), 1, FECHA_COMPRA, precio);
 
         assertEquals(compra1, compra2);
