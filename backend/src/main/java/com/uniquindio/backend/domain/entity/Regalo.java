@@ -26,6 +26,7 @@ public class Regalo {
     private final UUID idProducto;
     private UUID idUsuario;
     private final UUID idCombo;
+    private boolean notificado;
 
     private Regalo(UUID id, UUID idProducto, UUID idCombo) {
         this.id = Objects.requireNonNull(id, "El id del regalo es obligatorio");
@@ -36,8 +37,9 @@ public class Regalo {
     }
 
     public static Regalo crear(UUID id, UUID idProducto, UUID idCombo) {
-        if (idProducto == null && idCombo == null) {
-            throw new ReglaDominioException("Un regalo debe estar asociado a un producto o a un combo");
+        if ((idProducto == null) == (idCombo == null)) {
+            throw new ReglaDominioException(
+                    "Un regalo debe estar asociado a un producto o a un combo, pero no a ambos");
         }
         return new Regalo(id, idProducto, idCombo);
     }
@@ -63,6 +65,10 @@ public class Regalo {
         if (!this.idUsuario.equals(idUsuario)) {
             throw new ReglaDominioException("Solo se notifica al usuario al que se le eligió el regalo");
         }
+        if (this.notificado) {
+            throw new ReglaDominioException("El regalo ya fue notificado al usuario");
+        }
+        this.notificado = true;
     }
 
     public void enviar() {
@@ -72,9 +78,12 @@ public class Regalo {
         this.estado = EstadoRegalo.ENVIADO;
     }
 
-    public void confirmarEntrega() {
+    public void confirmarEntrega(UUID idUsuarioQueConfirma) {
         if (this.estado != EstadoRegalo.ENVIADO) {
             throw new ReglaDominioException("Un regalo no puede entregarse si no ha sido enviado");
+        }
+        if (!this.idUsuario.equals(idUsuarioQueConfirma)) {
+            throw new ReglaDominioException("Solo el usuario destinatario puede confirmar la recepción");
         }
         this.estado = EstadoRegalo.ENTREGADO;
         this.fechaEntrega = LocalDateTime.now();
