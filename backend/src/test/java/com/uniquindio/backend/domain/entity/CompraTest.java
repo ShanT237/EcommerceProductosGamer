@@ -285,4 +285,35 @@ class CompraTest {
         assertEquals(compra1.hashCode(), compra2.hashCode());
         assertNotEquals(compra1, compra3);
     }
+
+    @Test
+    @DisplayName("Cancela una compra pendiente y rechaza cancelar una completada")
+    void cancelar() {
+        Compra pendiente = crearCompraValida();
+        pendiente.cancelar();
+        assertEquals(EstadoCompra.CANCELADA, pendiente.getEstado());
+
+        assertThrows(ReglaDominioException.class, () -> crearCompraCompletada().cancelar());
+    }
+
+    @Test
+    @DisplayName("Expira una compra pendiente y rechaza expirar una completada")
+    void expirar() {
+        Compra pendiente = crearCompraValida();
+        pendiente.expirar();
+        assertEquals(EstadoCompra.EXPIRADA, pendiente.getEstado());
+
+        assertThrows(ReglaDominioException.class, () -> crearCompraCompletada().expirar());
+    }
+
+    @Test
+    @DisplayName("Una compra CANCELADA es final: no se confirma ni se reembolsa")
+    void canceladaEsFinal() {
+        Compra compra = crearCompraValida();
+        compra.cancelar();
+
+        assertThrows(ReglaDominioException.class, compra::confirmar);
+        assertThrows(ReglaDominioException.class, () -> compra.solicitarReembolso(FECHA_COMPRA.plusHours(1)));
+        assertEquals(EstadoCompra.CANCELADA, compra.getEstado());
+    }
 }

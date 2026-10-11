@@ -82,29 +82,35 @@ public class Compra {
         }
     }
 
+    private void verificarTransicion(EstadoCompra siguiente) {
+        if (estado.esFinal()) {
+            throw new ReglaDominioException(
+                    "Una compra " + estado + " no puede cambiar de estado");
+        }
+        if (!estado.puedeTransicionarA(siguiente)) {
+            throw new ReglaDominioException(
+                    "No se puede pasar de " + estado + " a " + siguiente);
+        }
+    }
+
     /**
      * Confirma el pago de la compra (simulación de pago exitosa).
      */
     public void confirmar() {
-        if (estado != EstadoCompra.PENDIENTE) {
-            throw new ReglaDominioException("Solo se puede confirmar una compra pendiente");
-        }
+        verificarTransicion(EstadoCompra.COMPLETADA);
         this.estado = EstadoCompra.COMPLETADA;
     }
 
     public void cancelar() {
-        if (estado != EstadoCompra.PENDIENTE) {
-            throw new ReglaDominioException("Solo se puede cancelar una compra pendiente");
-        }
+        verificarTransicion(EstadoCompra.CANCELADA);
         this.estado = EstadoCompra.CANCELADA;
     }
 
     public void expirar() {
-        if (estado != EstadoCompra.PENDIENTE) {
-            throw new ReglaDominioException("Solo se puede expirar una compra pendiente");
-        }
+        verificarTransicion(EstadoCompra.EXPIRADA);
         this.estado = EstadoCompra.EXPIRADA;
     }
+
 
     /**
      * Marca el archivo/producto como descargado. Una vez descargado,
@@ -124,9 +130,7 @@ public class Compra {
     public void solicitarReembolso(LocalDateTime ahora) {
         Objects.requireNonNull(ahora, "La fecha de solicitud es obligatoria");
 
-        if (estado != EstadoCompra.COMPLETADA) {
-            throw new ReglaDominioException("Solo se puede reembolsar una compra completada");
-        }
+        verificarTransicion(EstadoCompra.REEMBOLSADA);   // primero valida, después cambia
         if (descargado) {
             throw new ReglaDominioException("No se puede reembolsar una compra cuyo archivo ya fue descargado");
         }
