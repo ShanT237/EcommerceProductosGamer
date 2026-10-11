@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
- * Caso de uso: EliminarProducto (CU-08).
+ * Caso de uso: EliminarProducto (CU-06).
  * Orquesta la desactivación de un producto: consulta si tiene compras activas
  * y delega en Producto.eliminar(...) la decisión de negocio (Regla 3).
  */
