@@ -44,16 +44,24 @@ public class Regalo {
         return new Regalo(id, idProducto, idCombo);
     }
 
+    private void verificarTransicion(EstadoRegalo siguiente) {
+        if (estado.esFinal()) {
+            throw new ReglaDominioException(
+                    "Un regalo " + estado.name().toLowerCase() + " no puede cambiar de estado");
+        }
+        if (!estado.puedeTransicionarA(siguiente)) {
+            throw new ReglaDominioException(
+                    "No se puede pasar de " + estado + " a " + siguiente);
+        }
+    }
+
     public void elegir(UUID idUsuario, boolean usuarioYaPoseeElProducto) {
         Objects.requireNonNull(idUsuario, "El id del usuario es obligatorio para elegir el regalo");
 
-        if (this.estado != EstadoRegalo.DISPONIBLE) {
-            throw new ReglaDominioException("El regalo ya fue elegido, no se puede reasignar a otro usuario");
-        }
+        verificarTransicion(EstadoRegalo.ELEGIDO);
         if (usuarioYaPoseeElProducto) {
             throw new ReglaDominioException("El regalo no puede elegirse a un usuario que ya posee ese producto");
         }
-
         this.idUsuario = idUsuario;
         this.estado = EstadoRegalo.ELEGIDO;
     }
@@ -72,16 +80,12 @@ public class Regalo {
     }
 
     public void enviar() {
-        if (this.estado != EstadoRegalo.ELEGIDO) {
-            throw new ReglaDominioException("Un regalo no puede enviarse si no ha sido elegido");
-        }
+        verificarTransicion(EstadoRegalo.ENVIADO);
         this.estado = EstadoRegalo.ENVIADO;
     }
 
     public void confirmarEntrega(UUID idUsuarioQueConfirma) {
-        if (this.estado != EstadoRegalo.ENVIADO) {
-            throw new ReglaDominioException("Un regalo no puede entregarse si no ha sido enviado");
-        }
+        verificarTransicion(EstadoRegalo.ENTREGADO);
         if (!this.idUsuario.equals(idUsuarioQueConfirma)) {
             throw new ReglaDominioException("Solo el usuario destinatario puede confirmar la recepción");
         }
@@ -90,12 +94,7 @@ public class Regalo {
     }
 
     public void cancelarRegalo() {
-        if (this.estado == EstadoRegalo.ENTREGADO) {
-            throw new ReglaDominioException("Un regalo entregado no puede cambiar de estado");
-        }
-        if (this.estado == EstadoRegalo.CANCELADO) {
-            throw new ReglaDominioException("El regalo ya está cancelado");
-        }
+        verificarTransicion(EstadoRegalo.CANCELADO);
         this.estado = EstadoRegalo.CANCELADO;
     }
 
