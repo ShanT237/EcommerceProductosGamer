@@ -5,7 +5,8 @@ import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,31 +27,41 @@ public class Compra {
     private final UUID usuarioId;
     private final UUID productoId;
     private final int cantidad;
-    private final LocalDate fecha;
+    private final LocalDateTime fecha;
     private final Precio precioUnitario;
     private EstadoCompra estado;
     private boolean resenada;
     private boolean puntosAsignados;
     private boolean descargado;
 
+    public static final Duration PLAZO_REEMBOLSO = Duration.ofHours(48);
     private static final int PUNTOS_POR_RESENA = 10;
 
-    public Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad, LocalDate fecha, Precio precioUnitario) {
-        this.id = Objects.requireNonNull(id, "El id de la compra es obligatorio");
-        this.usuarioId = Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
-        this.productoId = Objects.requireNonNull(productoId, "El id del producto es obligatorio");
-        this.fecha = Objects.requireNonNull(fecha, "La fecha de la compra es obligatoria");
-        this.precioUnitario = Objects.requireNonNull(precioUnitario, "El precio unitario de la compra es obligatorio");
-
-        if (cantidad <= 0) {
-            throw new ReglaDominioException("La cantidad de la compra debe ser positiva");
-        }
-
+    private Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                   LocalDateTime fecha, Precio precioUnitario) {
+        this.id = id;
+        this.usuarioId = usuarioId;
+        this.productoId = productoId;
         this.cantidad = cantidad;
+        this.fecha = fecha;
+        this.precioUnitario = precioUnitario;
         this.estado = EstadoCompra.PENDIENTE;
         this.resenada = false;
         this.puntosAsignados = false;
         this.descargado = false;
+    }
+
+    public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                  LocalDateTime fecha, Precio precioUnitario) {
+        Objects.requireNonNull(id, "El id de la compra es obligatorio");
+        Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
+        Objects.requireNonNull(productoId, "El id del producto es obligatorio");
+        Objects.requireNonNull(fecha, "La fecha de la compra es obligatoria");
+        Objects.requireNonNull(precioUnitario, "El precio unitario de la compra es obligatorio");
+        if (cantidad <= 0) {
+            throw new ReglaDominioException("La cantidad de la compra debe ser positiva");
+        }
+        return new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario);
     }
 
     /**
@@ -71,29 +82,35 @@ public class Compra {
         }
     }
 
+    private void verificarTransicion(EstadoCompra siguiente) {
+        if (estado.esFinal()) {
+            throw new ReglaDominioException(
+                    "Una compra " + estado + " no puede cambiar de estado");
+        }
+        if (!estado.puedeTransicionarA(siguiente)) {
+            throw new ReglaDominioException(
+                    "No se puede pasar de " + estado + " a " + siguiente);
+        }
+    }
+
     /**
      * Confirma el pago de la compra (simulación de pago exitosa).
      */
     public void confirmar() {
-        if (estado != EstadoCompra.PENDIENTE) {
-            throw new ReglaDominioException("Solo se puede confirmar una compra pendiente");
-        }
+        verificarTransicion(EstadoCompra.COMPLETADA);
         this.estado = EstadoCompra.COMPLETADA;
     }
 
     public void cancelar() {
-        if (estado != EstadoCompra.PENDIENTE) {
-            throw new ReglaDominioException("Solo se puede cancelar una compra pendiente");
-        }
+        verificarTransicion(EstadoCompra.CANCELADA);
         this.estado = EstadoCompra.CANCELADA;
     }
 
     public void expirar() {
-        if (estado != EstadoCompra.PENDIENTE) {
-            throw new ReglaDominioException("Solo se puede expirar una compra pendiente");
-        }
+        verificarTransicion(EstadoCompra.EXPIRADA);
         this.estado = EstadoCompra.EXPIRADA;
     }
+
 
     /**
      * Marca el archivo/producto como descargado. Una vez descargado,
@@ -110,19 +127,19 @@ public class Compra {
      * Regla: una compra solo puede reembolsarse dentro de un plazo definido
      * y antes de haber descargado el archivo.
      */
-    public void solicitarReembolso(LocalDate fechaSolicitud, int plazoDias) {
-        Objects.requireNonNull(fechaSolicitud, "La fecha de solicitud es obligatoria");
+    public void solicitarReembolso(LocalDateTime ahora) {
+        Objects.requireNonNull(ahora, "La fecha de solicitud es obligatoria");
 
-        if (estado != EstadoCompra.COMPLETADA) {
-            throw new ReglaDominioException("Solo se puede reembolsar una compra completada");
-        }
+        verificarTransicion(EstadoCompra.REEMBOLSADA);   // primero valida, después cambia
         if (descargado) {
             throw new ReglaDominioException("No se puede reembolsar una compra cuyo archivo ya fue descargado");
         }
-        if (fechaSolicitud.isAfter(fecha.plusDays(plazoDias))) {
+        if (puntosAsignados) {
+            throw new ReglaDominioException("No se puede reembolsar una compra cuyos puntos ya fueron asignados");
+        }
+        if (ahora.isAfter(fecha.plus(PLAZO_REEMBOLSO))) {
             throw new ReglaDominioException("El plazo para solicitar el reembolso ha expirado");
         }
-
         this.estado = EstadoCompra.REEMBOLSADA;
     }
 

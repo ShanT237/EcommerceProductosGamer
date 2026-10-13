@@ -3,6 +3,7 @@ package com.uniquindio.backend.domain.entity;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -24,16 +25,29 @@ public class Producto {
     private final UUID vendedorId;
     private final String nombre;
     private final String descripcion;
-    private final double precio;
+    private double precio;
     private int stock;
     private final Gama gama;
     private final Exclusividad exclusividad;
     private boolean eliminado;
 
-    public Producto(UUID id, UUID vendedorId, String nombre, String descripcion, double precio,
-                    int stock, Gama gama, Exclusividad exclusividad) {
-        this.id = Objects.requireNonNull(id, "El id del producto es obligatorio");
-        this.vendedorId = Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
+    private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
+                     double precio, int stock, Gama gama, Exclusividad exclusividad) {
+        this.id = id;
+        this.vendedorId = vendedorId;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.stock = stock;
+        this.gama = gama;
+        this.exclusividad = exclusividad;
+        this.eliminado = false;
+    }
+
+    public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                    double precio, int stock, Gama gama, Exclusividad exclusividad) {
+        Objects.requireNonNull(id, "El id del producto es obligatorio");
+        Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
         Objects.requireNonNull(gama, "La gama del producto es obligatoria");
         Objects.requireNonNull(exclusividad, "La exclusividad del producto es obligatoria");
 
@@ -49,14 +63,7 @@ public class Producto {
         if (stock < 0) {
             throw new ReglaDominioException("El stock del producto no puede ser negativo");
         }
-
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precio = precio;
-        this.stock = stock;
-        this.gama = gama;
-        this.exclusividad = exclusividad;
-        this.eliminado = false;
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad);
     }
 
     public boolean esExclusivo() {
@@ -94,10 +101,11 @@ public class Producto {
      * Cuando no tiene compras activas se marca como eliminado lógicamente.
      */
     public void eliminar(boolean tieneComprasActivas) {
+        if (eliminado) {
+            throw new ReglaDominioException("El producto ya está eliminado");
+        }
         if (tieneComprasActivas) {
-            throw new ReglaDominioException(
-                    "No se puede eliminar un producto que tiene compras activas"
-            );
+            throw new ReglaDominioException("No se puede eliminar un producto que tiene compras activas");
         }
         this.eliminado = true;
     }
@@ -108,12 +116,29 @@ public class Producto {
      * repositorio, si el usuario ya tiene una compra de este producto; el Producto
      * solo decide qué hacer con ese dato.
      */
-    public void validarCompraExclusiva(boolean usuarioYaTieneEsteProducto) {
-        if (esExclusivo() && usuarioYaTieneEsteProducto) {
-            throw new ReglaDominioException(
-                    "El usuario ya compró este producto exclusivo anteriormente"
-            );
+    public void validarCompraExclusiva(boolean usuarioYaTieneEsteProducto, int cantidad) {
+        if (cantidad <= 0) {
+            throw new ReglaDominioException("La cantidad debe ser positiva");
         }
+        if (!esExclusivo()) {
+            return;
+        }
+        if (cantidad > 1) {
+            throw new ReglaDominioException(
+                    "Un producto exclusivo solo puede comprarse en cantidad de una unidad");
+        }
+        if (usuarioYaTieneEsteProducto) {
+            throw new ReglaDominioException(
+                    "El usuario ya compró este producto exclusivo anteriormente");
+        }
+    }
+
+    public void aplicarDescuento(double porcentaje) {
+        asegurarNoEliminado();
+        if (porcentaje <= 0) {
+            throw new ReglaDominioException("El descuento debe ser mayor a cero");
+        }
+        this.precio = new Precio(this.precio).aplicarDescuento(porcentaje).valor();
     }
 
     @Override

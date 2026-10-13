@@ -21,20 +21,24 @@ public class Usuario {
     private int puntos;
     private boolean activo;
 
-    public Usuario(UUID id, String nombre, String correo) {
-        this.id = Objects.requireNonNull(id, "El id del usuario es obligatorio");
+    // Usuario
+    private Usuario(UUID id, String nombre, String correo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.puntos = 0;
+        this.activo = true;
+    }
 
+    public static Usuario registrar(UUID id, String nombre, String correo) {
+        Objects.requireNonNull(id, "El id del usuario es obligatorio");
         if (nombre == null || nombre.isBlank()) {
             throw new ReglaDominioException("El nombre del usuario no puede estar vacío");
         }
         if (correo == null || !correo.contains("@")) {
             throw new ReglaDominioException("El correo del usuario no es válido");
         }
-
-        this.nombre = nombre;
-        this.correo = correo;
-        this.puntos = 0;
-        this.activo = true;
+        return new Usuario(id, nombre, correo);
     }
 
     public void acumularPuntos(int cantidad) {

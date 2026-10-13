@@ -9,7 +9,7 @@ import com.uniquindio.backend.domain.valueobject.Precio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ class RepositoriosEnMemoriaTest {
     @DisplayName("ProductoRepositoryEnMemoria guarda y devuelve el mismo producto por id")
     void guardaYRecuperaProductoPorId() {
         ProductoRepositoryEnMemoria repository = new ProductoRepositoryEnMemoria();
-        Producto producto = new Producto(UUID.randomUUID(), UUID.randomUUID(), "Mouse Gamer", "Mouse RGB 16000dpi",
+        Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse Gamer", "Mouse RGB 16000dpi",
                 150000, 10, Gama.ALTA, Exclusividad.NORMAL);
 
         repository.guardar(producto);
@@ -39,8 +39,8 @@ class RepositoriosEnMemoriaTest {
         CompraRepositoryEnMemoria repository = new CompraRepositoryEnMemoria();
         UUID usuarioId = UUID.randomUUID();
         UUID productoId = UUID.randomUUID();
-        Compra compra = new Compra(UUID.randomUUID(), usuarioId, productoId,
-                1, LocalDate.of(2026, 9, 22), new Precio(50000));
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId,
+                1, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(50000));
 
         assertFalse(repository.existeCompraDe(usuarioId, productoId));
 
@@ -54,7 +54,7 @@ class RepositoriosEnMemoriaTest {
     @DisplayName("UsuarioRepositoryEnMemoria guarda y devuelve el mismo usuario por id")
     void guardaYRecuperaUsuarioPorId() {
         UsuarioRepositoryEnMemoria repository = new UsuarioRepositoryEnMemoria();
-        Usuario usuario = new Usuario(UUID.randomUUID(), "Jose Bedoya", "jose@correo.com");
+        Usuario usuario = Usuario.registrar(UUID.randomUUID(), "Jose Bedoya", "jose@correo.com");
 
         repository.guardar(usuario);
         Optional<Usuario> encontrado = repository.obtenerPorId(usuario.getId());
@@ -68,10 +68,10 @@ class RepositoriosEnMemoriaTest {
     void guardarDosVecesSobreescribeLaMismaCompra() {
         CompraRepositoryEnMemoria repository = new CompraRepositoryEnMemoria();
         UUID id = UUID.randomUUID();
-        Compra compraOriginal = new Compra(id, UUID.randomUUID(), UUID.randomUUID(),
-                1, LocalDate.of(2026, 9, 22), new Precio(30000));
-        Compra compraActualizada = new Compra(id, UUID.randomUUID(), UUID.randomUUID(),
-                5, LocalDate.of(2026, 9, 22), new Precio(30000));
+        Compra compraOriginal = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(),
+                1, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(30000));
+        Compra compraActualizada = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(),
+                5, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(30000));
 
         repository.guardar(compraOriginal);
         repository.guardar(compraActualizada);
@@ -79,5 +79,20 @@ class RepositoriosEnMemoriaTest {
         Optional<Compra> encontrada = repository.obtenerPorId(id);
         assertTrue(encontrada.isPresent());
         assertEquals(5, encontrada.get().getCantidad());
+    }
+
+    @Test
+    @DisplayName("Una compra CANCELADA no cuenta como compra activa del usuario ni del producto")
+    void compraCanceladaNoCuentaComoActiva() {
+        CompraRepositoryEnMemoria repository = new CompraRepositoryEnMemoria();
+        UUID usuarioId = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId,
+                1, LocalDateTime.of(2026, 9, 22, 10, 0), new Precio(50000));
+        compra.cancelar();
+        repository.guardar(compra);
+
+        assertFalse(repository.existeCompraDe(usuarioId, productoId));
+        assertFalse(repository.existeCompraActivaDeProducto(productoId));
     }
 }

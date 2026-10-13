@@ -1,6 +1,7 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.entity.Wishlist;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
@@ -24,21 +25,20 @@ public class AnadirAWishlistUseCase {
     private final ProductoRepository productoRepository;
     private final WishlistRepository wishlistRepository;
 
-    public Wishlist ejecutar(UUID wishlistId, UUID usuarioId, UUID productoId) {
-        usuarioRepository.obtenerPorId(usuarioId)
+    public Wishlist ejecutar(UUID usuarioId, UUID productoId) {
+        Usuario usuario = usuarioRepository.obtenerPorId(usuarioId)
                 .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
+        usuario.asegurarActivo();
 
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
         producto.asegurarNoEliminado();
 
         Wishlist wishlist = wishlistRepository.obtenerPorUsuarioId(usuarioId)
-                .orElse(new Wishlist(wishlistId, usuarioId));
+                .orElseGet(() -> Wishlist.crear(UUID.randomUUID(), usuarioId));
 
         wishlist.agregarProducto(productoId);
-
         wishlistRepository.guardar(wishlist);
-
         return wishlist;
     }
 }

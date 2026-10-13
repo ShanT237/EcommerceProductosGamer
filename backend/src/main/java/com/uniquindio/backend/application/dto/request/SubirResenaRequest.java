@@ -6,9 +6,6 @@ import java.util.UUID;
 
 // Mapea a: Resena.crear()
 public record SubirResenaRequest(
-        @NotBlank(message = "El id de la reseña es obligatorio")
-        String idResena,
-
         @NotNull(message = "La compra es obligatoria")
         UUID idCompra,
 

@@ -6,17 +6,17 @@ import com.uniquindio.backend.domain.valueobject.Precio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CompraTest {
 
-    private static final LocalDate FECHA_COMPRA = LocalDate.of(2026, 9, 17);
+    private static final LocalDateTime FECHA_COMPRA = LocalDateTime.of(2026, 9, 17, 10, 0);
 
     private Compra crearCompraValida() {
-        return new Compra(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        return Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 2, FECHA_COMPRA, new Precio(50000));
     }
 
@@ -38,7 +38,7 @@ class CompraTest {
         UUID productoId = UUID.randomUUID();
         Precio precio = new Precio(50000);
 
-        Compra compra = new Compra(id, usuarioId, productoId, 3, FECHA_COMPRA, precio);
+        Compra compra = Compra.realizar(id, usuarioId, productoId, 3, FECHA_COMPRA, precio);
 
         assertEquals(id, compra.getId());
         assertEquals(usuarioId, compra.getUsuarioId());
@@ -52,19 +52,19 @@ class CompraTest {
         assertFalse(compra.isDescargado());
 
         assertThrows(ReglaDominioException.class,
-                () -> new Compra(id, usuarioId, productoId, 0, FECHA_COMPRA, precio));
+                () -> Compra.realizar(id, usuarioId, productoId, 0, FECHA_COMPRA, precio));
         assertThrows(ReglaDominioException.class,
-                () -> new Compra(id, usuarioId, productoId, -1, FECHA_COMPRA, precio));
+                () -> Compra.realizar(id, usuarioId, productoId, -1, FECHA_COMPRA, precio));
         assertThrows(NullPointerException.class,
-                () -> new Compra(id, usuarioId, productoId, 1, null, precio));
+                () -> Compra.realizar(id, usuarioId, productoId, 1, null, precio));
         assertThrows(NullPointerException.class,
-                () -> new Compra(id, usuarioId, productoId, 1, FECHA_COMPRA, null));
+                () -> Compra.realizar(id, usuarioId, productoId, 1, FECHA_COMPRA, null));
     }
 
     @Test
     @DisplayName("El subtotal se calcula con el precio guardado en la compra, no con el actual del producto")
     void calculaSubtotalConElPrecioGuardado() {
-        Compra compra = new Compra(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        Compra compra = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 3, FECHA_COMPRA, new Precio(10000));
 
         assertEquals(new Precio(30000), compra.getSubtotal());
@@ -94,7 +94,7 @@ class CompraTest {
     @DisplayName("Rechaza confirmar una compra que ya fue REEMBOLSADA")
     void rechazaConfirmarCompraReembolsada() {
         Compra compra = crearCompraCompletada();
-        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2);
+        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1));
 
         assertThrows(ReglaDominioException.class, compra::confirmar);
     }
@@ -127,7 +127,7 @@ class CompraTest {
     void reembolsaDentroDePlazoYSinDescargar() {
         Compra compra = crearCompraCompletada();
 
-        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2);
+        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1));
 
         assertEquals(EstadoCompra.REEMBOLSADA, compra.getEstado());
     }
@@ -138,9 +138,20 @@ class CompraTest {
         Compra compra = crearCompraValida();
 
         assertThrows(ReglaDominioException.class,
-                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2));
+                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1)));
     }
 
+    @Test
+    @DisplayName("Rechaza reembolsar una compra cuyos puntos ya fueron asignados")
+    void rechazaReembolsarSiYaSeAsignaronPuntos() {
+        Compra compra = crearCompraCompletada();
+        compra.registrarResena();
+        compra.asignarPuntosPorResena();
+
+        assertThrows(ReglaDominioException.class,
+                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1)));
+        assertEquals(EstadoCompra.COMPLETADA, compra.getEstado());
+    }
     @Test
     @DisplayName("Rechaza reembolsar una compra cuyo archivo ya fue descargado")
     void rechazaReembolsarSiYaFueDescargado() {
@@ -148,7 +159,7 @@ class CompraTest {
         compra.marcarDescargado();
 
         assertThrows(ReglaDominioException.class,
-                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2));
+                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1)));
         assertEquals(EstadoCompra.COMPLETADA, compra.getEstado());
     }
 
@@ -158,18 +169,29 @@ class CompraTest {
         Compra compra = crearCompraCompletada();
 
         assertThrows(ReglaDominioException.class,
-                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(3), 2));
+                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(3)));
         assertEquals(EstadoCompra.COMPLETADA, compra.getEstado());
+    }
+
+    @Test
+    @DisplayName("El reembolso se acepta justo a las 48 horas y se rechaza un minuto después")
+    void plazoDeReembolsoEsDe48Horas() {
+        Compra enElLimite = crearCompraCompletada();
+        assertDoesNotThrow(() -> enElLimite.solicitarReembolso(FECHA_COMPRA.plusHours(48)));
+
+        Compra fuera = crearCompraCompletada();
+        assertThrows(ReglaDominioException.class,
+                () -> fuera.solicitarReembolso(FECHA_COMPRA.plusHours(48).plusMinutes(1)));
     }
 
     @Test
     @DisplayName("Rechaza reembolsar una compra que ya fue REEMBOLSADA")
     void rechazaReembolsarDosVeces() {
         Compra compra = crearCompraCompletada();
-        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2);
+        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1));
 
         assertThrows(ReglaDominioException.class,
-                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2));
+                () -> compra.solicitarReembolso(FECHA_COMPRA.plusDays(1)));
     }
 
     // ===================== registrarResena() — Regla 2 =====================
@@ -198,7 +220,7 @@ class CompraTest {
     @DisplayName("Rechaza reseñar una compra que fue REEMBOLSADA")
     void rechazaResenarCompraReembolsada() {
         Compra compra = crearCompraCompletada();
-        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1), 2);
+        compra.solicitarReembolso(FECHA_COMPRA.plusDays(1));
 
         assertThrows(ReglaDominioException.class, compra::registrarResena);
         assertFalse(compra.isResenada());
@@ -254,13 +276,44 @@ class CompraTest {
     void identidadPorId() {
         UUID id = UUID.randomUUID();
         Precio precio = new Precio(50000);
-        Compra compra1 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 1, FECHA_COMPRA, precio);
-        Compra compra2 = new Compra(id, UUID.randomUUID(), UUID.randomUUID(), 5, FECHA_COMPRA, precio);
-        Compra compra3 = new Compra(UUID.randomUUID(), UUID.randomUUID(),
+        Compra compra1 = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(), 1, FECHA_COMPRA, precio);
+        Compra compra2 = Compra.realizar(id, UUID.randomUUID(), UUID.randomUUID(), 5, FECHA_COMPRA, precio);
+        Compra compra3 = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(),
                 UUID.randomUUID(), 1, FECHA_COMPRA, precio);
 
         assertEquals(compra1, compra2);
         assertEquals(compra1.hashCode(), compra2.hashCode());
         assertNotEquals(compra1, compra3);
+    }
+
+    @Test
+    @DisplayName("Cancela una compra pendiente y rechaza cancelar una completada")
+    void cancelar() {
+        Compra pendiente = crearCompraValida();
+        pendiente.cancelar();
+        assertEquals(EstadoCompra.CANCELADA, pendiente.getEstado());
+
+        assertThrows(ReglaDominioException.class, () -> crearCompraCompletada().cancelar());
+    }
+
+    @Test
+    @DisplayName("Expira una compra pendiente y rechaza expirar una completada")
+    void expirar() {
+        Compra pendiente = crearCompraValida();
+        pendiente.expirar();
+        assertEquals(EstadoCompra.EXPIRADA, pendiente.getEstado());
+
+        assertThrows(ReglaDominioException.class, () -> crearCompraCompletada().expirar());
+    }
+
+    @Test
+    @DisplayName("Una compra CANCELADA es final: no se confirma ni se reembolsa")
+    void canceladaEsFinal() {
+        Compra compra = crearCompraValida();
+        compra.cancelar();
+
+        assertThrows(ReglaDominioException.class, compra::confirmar);
+        assertThrows(ReglaDominioException.class, () -> compra.solicitarReembolso(FECHA_COMPRA.plusHours(1)));
+        assertEquals(EstadoCompra.CANCELADA, compra.getEstado());
     }
 }
