@@ -23,4 +23,10 @@ public class UsuarioRepositoryEnMemoria implements UsuarioRepository {
     public void guardar(Usuario usuario) {
         usuarios.put(usuario.getId(), usuario);
     }
+
+    @Override
+    public boolean existeConCorreo(String correo) {
+        return usuarios.values().stream()
+                .anyMatch(u -> u.getCorreo().equals(correo));
+    }
 }
