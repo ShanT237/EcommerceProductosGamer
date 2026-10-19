@@ -18,7 +18,7 @@ class WishlistTest {
     void setUp() {
         id = UUID.randomUUID();
         usuarioId = UUID.randomUUID();
-        wishlist = new Wishlist(id, usuarioId);
+        wishlist = Wishlist.crear(id, usuarioId);
     }
 
     @Test
@@ -30,12 +30,12 @@ class WishlistTest {
 
     @Test
     void deberiaLanzarExcepcionSiIdEsNulo() {
-        assertThrows(NullPointerException.class, () -> new Wishlist(null, usuarioId));
+        assertThrows(NullPointerException.class, () -> Wishlist.crear(null, usuarioId));
     }
 
     @Test
     void deberiaLanzarExcepcionSiUsuarioIdEsNulo() {
-        assertThrows(NullPointerException.class, () -> new Wishlist(id, null));
+        assertThrows(NullPointerException.class, () -> Wishlist.crear(id, null));
     }
 
     @Test
@@ -99,7 +99,7 @@ class WishlistTest {
 
     @Test
     void dosWishlistsConMismoIdDebenSerIguales() {
-        Wishlist otra = new Wishlist(id, UUID.randomUUID());
+        Wishlist otra = Wishlist.crear(id, UUID.randomUUID());
 
         assertEquals(wishlist, otra);
         assertEquals(wishlist.hashCode(), otra.hashCode());
@@ -107,7 +107,7 @@ class WishlistTest {
 
     @Test
     void dosWishlistsConDistintoIdNoDebenSerIguales() {
-        Wishlist otra = new Wishlist(UUID.randomUUID(), usuarioId);
+        Wishlist otra = Wishlist.crear(UUID.randomUUID(), usuarioId);
 
         assertNotEquals(wishlist, otra);
     }

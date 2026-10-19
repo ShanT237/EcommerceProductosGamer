@@ -17,7 +17,7 @@ public interface CompraRepository {
     void guardar(Compra compra);
 
     /**
-     * Indica si el usuario ya tiene una compra registrada de ese producto.
+     * Indica si el usuario ya tieneuna compra activa (PENDIENTE o COMPLETADA) de ese producto.
      * La usa RealizarCompraUseCase para poder validar la Regla 9
      * (un producto exclusivo solo se compra una vez por usuario) sin que
      * el caso de uso tenga que decidir nada por su cuenta.

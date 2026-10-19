@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class VendedorTest {
 
     private Vendedor crearVendedorValido() {
-        return new Vendedor(UUID.randomUUID(), "GamerZone SAS", "ventas@gamerzone.com",
+        return Vendedor.registrar(UUID.randomUUID(), "GamerZone SAS", "ventas@gamerzone.com",
                 TipoVendedor.EMPRESA, "900123456-7");
     }
 
@@ -20,7 +20,7 @@ class VendedorTest {
     @DisplayName("Crea un vendedor válido, activo, y falla con datos inválidos")
     void creaVendedorValidoYValidaDatos() {
         UUID id = UUID.randomUUID();
-        Vendedor vendedor = new Vendedor(id, "Juan Pérez", "juan@example.com",
+        Vendedor vendedor = Vendedor.registrar(id, "Juan Pérez", "juan@example.com",
                 TipoVendedor.PERSONA_NATURAL, "1094123456");
 
         assertEquals(id, vendedor.getId());
@@ -32,17 +32,17 @@ class VendedorTest {
         assertFalse(vendedor.esEmpresa());
 
         assertThrows(NullPointerException.class,
-                () -> new Vendedor(null, "Juan", "juan@example.com", TipoVendedor.PERSONA_NATURAL, "123"));
+                () -> Vendedor.registrar(null, "Juan", "juan@example.com", TipoVendedor.PERSONA_NATURAL, "123"));
         assertThrows(NullPointerException.class,
-                () -> new Vendedor(id, "Juan", "juan@example.com", null, "123"));
+                () -> Vendedor.registrar(id, "Juan", "juan@example.com", null, "123"));
         assertThrows(ReglaDominioException.class,
-                () -> new Vendedor(id, "", "juan@example.com", TipoVendedor.PERSONA_NATURAL, "123"));
+                () -> Vendedor.registrar(id, "", "juan@example.com", TipoVendedor.PERSONA_NATURAL, "123"));
         assertThrows(ReglaDominioException.class,
-                () -> new Vendedor(id, "Juan", "correo-invalido.com", TipoVendedor.PERSONA_NATURAL, "123"));
+                () -> Vendedor.registrar(id, "Juan", "correo-invalido.com", TipoVendedor.PERSONA_NATURAL, "123"));
         assertThrows(ReglaDominioException.class,
-                () -> new Vendedor(id, "Juan", null, TipoVendedor.PERSONA_NATURAL, "123"));
+                () -> Vendedor.registrar(id, "Juan", null, TipoVendedor.PERSONA_NATURAL, "123"));
         assertThrows(ReglaDominioException.class,
-                () -> new Vendedor(id, "Juan", "juan@example.com", TipoVendedor.PERSONA_NATURAL, "  "));
+                () -> Vendedor.registrar(id, "Juan", "juan@example.com", TipoVendedor.PERSONA_NATURAL, "  "));
     }
 
     @Test
@@ -55,7 +55,7 @@ class VendedorTest {
     @DisplayName("El mensaje de documento vacío indica qué documento corresponde al tipo")
     void mensajeDocumentoSegunTipo() {
         ReglaDominioException excepcion = assertThrows(ReglaDominioException.class,
-                () -> new Vendedor(UUID.randomUUID(), "GamerZone", "a@b.com", TipoVendedor.EMPRESA, ""));
+                () -> Vendedor.registrar(UUID.randomUUID(), "GamerZone", "a@b.com", TipoVendedor.EMPRESA, ""));
 
         assertTrue(excepcion.getMessage().contains("NIT"));
     }
@@ -100,11 +100,11 @@ class VendedorTest {
     @DisplayName("La identidad del vendedor depende solo del id")
     void identidadPorId() {
         UUID id = UUID.randomUUID();
-        Vendedor vendedor1 = new Vendedor(id, "Nombre A", "a@example.com",
+        Vendedor vendedor1 = Vendedor.registrar(id, "Nombre A", "a@example.com",
                 TipoVendedor.PERSONA_NATURAL, "111");
-        Vendedor vendedor2 = new Vendedor(id, "Nombre B", "b@example.com",
+        Vendedor vendedor2 = Vendedor.registrar(id, "Nombre B", "b@example.com",
                 TipoVendedor.EMPRESA, "222");
-        Vendedor vendedor3 = new Vendedor(UUID.randomUUID(), "Nombre A", "a@example.com",
+        Vendedor vendedor3 = Vendedor.registrar(UUID.randomUUID(), "Nombre A", "a@example.com",
                 TipoVendedor.PERSONA_NATURAL, "111");
 
         assertEquals(vendedor1, vendedor2);
