@@ -163,6 +163,24 @@ public class Producto {
         }
     }
 
+    /**
+     * Cambia el precio base del producto. El precio debe seguir siendo positivo
+     * y un producto eliminado no se modifica.
+     */
+    public void cambiarPrecio(double nuevoPrecio) {
+        asegurarNoEliminado();
+        if (nuevoPrecio <= 0) {
+            throw new ReglaDominioException("El precio del producto debe ser positivo");
+        }
+        this.precio = nuevoPrecio;
+    }
+
+    public void asegurarPerteneceA(UUID vendedorId) {
+        if (!this.vendedorId.equals(vendedorId)) {
+            throw new ReglaDominioException("El producto no pertenece a este vendedor");
+        }
+    }
+
     public void aplicarDescuento(double porcentaje) {
         asegurarNoEliminado();
         if (precioOriginal != null) {
