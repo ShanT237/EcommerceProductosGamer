@@ -70,12 +70,12 @@ Categorías habilitadas en el catálogo:
 | 2 | Solo se reseña una compra `COMPLETADA`; una reseña por usuario y producto. | `Compra.registrarResena`, `Resena.crear`, `SubirResenaUseCase` | ✅ |
 | 3 | No se elimina un producto con compras activas (`PENDIENTE` o `COMPLETADA`); la eliminación es lógica. | `Producto.eliminar`, `EliminarProductoUseCase` | ✅ |
 | 4 | Un producto en preventa no se compra antes de su fecha de lanzamiento. | `Preventa.validarAcceso`, `RealizarCompraUseCase` | ✅ |
-| 5 | Un combo tiene dos o más productos distintos y su descuento es menor a 100%. | `Combo.crear`, `agregarProducto`, `quitarProducto` | ✅ Dominio (sin caso de uso aún) |
+| 5 | Un combo tiene dos o más productos distintos y su descuento es menor a 100%. | `Combo.crear`, `agregarProducto`, `quitarProducto`, `CrearComboUseCase`, `ModificarProductosComboUseCase` | ✅ |
 | 6 | Los puntos se asignan solo después de reseñar, y una sola vez. | `Compra.asignarPuntos`, `SubirResenaUseCase` | ✅ |
 | 7 | Un producto no se repite en la Wishlist ni se agregan productos eliminados. | `Wishlist.agregarProducto`, `AnadirAWishlistUseCase` | ✅ |
-| 8 | Solo se notifica a quienes tienen el producto en su Wishlist, y solo cuando hay descuento. | `Producto.aplicarDescuento`, `NotificarDescuentoWishlistUseCase` | ✅ |
+| 8 | Solo se notifica a quienes tienen el producto en su Wishlist, y solo cuando hay descuento. | `Producto.aplicarDescuento`, `AplicarDescuentoUseCase`, `NotificarDescuentoWishlistUseCase` | ✅ |
 | 9 | Un producto exclusivo se compra una sola vez por usuario y de a una unidad. | `Producto.validarCompraExclusiva` | ✅ |
-| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo` | 🟡 Ciclo del regalo listo; falta la **meta de compras** que lo dispara |
+| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo`, `EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase` | 🟡 Ciclo del regalo listo; falta la **meta de compras** que lo dispara (CU-10) |
 
 ### Reglas adicionales que el código garantiza
 
@@ -88,54 +88,69 @@ Categorías habilitadas en el catálogo:
 
 ## 5. Casos de Uso del Sistema (36 Casos de Uso)
 
+**Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
+
+### 📈 Resumen de avance
+
+| Módulo | ✅ Implementados | 🟡 Parciales | ⏳ Especificados | Total |
+| :--- | :---: | :---: | :---: | :---: |
+| Compras y Checkout | 4 | 0 | 2 | 6 |
+| Productos y Catálogo | 3 | 1 | 4 | 8 |
+| Combos Promocionales | 2 | 0 | 0 | 2 |
+| Reseñas, Puntos y Recompensas | 3 | 0 | 1 | 4 |
+| Lista de Deseos (Wishlist) y Notificaciones | 3 | 0 | 0 | 3 |
+| Usuarios, Vendedores y Autenticación | 2 | 0 | 3 | 5 |
+| Consultas, Métricas y Reportes | 1 | 0 | 7 | 8 |
+| **Total** | **18** | **1** | **17** | **36** |
+
 ### 🛒 Módulo 1: Compras y Checkout
-| Código | Caso de Uso | Estado Código | Actor | Descripción                                                                                                                             |
-| :--- | :--- | :--- | :--- |:----------------------------------------------------------------------------------------------------------------------------------------|
-| `CU-01` | **Realizar Compra** | ✅ Implementado | Comprador | Registra orden `PENDIENTE`, reserva stock, valida producto no eliminado, usuario activo y vendedor activo (`RealizarCompraUseCase`) y valida la fecha de preventa y usa la fecha del servidor. |
-| `CU-09` | **Confirmar Compra** | ✅ Implementado | Comprador / Sistema | Valida el pago y pasa la orden a `COMPLETADA` (`ConfirmarCompraUseCase`).                                                               |
-| `CU-12` | **Cancelar Compra** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`).                         |
-| `CU-13` | **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro de 48 horas, sin descarga y sin puntos asignados, pasa a `REEMBOLSADA` y restituye el stock al inventario (`SolicitarReembolsoUseCase`).       |
-| `CU-16` | **Comprar Combo** | ⏳ Especificado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes.                                                                   |
-| `CU-17` | **Aplicar Cupón de Descuento** | ⏳ Especificado | Comprador | Aplica un código promocional al total del pago previo al checkout.                                                                      |
+| Código | Caso de Uso | Estado Código | Actor | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `CU-01` | **Realizar Compra** | ✅ Implementado | Comprador | Registra la orden `PENDIENTE`, reserva stock y valida producto no eliminado, usuario y vendedor activos, exclusividad y fecha de preventa, usando la fecha del servidor (`RealizarCompraUseCase`). |
+| `CU-09` | **Confirmar Compra** | ✅ Implementado | Comprador / Sistema | Valida el pago y pasa la orden a `COMPLETADA` (`ConfirmarCompraUseCase`). |
+| `CU-12` | **Cancelar Compra** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`). |
+| `CU-13` | **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro de 48 horas, sin descarga y sin puntos asignados; pasa a `REEMBOLSADA` y restituye el stock (`SolicitarReembolsoUseCase`). |
+| `CU-16` | **Comprar Combo** | ⏳ Especificado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes. |
+| `CU-17` | **Aplicar Cupón de Descuento** | ⏳ Especificado | Comprador | Aplica un código promocional al total del pago previo al checkout. |
 
 ### 📦 Módulo 2: Productos y Catálogo
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `CU-04` | **Publicar Producto** | ✅ Implementado | Vendedor | Crea un nuevo producto especificando gama, precio, stock y atributos (`PublicarProductoUseCase`). |
+| `CU-04` | **Publicar Producto** | ✅ Implementado | Vendedor | Crea un nuevo producto especificando gama, precio, stock y atributos; expuesto en `POST /api/productos` (`PublicarProductoUseCase`, `ProductoController`). |
 | `CU-05` | **Modificar Producto** | ⏳ Especificado | Vendedor | Actualiza precio, descripción o disponibilidad de preventa. |
-| `CU-06` | **Eliminar Producto** | ✅ Implementado | Vendedor | Desactiva producto preservando trazabilidad; rechaza baja si hay compras activas (`EliminarProductoUseCase`). |
-| `CU-18` | **Gestionar / Aumentar Stock** | ✅ Implementado | Vendedor | Incrementa el número de unidades disponibles en inventario (`Producto.aumentarStock`). |
+| `CU-06` | **Eliminar Producto** | ✅ Implementado | Vendedor | Desactiva el producto preservando trazabilidad; rechaza la baja si hay compras activas (`EliminarProductoUseCase`). |
+| `CU-18` | **Gestionar / Aumentar Stock** | ✅ Implementado (Dominio) | Vendedor | Incrementa las unidades disponibles en inventario (`Producto.aumentarStock`, usado al cancelar y reembolsar). |
 | `CU-19` | **Editar Información General** | ⏳ Especificado | Vendedor | Actualiza detalles secundarios e imágenes del producto. |
 | `CU-20` | **Filtrar y Buscar Productos** | ⏳ Especificado | Comprador | Búsqueda avanzada por gama, categoría, precio y preventas. |
-| `CU-21` | **Activar / Pausar Publicación** | ⏳ Especificado | Vendedor | Alterna visibilidad del producto en el catálogo sin borrarlo. |
-| `CU-22` | **Configurar Descuento Promocional** | ⏳ Especificado | Vendedor | Establece porcentajes de descuento temporales en un producto. |
+| `CU-21` | **Activar / Pausar Publicación** | ⏳ Especificado | Vendedor | Alterna la visibilidad del producto en el catálogo sin borrarlo. |
+| `CU-22` | **Configurar Descuento Promocional** | 🟡 Parcial | Vendedor | Aplica un porcentaje de descuento a un producto y notifica a quienes lo tienen en su Wishlist (`AplicarDescuentoUseCase`). Falta la vigencia temporal del descuento. |
 
 ### 🎁 Módulo 3: Combos Promocionales
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `CU-07` | **Crear Combo Gamer** | ✅ Implementado (Dominio) | Vendedor | Agrupa 2 o más productos sin duplicados y con descuento en la entidad `Combo`. |
-| `CU-23` | **Modificar Productos de Combo**| ✅ Implementado (Dominio) | Vendedor | Añade o remueve productos garantizando el mínimo de 2 unidades. |
+| `CU-07` | **Crear Combo Gamer** | ✅ Implementado | Vendedor | Agrupa 2 o más productos del vendedor, sin duplicados y con descuento menor a 100% (`CrearComboUseCase`, `Combo.crear`). |
+| `CU-23` | **Modificar Productos de Combo** | ✅ Implementado | Vendedor | Añade o remueve productos garantizando el mínimo de 2 unidades (`ModificarProductosComboUseCase`). |
 
 ### ⭐ Módulo 4: Reseñas, Puntos y Recompensas
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-02` | **Subir Reseña y Asignar Puntos** | ✅ Implementado | Comprador | Publica reseña sobre compra completada, valida 1 reseña por usuario/producto y asigna puntos (`SubirResenaUseCase`). |
-| `CU-08` | **Redimir Puntos por Beneficios** | ✅ Implementado (Dominio) | Comprador | Canjea puntos acumulados con validación de saldo positivo (`Usuario.redimirPuntos`). |
+| `CU-08` | **Redimir Puntos por Beneficios** | ✅ Implementado | Comprador | Canjea puntos acumulados con validación de saldo positivo (`RedimirPuntosUseCase`, `Usuario.redimirPuntos`). |
 | `CU-10` | **Asignar Regalo por Meta** | ⏳ Especificado | Admin / Sistema | Concede regalos del catálogo al cumplir metas acumuladas de compra. |
-| `CU-24` | **Enviar / Confirmar Entrega Regalo**| ⏳ Especificado | Admin / Sistema | Administra la logística y cambio de estado del regalo asignado. |
+| `CU-24` | **Enviar / Confirmar Entrega Regalo** | ✅ Implementado | Admin / Sistema / Comprador | Administra el cambio de estado del regalo: el envío exige que esté elegido y la entrega la confirma solo el destinatario (`EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase`). |
 
 ### ❤️ Módulo 5: Lista de Deseos (Wishlist) y Notificaciones
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `CU-03` | **Añadir a Wishlist** | ✅ Implementado | Comprador | Guarda productos en wishlist evitando duplicados y rechazando eliminados (`AnadirAWishlistUseCase`). |
-| `CU-14` | **Notificar Descuento en Wishlist** | ✅ Implementado | Sistema | notificaciones por descuento a quienes tienen el producto en su Wishlist (`NotificarDescuentoWishlistUseCase`). |
-| `CU-15` | **Quitar de Wishlist** | ✅ Implementado (Dominio) | Comprador | Elimina un producto específico de la lista de deseos (`Wishlist.quitarProducto`). |
+| `CU-03` | **Añadir a Wishlist** | ✅ Implementado | Comprador | Guarda productos en la wishlist evitando duplicados y rechazando eliminados (`AnadirAWishlistUseCase`). |
+| `CU-14` | **Notificar Descuento en Wishlist** | ✅ Implementado | Sistema | Genera notificaciones por descuento para quienes tienen el producto en su Wishlist (`NotificarDescuentoWishlistUseCase`). |
+| `CU-15` | **Quitar de Wishlist** | ✅ Implementado | Comprador | Elimina un producto específico de la lista de deseos (`QuitarDeWishlistUseCase`). |
 
 ### 👤 Módulo 6: Usuarios, Vendedores y Autenticación
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| `CU-11` | **Registrar Usuario / Vendedor** | ⏳ Especificado | Público | Registro de cuentas de compradores o perfiles de vendedor. |
-| `CU-25` | **Dar de Baja Vendedor** | ✅ Implementado (Dominio) | Admin / Vendedor | Desactiva la cuenta del vendedor conservando la historia comercial (`Vendedor.darDeBaja`). |
+| `CU-11` | **Registrar Usuario / Vendedor** | ✅ Implementado | Público | Registro de compradores (correo único) y de vendedores (documento único, cédula o NIT) (`RegistrarUsuarioUseCase`, `RegistrarVendedorUseCase`). |
+| `CU-25` | **Dar de Baja Vendedor** | ✅ Implementado | Admin / Vendedor | Baja lógica del vendedor conservando la historia comercial (`DarDeBajaVendedorUseCase`). |
 | `CU-26` | **Editar Perfil y Seguridad** | ⏳ Especificado | Usuario | Modificación de datos personales, dirección y contraseña. |
 | `CU-27` | **Iniciar Sesión (JWT)** | ⏳ Especificado | Todos | Autenticación con token JWT seguro para el acceso a las APIs. |
 | `CU-28` | **Valorar Vendedor** | ⏳ Especificado | Comprador | Calificación directa del servicio y atención brindada por el vendedor. |
@@ -144,8 +159,8 @@ Categorías habilitadas en el catálogo:
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-29` | **Reporte de Ventas por Vendedor** | ⏳ Especificado | Vendedor | Balance de ingresos, unidades vendidas y comisiones. |
-| `CU-30` | **Reporte de Productos Más Vendidos**| ⏳ Especificado | Admin / Vendedor | Escalafón de productos con mayor volumen de venta y calificación. |
-| `CU-31` | **Consultar Historial de Compras** | ⏳ Especificado | Comprador | Muestra órdenes históricas, comprobantes y estados de entrega. |
+| `CU-30` | **Reporte de Productos Más Vendidos** | ⏳ Especificado | Admin / Vendedor | Escalafón de productos con mayor volumen de venta y calificación. |
+| `CU-31` | **Consultar Historial de Compras** | ✅ Implementado | Comprador | Muestra las compras del usuario, la más reciente primero (`ConsultarHistorialComprasUseCase`). |
 | `CU-32` | **Consultar Historial de Puntos** | ⏳ Especificado | Comprador | Detalle de saldo de puntos ganados y redimidos. |
 | `CU-33` | **Gestionar Metas de Recompensas** | ⏳ Especificado | Admin | Configura umbrales de compras para desbloquear regalos. |
 | `CU-34` | **Alertas de Stock Bajo** | ⏳ Especificado | Vendedor | Reporte de inventario crítico o agotado para reabastecimiento. |
@@ -162,16 +177,22 @@ El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructura
 backend/src/main/java/com/uniquindio/backend/
 ├── domain/                  # Capa de Dominio (Sin dependencias de frameworks)
 │   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion)
-│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, Precio, Exclusividad, TipoNotificacion)
+│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad)
 │   ├── repository/          # Interfaces de Repositorio de Dominio
-│   └── exception/           # Excepciones de Negocio
+│   └── exception/           # Excepciones de Negocio (ReglaDominioException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, PublicarProducto, EliminarProducto, SubirResena, AnadirAWishlist, NotificarCambioWishlist)
-│   └── dto/                 # Data Transfer Objects (DTOs)
+│   ├── usecase/             # Lógica de Orquestación (20 casos de uso)
+│   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, ConsultarHistorialCompras
+│   │   ├── Productos: PublicarProducto, EliminarProducto, AplicarDescuento
+│   │   ├── Combos:    CrearCombo, ModificarProductosCombo
+│   │   ├── Reseñas y recompensas: SubirResena, RedimirPuntos, EnviarRegalo, ConfirmarEntregaRegalo
+│   │   ├── Wishlist:  AnadirAWishlist, QuitarDeWishlist, NotificarDescuentoWishlist
+│   │   └── Cuentas:   RegistrarUsuario, RegistrarVendedor, DarDeBajaVendedor
+│   └── dto/                 # Data Transfer Objects (request y response)
 └── infrastructure/          # Capa de Infraestructura (Spring Boot / Controller / Persistence)
-    ├── rest/                # Controladores REST API
-    ├── persistence/         # Repositorios en Memoria y Persistencia JPA / MariaDB
-    └── config/        ClockConfig
+    ├── rest/                # Controladores REST (ProductoController), mapper (ProductoMapper) y GlobalExceptionHandler
+    ├── persistence/         # Repositorios en Memoria (uno por repositorio de dominio)
+    └── config/              # ClockConfig
 ```
 
 ---
@@ -182,5 +203,3 @@ backend/src/main/java/com/uniquindio/backend/
 cd backend
 .\gradlew.bat test
 ```
-
----
