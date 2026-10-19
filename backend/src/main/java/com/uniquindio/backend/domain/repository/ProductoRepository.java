@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Producto;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +16,9 @@ public interface ProductoRepository {
     Optional<Producto> obtenerPorId(UUID id);
 
     void guardar(Producto producto);
+
+    /**
+     * Todos los productos (cualquier estado). La usan los casos de uso de búsqueda y reportes.
+     */
+    List<Producto> obtenerTodos();
 }

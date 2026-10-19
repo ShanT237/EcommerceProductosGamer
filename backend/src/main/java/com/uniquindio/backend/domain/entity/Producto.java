@@ -21,6 +21,8 @@ import java.util.UUID;
 @Getter
 public class Producto {
 
+    public static final String CATEGORIA_POR_DEFECTO = "General";
+
     private final UUID id;
     private final UUID vendedorId;
     private String nombre;
@@ -31,11 +33,12 @@ public class Producto {
     private int stock;
     private final Gama gama;
     private final Exclusividad exclusividad;
+    private final String categoria;
     private boolean eliminado;
     private boolean pausado;
 
     private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
-                     double precio, int stock, Gama gama, Exclusividad exclusividad) {
+                     double precio, int stock, Gama gama, Exclusividad exclusividad, String categoria) {
         this.id = id;
         this.vendedorId = vendedorId;
         this.nombre = nombre;
@@ -45,11 +48,19 @@ public class Producto {
         this.stock = stock;
         this.gama = gama;
         this.exclusividad = exclusividad;
+        this.categoria = categoria;
         this.eliminado = false;
     }
 
     public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
                                     double precio, int stock, Gama gama, Exclusividad exclusividad) {
+        return publicar(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                CATEGORIA_POR_DEFECTO);
+    }
+
+    public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                    double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                    String categoria) {
         Objects.requireNonNull(id, "El id del producto es obligatorio");
         Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
         Objects.requireNonNull(gama, "La gama del producto es obligatoria");
@@ -67,7 +78,10 @@ public class Producto {
         if (stock < 0) {
             throw new ReglaDominioException("El stock del producto no puede ser negativo");
         }
-        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad);
+        if (categoria == null || categoria.isBlank()) {
+            throw new ReglaDominioException("La categoría del producto no puede estar vacía");
+        }
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad, categoria);
     }
 
     /**
@@ -101,6 +115,10 @@ public class Producto {
 
     public boolean esExclusivo() {
         return exclusividad.esExclusivo();
+    }
+
+    public boolean estaVisible() {
+        return !eliminado && !pausado;
     }
 
     public void asegurarNoEliminado() {
