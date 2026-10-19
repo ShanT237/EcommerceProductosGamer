@@ -30,4 +30,10 @@ public interface CompraRepository {
      * La usa EliminarProductoUseCase para validar la Regla 3.
      */
     boolean existeCompraActivaDeProducto(UUID productoId);
+
+    /**
+     * Cuenta las compras COMPLETADAS del usuario. La usa AsignarRegaloPorMetaUseCase
+     * para comprobar si el usuario alcanzó la meta de compras exigida.
+     */
+    int contarCompletadasDe(UUID usuarioId);
 }

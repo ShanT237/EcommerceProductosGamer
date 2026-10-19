@@ -43,4 +43,12 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
         return c.getEstado() == EstadoCompra.PENDIENTE
                 || c.getEstado() == EstadoCompra.COMPLETADA;
     }
+
+    @Override
+    public int contarCompletadasDe(UUID usuarioId) {
+        return (int) compras.values().stream()
+                .filter(c -> c.getUsuarioId().equals(usuarioId)
+                        && c.getEstado() == EstadoCompra.COMPLETADA)
+                .count();
+    }
 }
