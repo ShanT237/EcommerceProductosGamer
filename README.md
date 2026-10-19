@@ -16,9 +16,8 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 3. [Lenguaje Ubicuo (DDD)](#3-lenguaje-ubicuo-ddd)
 4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
 5. [Casos de Uso del Sistema (36 Casos de Uso)](#5-casos-de-uso-del-sistema-36-casos-de-uso)
-6. [Diseño de Agregados y Dominio (DDD)](#6-diseño-de-agregados-y-dominio-ddd)
-7. [Arquitectura del Software (Clean Architecture)](#7-arquitectura-del-software-clean-architecture)
-8. [Guía de Instalación y Ejecución](#8-guía-de-instalación-y-ejecución)
+6. [Arquitectura del Software (Clean Architecture)](#6-arquitectura-del-software-clean-architecture)
+7. [Cómo ejecutar las pruebas](#7-cómo-ejecutar-las-pruebas)
 
 ---
 
@@ -48,48 +47,56 @@ Categorías habilitadas en el catálogo:
 
 ## 3. Lenguaje Ubicuo (DDD)
 
-| Término | Definición en el Dominio |
-| :--- | :--- |
-| **Gama** | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
-| **Preventa** | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
-| **Wishlist** | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
-| **Notificación** | Alerta generada para el comprador sobre cambios de precio o reposición de stock en productos guardados en su Wishlist. |
-| **Combo** | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
-| **Comprador / Usuario** | Entidad compradora registrada que realiza transacciones, evalúa productos, redime y acumula puntos. |
-| **Vendedor** | Entidad comercial (Persona Natural o Empresa) registrada para publicar y vender productos. |
+| Término                    | Definición en el Dominio |
+|:---------------------------| :--- |
+| **Gama**                   | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
+| **Preventa**               | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
+| **Wishlist**               | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
+| **Notificación**           | Alerta que recibe el usuario cuando un producto de su Wishlist baja de precio (descuento). |
+| **Combo**                  | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
+| **Usuario**                | Persona registrada que compra, reseña, acumula y redime puntos. Se llama *Usuario* en todo el código. |
+| **Vendedor**               | Entidad comercial (Persona Natural o Empresa) registrada para publicar y vender productos. |
 | **Puntos de Fidelización** | Unidades de beneficio otorgadas a compradores tras publicar reseñas de compras completadas. |
-| **Regalo / Recompensa** | Beneficio otorgado por el sistema al usuario tras alcanzar metas de compra acumuladas. |
-| **Exclusividad** | Restricción de compra que limita la adquisición a máximo una unidad por comprador. |
-
+| **Regalo**                 | Beneficio otorgado por el sistema al usuario tras alcanzar metas de compra acumuladas. |
+| **Exclusividad**           | Condición de un producto especial: cada usuario puede comprarlo una sola vez y de a una unidad. |
+| **Unidades**               | Cantidad disponible de un producto para su venta (nunca negativa; cero significa agotado). |
 ---
 
 ## 4. Reglas de Negocio e Invariantes del Dominio
 
-### Reglas Innegociables (100% Implementadas en Código)
-1. **Stock No Negativo:** Un producto nunca puede tener stock inferior a cero (`stock >= 0`). Restitución de stock garantizada al cancelar o reembolsar compras.
-2. **Reseña Verificada:** Solo se permite calificar y reseñar productos con compras previas en estado `COMPLETADA`. Máximo 1 reseña por usuario y producto.
-3. **Integridad de Productos con Compras:** No se puede eliminar físicamente un producto con historial de ventas; se debe usar **eliminación lógica**.
-4. **Fechas de Preventa:** Ningún comprador puede acceder a productos en preventa antes de la fecha estipulada.
-5. **Estructura de Combos:** Un combo debe estar compuesto obligatoriamente por **mínimo dos (2) productos** distintos pertenecientes a un vendedor.
-6. **Acreditación de Puntos:** Los puntos de fidelización solo se asignan al registrar una reseña de una compra confirmada. Se habilita también la redención de puntos (`redimirPuntos`).
-7. **Unicidad en Wishlist:** Un comprador no puede añadir duplicados del mismo producto a su Wishlist ni agregar productos eliminados.
-8. **Notificaciones Dirigidas (Wishlist):** Notificaciones automáticas por descuento o reposición de stock enviadas a usuarios que tengan el producto en su Wishlist (`NotificarCambioWishlistUseCase`).
-9. **Límite Exclusivo:** Productos marcados como exclusivos solo pueden ser comprados una única vez por el mismo usuario.
-10. **Metas de Recompensa:** Los regalos solo se asignan a usuarios que hayan cumplido las metas acumuladas de compra exigidas.
+| # | Regla | Dónde se garantiza | Estado |
+|---|---|---|---|
+| 1 | Un producto nunca tiene stock negativo; se restituye al cancelar o reembolsar. | `Producto.reducirStock` / `aumentarStock` | ✅ |
+| 2 | Solo se reseña una compra `COMPLETADA`; una reseña por usuario y producto. | `Compra.registrarResena`, `Resena.crear`, `SubirResenaUseCase` | ✅ |
+| 3 | No se elimina un producto con compras activas (`PENDIENTE` o `COMPLETADA`); la eliminación es lógica. | `Producto.eliminar`, `EliminarProductoUseCase` | ✅ |
+| 4 | Un producto en preventa no se compra antes de su fecha de lanzamiento. | `Preventa.validarAcceso`, `RealizarCompraUseCase` | ✅ |
+| 5 | Un combo tiene dos o más productos distintos y su descuento es menor a 100%. | `Combo.crear`, `agregarProducto`, `quitarProducto` | ✅ Dominio (sin caso de uso aún) |
+| 6 | Los puntos se asignan solo después de reseñar, y una sola vez. | `Compra.asignarPuntos`, `SubirResenaUseCase` | ✅ |
+| 7 | Un producto no se repite en la Wishlist ni se agregan productos eliminados. | `Wishlist.agregarProducto`, `AnadirAWishlistUseCase` | ✅ |
+| 8 | Solo se notifica a quienes tienen el producto en su Wishlist, y solo cuando hay descuento. | `Producto.aplicarDescuento`, `NotificarDescuentoWishlistUseCase` | ✅ |
+| 9 | Un producto exclusivo se compra una sola vez por usuario y de a una unidad. | `Producto.validarCompraExclusiva` | ✅ |
+| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo` | 🟡 Ciclo del regalo listo; falta la **meta de compras** que lo dispara |
+
+### Reglas adicionales que el código garantiza
+
+- El reembolso solo procede si la compra está `COMPLETADA`, dentro de **48 horas**, sin descarga y sin puntos asignados.
+- `REEMBOLSADA`, `CANCELADA` y `EXPIRADA` son estados finales de una compra.
+- La fecha de la compra y los ids los genera el servidor, no el cliente.
+- Un vendedor dado de baja no puede publicar y sus productos no se pueden comprar.
 
 ---
 
 ## 5. Casos de Uso del Sistema (36 Casos de Uso)
 
 ### 🛒 Módulo 1: Compras y Checkout
-| Código | Caso de Uso | Estado Código | Actor | Descripción |
-| :--- | :--- | :--- | :--- | :--- |
-| `CU-01` | **Realizar Compra** | ✅ Implementado | Comprador | Registra orden `PENDIENTE`, reserva stock y valida producto no eliminado, usuario activo y vendedor activo (`RealizarCompraUseCase`). |
-| `CU-09` | **Confirmar Compra** | ✅ Implementado | Comprador / Sistema | Valida el pago y pasa la orden a `COMPLETADA` (`ConfirmarCompraUseCase`). |
-| `CU-12` | **Cancelar Compra** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`). |
-| `CU-13` | **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro del plazo legal, pasa a `REEMBOLSADA` y restituye el stock al inventario (`SolicitarReembolsoUseCase`). |
-| `CU-16` | **Comprar Combo** | ⏳ Especificado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes. |
-| `CU-17` | **Aplicar Cupón de Descuento** | ⏳ Especificado | Comprador | Aplica un código promocional al total del pago previo al checkout. |
+| Código | Caso de Uso | Estado Código | Actor | Descripción                                                                                                                             |
+| :--- | :--- | :--- | :--- |:----------------------------------------------------------------------------------------------------------------------------------------|
+| `CU-01` | **Realizar Compra** | ✅ Implementado | Comprador | Registra orden `PENDIENTE`, reserva stock, valida producto no eliminado, usuario activo y vendedor activo (`RealizarCompraUseCase`) y valida la fecha de preventa y usa la fecha del servidor. |
+| `CU-09` | **Confirmar Compra** | ✅ Implementado | Comprador / Sistema | Valida el pago y pasa la orden a `COMPLETADA` (`ConfirmarCompraUseCase`).                                                               |
+| `CU-12` | **Cancelar Compra** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`).                         |
+| `CU-13` | **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro de 48 horas, sin descarga y sin puntos asignados, pasa a `REEMBOLSADA` y restituye el stock al inventario (`SolicitarReembolsoUseCase`).       |
+| `CU-16` | **Comprar Combo** | ⏳ Especificado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes.                                                                   |
+| `CU-17` | **Aplicar Cupón de Descuento** | ⏳ Especificado | Comprador | Aplica un código promocional al total del pago previo al checkout.                                                                      |
 
 ### 📦 Módulo 2: Productos y Catálogo
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -121,7 +128,7 @@ Categorías habilitadas en el catálogo:
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-03` | **Añadir a Wishlist** | ✅ Implementado | Comprador | Guarda productos en wishlist evitando duplicados y rechazando eliminados (`AnadirAWishlistUseCase`). |
-| `CU-14` | **Notificar Cambio Wish List** | ✅ Implementado | Sistema | Genera notificaciones automáticas por cambio de precio o reabastecimiento de stock (`NotificarCambioWishlistUseCase`). |
+| `CU-14` | **Notificar Descuento en Wishlist** | ✅ Implementado | Sistema | notificaciones por descuento a quienes tienen el producto en su Wishlist (`NotificarDescuentoWishlistUseCase`). |
 | `CU-15` | **Quitar de Wishlist** | ✅ Implementado (Dominio) | Comprador | Elimina un producto específico de la lista de deseos (`Wishlist.quitarProducto`). |
 
 ### 👤 Módulo 6: Usuarios, Vendedores y Autenticación
@@ -162,9 +169,18 @@ backend/src/main/java/com/uniquindio/backend/
 │   ├── usecase/             # Lógica de Orquestación (RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, PublicarProducto, EliminarProducto, SubirResena, AnadirAWishlist, NotificarCambioWishlist)
 │   └── dto/                 # Data Transfer Objects (DTOs)
 └── infrastructure/          # Capa de Infraestructura (Spring Boot / Controller / Persistence)
-    ├── controller/          # Controladores REST API
-    └── persistence/         # Repositorios en Memoria y Persistencia JPA / MariaDB
+    ├── rest/                # Controladores REST API
+    ├── persistence/         # Repositorios en Memoria y Persistencia JPA / MariaDB
+    └── config/        ClockConfig
 ```
 
 ---
 
+## 7. Cómo ejecutar las pruebas
+
+```powershell
+cd backend
+.\gradlew.bat test
+```
+
+---
