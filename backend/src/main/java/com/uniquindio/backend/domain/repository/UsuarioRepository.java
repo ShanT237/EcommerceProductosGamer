@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface UsuarioRepository {
     Optional<Usuario> obtenerPorId(UUID id);
     void guardar(Usuario usuario);
+    boolean existeConCorreo(String correo);
 }
