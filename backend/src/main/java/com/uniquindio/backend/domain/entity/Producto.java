@@ -32,6 +32,7 @@ public class Producto {
     private final Gama gama;
     private final Exclusividad exclusividad;
     private boolean eliminado;
+    private boolean pausado;
 
     private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
                      double precio, int stock, Gama gama, Exclusividad exclusividad) {
@@ -104,6 +105,32 @@ public class Producto {
         if (!Objects.equals(this.vendedorId, vendedorId)) {
             throw new ReglaDominioException("El producto no pertenece al vendedor");
         }
+    }
+
+    /**
+     * Un producto solo se puede comprar si no está eliminado ni pausado.
+     */
+    public void asegurarComprable() {
+        asegurarNoEliminado();
+        if (pausado) {
+            throw new ReglaDominioException("El producto se encuentra pausado");
+        }
+    }
+
+    public void pausar() {
+        asegurarNoEliminado();
+        if (pausado) {
+            throw new ReglaDominioException("El producto ya está pausado");
+        }
+        this.pausado = true;
+    }
+
+    public void activar() {
+        asegurarNoEliminado();
+        if (!pausado) {
+            throw new ReglaDominioException("El producto ya está activo");
+        }
+        this.pausado = false;
     }
 
     /**

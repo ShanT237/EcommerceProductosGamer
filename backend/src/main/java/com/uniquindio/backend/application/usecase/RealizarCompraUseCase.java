@@ -42,7 +42,7 @@ public class RealizarCompraUseCase {
 
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
-        producto.asegurarNoEliminado();
+        producto.asegurarComprable();
 
         preventaRepository.obtenerPorProductoId(productoId)
                 .ifPresent(preventa -> preventa.validarAcceso(ahora.toLocalDate()));

@@ -107,4 +107,13 @@ class RealizarCompraUseCaseTest {
 
         assertThrows(ReglaDominioException.class, () -> comprar(producto, 1, HOY));
     }
+
+    @Test
+    @DisplayName("Rechaza comprar un producto pausado y no toca el stock")
+    void productoPausado() {
+        producto.pausar();
+
+        assertThrows(ReglaDominioException.class, () -> comprar(producto, 1, HOY));
+        assertEquals(5, producto.getStock());
+    }
 }
