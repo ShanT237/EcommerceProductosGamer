@@ -6,6 +6,7 @@ import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +24,13 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
     @Override
     public void guardar(Compra compra) {
         compras.put(compra.getId(), compra);
+    }
+
+    @Override
+    public List<Compra> obtenerPorUsuarioId(UUID usuarioId) {
+        return compras.values().stream()
+                .filter(c -> c.getUsuarioId().equals(usuarioId))
+                .toList();
     }
 
     @Override
