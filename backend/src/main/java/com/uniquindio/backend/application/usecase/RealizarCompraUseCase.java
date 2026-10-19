@@ -30,6 +30,7 @@ public class RealizarCompraUseCase {
     private final UsuarioRepository usuarioRepository;
     private final VendedorRepository vendedorRepository;
     private final PreventaRepository preventaRepository;
+    private final PromocionRepository promocionRepository;
     private final Clock clock;
 
     @Transactional
@@ -56,8 +57,14 @@ public class RealizarCompraUseCase {
 
         producto.reducirStock(cantidad);
 
+        Precio precioBase = new Precio(producto.getPrecio());
+        Precio precioUnitario = promocionRepository
+                .obtenerVigentePorProductoId(productoId, ahora.toLocalDate())
+                .map(promocion -> precioBase.aplicarDescuento(promocion.getPorcentaje()))
+                .orElse(precioBase);
+
         Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId, cantidad,
-                ahora, new Precio(producto.getPrecio()));
+                ahora, precioUnitario);
 
         productoRepository.guardar(producto);
         compraRepository.guardar(compra);

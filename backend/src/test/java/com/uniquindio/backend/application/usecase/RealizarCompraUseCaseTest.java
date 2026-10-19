@@ -26,6 +26,7 @@ class RealizarCompraUseCaseTest {
     private ProductoRepository productoRepository;
     private CompraRepository compraRepository;
     private PreventaRepository preventaRepository;
+    private PromocionRepository promocionRepository;
     private UsuarioRepository usuarioRepository;
     private VendedorRepository vendedorRepository;
     private UUID usuarioId;
@@ -37,6 +38,7 @@ class RealizarCompraUseCaseTest {
         productoRepository = new ProductoRepositoryEnMemoria();
         compraRepository = new CompraRepositoryEnMemoria();
         preventaRepository = new PreventaRepositoryEnMemoria();
+        promocionRepository = new PromocionRepositoryEnMemoria();
         usuarioRepository = new UsuarioRepositoryEnMemoria();
         vendedorRepository = new VendedorRepositoryEnMemoria();
 
@@ -59,7 +61,7 @@ class RealizarCompraUseCaseTest {
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(fecha.atTime(10, 0).atZone(zona).toInstant(), zona);
         RealizarCompraUseCase useCase = new RealizarCompraUseCase(productoRepository,
-                compraRepository, usuarioRepository, vendedorRepository, preventaRepository, reloj);
+                compraRepository, usuarioRepository, vendedorRepository, preventaRepository, promocionRepository, reloj);
         return useCase.ejecutar(usuarioId, p.getId(), cantidad);
     }
 
@@ -115,5 +117,17 @@ class RealizarCompraUseCaseTest {
 
         assertThrows(ReglaDominioException.class, () -> comprar(producto, 1, HOY));
         assertEquals(5, producto.getStock());
+    }
+
+    @Test
+    @DisplayName("El precio de la compra usa la promoción solo mientras está vigente (CU-22)")
+    void precioPromocionalSoloSiVigente() {
+        promocionRepository.guardar(Promocion.programar(UUID.randomUUID(), producto.getId(),
+                20, HOY, HOY.plusDays(9)));
+
+        assertEquals(80, comprar(producto, 1, HOY).getPrecioUnitario().valor(), 0.001);
+        assertEquals(80, comprar(producto, 1, HOY.plusDays(9)).getPrecioUnitario().valor(), 0.001);
+        assertEquals(100, comprar(producto, 1, HOY.plusDays(10)).getPrecioUnitario().valor(), 0.001);
+        assertEquals(100, producto.getPrecio());
     }
 }
