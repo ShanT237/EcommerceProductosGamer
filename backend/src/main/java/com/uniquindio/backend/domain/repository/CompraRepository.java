@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Compra;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,6 +16,11 @@ public interface CompraRepository {
     Optional<Compra> obtenerPorId(UUID id);
 
     void guardar(Compra compra);
+
+    /**
+     * Todas las compras del usuario (cualquier estado). La usa ConsultarHistorialComprasUseCase.
+     */
+    List<Compra> obtenerPorUsuarioId(UUID usuarioId);
 
     /**
      * Indica si el usuario ya tiene una compra activa de ese producto.
