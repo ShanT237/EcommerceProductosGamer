@@ -23,8 +23,8 @@ public class Producto {
 
     private final UUID id;
     private final UUID vendedorId;
-    private final String nombre;
-    private final String descripcion;
+    private String nombre;
+    private String descripcion;
     private double precio;
     /** Precio anterior al descuento activo; {@code null} si no hay descuento. */
     private Double precioOriginal;
@@ -173,6 +173,21 @@ public class Producto {
             throw new ReglaDominioException("El precio del producto debe ser positivo");
         }
         this.precio = nuevoPrecio;
+    }
+
+    /**
+     * Actualiza nombre y descripción; ambos siguen siendo obligatorios.
+     */
+    public void editarInformacion(String nuevoNombre, String nuevaDescripcion) {
+        asegurarNoEliminado();
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new ReglaDominioException("El nombre del producto no puede estar vacío");
+        }
+        if (nuevaDescripcion == null || nuevaDescripcion.isBlank()) {
+            throw new ReglaDominioException("La descripción del producto no puede estar vacía");
+        }
+        this.nombre = nuevoNombre;
+        this.descripcion = nuevaDescripcion;
     }
 
     public void asegurarPerteneceA(UUID vendedorId) {
