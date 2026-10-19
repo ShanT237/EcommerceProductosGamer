@@ -145,4 +145,19 @@ class RegaloTest {
         assertThrows(ReglaDominioException.class, regalo::cancelarRegalo);
         assertThrows(ReglaDominioException.class, regalo::enviar);
     }
+
+    @Test
+    @DisplayName("Se puede cancelar un regalo ya enviado, pero un cancelado no vuelve a elegirse")
+    void canceladoEsFinal() {
+        UUID idUsuario = UUID.randomUUID();
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        regalo.elegir(idUsuario, false);
+        regalo.enviar();
+
+        regalo.cancelarRegalo();
+
+        assertEquals(EstadoRegalo.CANCELADO, regalo.getEstado());
+        assertThrows(ReglaDominioException.class, () -> regalo.elegir(UUID.randomUUID(), false));
+        assertThrows(ReglaDominioException.class, () -> regalo.confirmarEntrega(idUsuario));
+    }
 }

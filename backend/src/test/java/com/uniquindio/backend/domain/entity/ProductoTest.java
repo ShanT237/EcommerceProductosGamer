@@ -195,4 +195,22 @@ class ProductoTest {
 
         assertDoesNotThrow(() -> normal.validarCompraExclusiva(true, 3));
     }
+
+    @Test
+    @DisplayName("La cantidad inválida se reporta antes que la regla de exclusividad")
+    void validaCantidadAntesQueExclusividad() {
+        Producto exclusivo = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse Pro",
+                "Desc", 100, 5, Gama.ALTA, Exclusividad.EXCLUSIVO);
+        Producto normal = crearProductoValido();
+
+        ReglaDominioException e1 = assertThrows(ReglaDominioException.class,
+                () -> exclusivo.validarCompraExclusiva(true, 0));
+        assertEquals("La cantidad debe ser positiva", e1.getMessage());
+
+        ReglaDominioException e2 = assertThrows(ReglaDominioException.class,
+                () -> exclusivo.validarCompraExclusiva(true, 2));
+        assertTrue(e2.getMessage().contains("una unidad"));
+
+        assertThrows(ReglaDominioException.class, () -> normal.validarCompraExclusiva(false, 0));
+    }
 }

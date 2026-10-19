@@ -117,16 +117,19 @@ public class Producto {
      * solo decide qué hacer con ese dato.
      */
     public void validarCompraExclusiva(boolean usuarioYaTieneEsteProducto, int cantidad) {
+        if (cantidad <= 0) {
+            throw new ReglaDominioException("La cantidad debe ser positiva");
+        }
         if (!esExclusivo()) {
             return;
-        }
-        if (usuarioYaTieneEsteProducto) {
-            throw new ReglaDominioException(
-                    "El usuario ya compró este producto exclusivo anteriormente");
         }
         if (cantidad > 1) {
             throw new ReglaDominioException(
                     "Un producto exclusivo solo puede comprarse en cantidad de una unidad");
+        }
+        if (usuarioYaTieneEsteProducto) {
+            throw new ReglaDominioException(
+                    "El usuario ya compró este producto exclusivo anteriormente");
         }
     }
 

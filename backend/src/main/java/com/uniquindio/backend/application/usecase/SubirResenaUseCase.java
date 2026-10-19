@@ -26,7 +26,7 @@ public class SubirResenaUseCase {
     private final ResenaRepository resenaRepository;
     private final UsuarioRepository usuarioRepository;
 
-    public Resena ejecutar(String idResena, UUID idCompra, UUID idUsuario, int valorCalificacion, String comentario) {
+    public Resena ejecutar(UUID idCompra, UUID idUsuario, int valorCalificacion, String comentario) {
         Compra compra = compraRepository.obtenerPorId(idCompra)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
         compra.asegurarPerteneceA(idUsuario);
@@ -40,7 +40,7 @@ public class SubirResenaUseCase {
 
         Calificacion calificacion = new Calificacion(valorCalificacion);
         Resena resena = Resena.crear(
-                idResena,
+                UUID.randomUUID().toString(),
                 idCompra.toString(),
                 compra.getProductoId().toString(),
                 idUsuario.toString(),
