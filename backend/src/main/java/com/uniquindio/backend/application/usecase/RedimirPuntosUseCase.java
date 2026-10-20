@@ -1,11 +1,15 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.domain.entity.MovimientoPuntos;
 import com.uniquindio.backend.domain.entity.Usuario;
+import com.uniquindio.backend.domain.repository.MovimientoPuntosRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -18,6 +22,8 @@ import java.util.UUID;
 public class RedimirPuntosUseCase {
 
     private final UsuarioRepository usuarioRepository;
+    private final MovimientoPuntosRepository movimientoRepository;
+    private final Clock clock;
 
     @Transactional
     public Usuario ejecutar(UUID usuarioId, int cantidad) {
@@ -28,6 +34,7 @@ public class RedimirPuntosUseCase {
         usuario.redimirPuntos(cantidad);
 
         usuarioRepository.guardar(usuario);
+        movimientoRepository.guardar(MovimientoPuntos.redimido(usuarioId, cantidad, LocalDateTime.now(clock)));
 
         return usuario;
     }
