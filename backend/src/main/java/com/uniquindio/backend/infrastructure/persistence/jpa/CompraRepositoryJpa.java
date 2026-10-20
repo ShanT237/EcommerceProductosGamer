@@ -7,6 +7,7 @@ import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.CompraPersis
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,5 +49,17 @@ public class CompraRepositoryJpa implements CompraRepository {
     @Override
     public boolean existeCompraActivaDeProducto(UUID productoId) {
         return dataRepository.existsByProductoIdAndEstadoIn(productoId, ESTADOS_ACTIVOS);
+    }
+
+    @Override                                                              // <-- NUEVO
+    public long contarCompletadasDe(UUID usuarioId) {
+        return dataRepository.countByUsuarioIdAndEstado(usuarioId, EstadoCompra.COMPLETADA);
+    }
+
+    @Override
+    public boolean existeCompraDeAlguno(UUID usuarioId, Collection<UUID> productoIds) {
+        if (productoIds.isEmpty()) return false;
+        return dataRepository.existsByUsuarioIdAndProductoIdInAndEstadoIn(
+                usuarioId, productoIds, ESTADOS_ACTIVOS);
     }
 }

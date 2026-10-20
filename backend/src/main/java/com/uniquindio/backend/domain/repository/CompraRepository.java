@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Compra;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,4 +37,9 @@ public interface CompraRepository {
      * La usa EliminarProductoUseCase para validar la Regla 3.
      */
     boolean existeCompraActivaDeProducto(UUID productoId);
+
+
+    long contarCompletadasDe(UUID usuarioId);
+
+    boolean existeCompraDeAlguno(UUID usuarioId, Collection<UUID> productoIds);
 }
