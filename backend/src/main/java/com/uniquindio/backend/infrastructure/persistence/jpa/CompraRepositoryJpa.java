@@ -49,4 +49,9 @@ public class CompraRepositoryJpa implements CompraRepository {
     public boolean existeCompraActivaDeProducto(UUID productoId) {
         return dataRepository.existsByProductoIdAndEstadoIn(productoId, ESTADOS_ACTIVOS);
     }
+
+    @Override                                                              // <-- NUEVO
+    public long contarCompletadasDe(UUID usuarioId) {
+        return dataRepository.countByUsuarioIdAndEstado(usuarioId, EstadoCompra.COMPLETADA);
+    }
 }
