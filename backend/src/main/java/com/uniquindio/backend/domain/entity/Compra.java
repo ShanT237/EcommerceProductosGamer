@@ -189,6 +189,9 @@ public class Compra {
         return puntosPorCompra;
     }
 
+
+
+
     public int asignarPuntosPorResena() {
         return asignarPuntos(PUNTOS_POR_RESENA);
     }
@@ -204,4 +207,8 @@ public class Compra {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+
+
+
 }
