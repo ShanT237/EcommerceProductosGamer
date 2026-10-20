@@ -42,4 +42,9 @@ public interface CompraRepository {
     long contarCompletadasDe(UUID usuarioId);
 
     boolean existeCompraDeAlguno(UUID usuarioId, Collection<UUID> productoIds);
+
+    /**
+     * Todas las compras (cualquier estado). La usan los casos de uso de reportes.
+     */
+    List<Compra> obtenerTodas();
 }
