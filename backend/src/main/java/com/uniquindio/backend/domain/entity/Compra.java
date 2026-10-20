@@ -28,11 +28,12 @@ public class Compra {
     private final UUID productoId;
     private final int cantidad;
     private final LocalDateTime fecha;
-    private final Precio precioUnitario;
+    private Precio precioUnitario;
     private EstadoCompra estado;
     private boolean resenada;
     private boolean puntosAsignados;
     private boolean descargado;
+    private boolean cuponAplicado;
 
     public static final Duration PLAZO_REEMBOLSO = Duration.ofHours(48);
     private static final int PUNTOS_POR_RESENA = 10;
@@ -114,6 +115,22 @@ public class Compra {
     public void confirmar() {
         verificarTransicion(EstadoCompra.COMPLETADA);
         this.estado = EstadoCompra.COMPLETADA;
+    }
+
+    /**
+     * Aplica un cupón: reemplaza el precio unitario por el ya descontado. Solo mientras la
+     * compra está PENDIENTE (después de confirmarla el precio queda fijo) y una sola vez.
+     */
+    public void aplicarCupon(Precio nuevoPrecioUnitario) {
+        Objects.requireNonNull(nuevoPrecioUnitario, "El nuevo precio unitario es obligatorio");
+        if (estado != EstadoCompra.PENDIENTE) {
+            throw new ReglaDominioException("Solo se puede aplicar un cupón a una compra pendiente");
+        }
+        if (cuponAplicado) {
+            throw new ReglaDominioException("La compra ya tiene un cupón aplicado");
+        }
+        this.precioUnitario = nuevoPrecioUnitario;
+        this.cuponAplicado = true;
     }
 
     public void cancelar() {
