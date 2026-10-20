@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.repository.RegaloRepository;
+import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -22,5 +23,13 @@ public class RegaloRepositoryEnMemoria implements RegaloRepository {
     @Override
     public void guardar(Regalo regalo) {
         regalos.put(regalo.getId(), regalo);
+    }
+
+    @Override
+    public long contarAsignadosA(UUID usuarioId) {
+        return regalos.values().stream()
+                .filter(r -> usuarioId.equals(r.getIdUsuario())
+                        && r.getEstado() != EstadoRegalo.CANCELADO)
+                .count();
     }
 }
