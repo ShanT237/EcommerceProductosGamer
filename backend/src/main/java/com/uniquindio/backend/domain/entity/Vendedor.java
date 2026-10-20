@@ -50,6 +50,17 @@ public class Vendedor {
         return new Vendedor(id, nombre, correo, tipo, documento);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" un vendedor que YA existía.
+     * NO valida: esos datos ya pasaron por registrar(...) cuando el vendedor nació.
+     */
+    public static Vendedor reconstruir(UUID id, String nombre, String correo,
+                                       TipoVendedor tipo, String documento, boolean activo) {
+        Vendedor vendedor = new Vendedor(id, nombre, correo, tipo, documento);
+        vendedor.activo = activo;
+        return vendedor;
+    }
+
     public boolean esEmpresa() {
         return tipo.esEmpresa();
     }
