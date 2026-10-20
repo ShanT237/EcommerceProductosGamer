@@ -15,6 +15,10 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+/**
+ * Limitación: no hay autenticación ni autorización. Cualquiera podría dar de baja
+ * a un vendedor por id (CU-27 pendiente).
+ */
 @RestController
 @RequestMapping("/api/vendedores")
 public class VendedorController {
