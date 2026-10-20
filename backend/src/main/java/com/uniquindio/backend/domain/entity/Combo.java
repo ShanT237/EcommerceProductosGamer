@@ -64,6 +64,13 @@ public class Combo {
         }
         return new Combo(id, vendedorId, nombre, descripcion, descuento, productosIniciales);
     }
+
+    public static Combo reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                    double descuento, List<UUID> productos) {
+        return new Combo(id, vendedorId, nombre, descripcion, descuento, productos != null ? productos : List.of());
+    }
+
+
     public List<UUID> getProductos() {
         return List.copyOf(productos);
     }
