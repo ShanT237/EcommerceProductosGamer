@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ public class SolicitarReembolsoUseCase {
     private final ProductoRepository productoRepository;
     private final Clock clock;
 
+    @Transactional
     public Compra ejecutar(UUID compraId, UUID usuarioId) {
         Compra compra = compraRepository.obtenerPorId(compraId)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
