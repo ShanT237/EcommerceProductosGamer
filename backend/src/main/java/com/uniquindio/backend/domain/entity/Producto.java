@@ -66,6 +66,19 @@ public class Producto {
         return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" un producto que YA existía.
+     * NO valida: esos datos ya pasaron por publicar(...) cuando el producto nació.
+     */
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado) {
+        Producto producto = new Producto(id, vendedorId, nombre, descripcion,
+                precio, stock, gama, exclusividad);
+        producto.eliminado = eliminado;
+        return producto;
+    }
+
     public boolean esExclusivo() {
         return exclusividad.esExclusivo();
     }
