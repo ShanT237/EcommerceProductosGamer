@@ -1,9 +1,11 @@
 package com.uniquindio.backend.infrastructure.rest.exception;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,6 +41,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Map<String, Object>> manejarNoEncontrado(NoSuchElementException ex) {
         return construirRespuesta(HttpStatus.NOT_FOUND, ex.getMessage()); // -> 404
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> manejarIntegridad(DataIntegrityViolationException ex) {
+        return construirRespuesta(HttpStatus.CONFLICT,
+                "La operación viola una restricción de integridad"); // -> 409
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> manejarConcurrencia(ObjectOptimisticLockingFailureException ex) {
+        return construirRespuesta(HttpStatus.CONFLICT,
+                "El recurso fue modificado por otra operación. Reintente"); // -> 409
     }
 
     private ResponseEntity<Map<String, Object>> construirRespuesta(HttpStatus status, String mensaje) {
