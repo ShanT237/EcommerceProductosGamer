@@ -14,6 +14,10 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+/**
+ * Limitación: no hay autenticación ni autorización. El {@code vendedorId} viaja
+ * en el body; cualquiera podría crear o modificar combos de otro vendedor (CU-27 pendiente).
+ */
 @RestController
 @RequestMapping("/api/combos")
 public class ComboController {
