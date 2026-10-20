@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-
 public class VendedorRepositoryEnMemoria implements VendedorRepository {
 
     private final Map<UUID, Vendedor> vendedores = new HashMap<>();
