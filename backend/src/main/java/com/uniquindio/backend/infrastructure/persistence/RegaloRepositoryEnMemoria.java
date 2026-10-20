@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+
 public class RegaloRepositoryEnMemoria implements RegaloRepository {
 
     private final Map<UUID, Regalo> regalos = new HashMap<>();
