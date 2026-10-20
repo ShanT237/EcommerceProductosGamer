@@ -8,6 +8,7 @@ import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -24,6 +25,7 @@ public class PublicarProductoUseCase {
     private final VendedorRepository vendedorRepository;
     private final ProductoRepository productoRepository;
 
+    @Transactional
     public Producto ejecutar(UUID id, UUID vendedorId, String nombre, String descripcion,
                              double precio, int stock, Gama gama, Exclusividad exclusividad) {
         Vendedor vendedor = vendedorRepository.obtenerPorId(vendedorId)
