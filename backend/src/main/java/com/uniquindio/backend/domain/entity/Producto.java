@@ -90,7 +90,7 @@ public class Producto {
     }
 
     public void asegurarPerteneceA(UUID vendedorId) {
-        if (!this.vendedorId.equals(vendedorId)) {
+        if (!Objects.equals(this.vendedorId, vendedorId)) {
             throw new ReglaDominioException("El producto no pertenece al vendedor");
         }
     }

@@ -127,4 +127,12 @@ class ProgramarPreventaUseCaseTest {
         assertThrows(NoSuchElementException.class, () -> useCase.ejecutar(
                 vendedor.getId(), UUID.randomUUID(), HOY.plusDays(5), "Preventa"));
     }
+
+    @Test
+    @DisplayName("Rechaza una fecha de lanzamiento nula")
+    void fechaNula() {
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(
+                vendedor.getId(), producto.getId(), null, "Preventa"));
+        assertTrue(preventaRepository.obtenerPorProductoId(producto.getId()).isEmpty());
+    }
 }

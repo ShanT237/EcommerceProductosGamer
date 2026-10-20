@@ -45,7 +45,9 @@ public class Preventa {
     public static Preventa programar(UUID id, UUID productoId, LocalDate fechaLanzamiento,
                                      String descripcion, LocalDate hoy) {
         Objects.requireNonNull(hoy, "La fecha actual es obligatoria");
-        Objects.requireNonNull(fechaLanzamiento, "La fecha de lanzamiento es obligatoria");
+        if (fechaLanzamiento == null) {
+            throw new ReglaDominioException("La fecha de lanzamiento es obligatoria");
+        }
         if (!fechaLanzamiento.isAfter(hoy)) {
             throw new ReglaDominioException("La fecha de lanzamiento debe ser futura");
         }
