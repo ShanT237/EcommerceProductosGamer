@@ -15,9 +15,10 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 2. [¿Qué hace único a sus vendedores?](#2-qué-hace-único-a-sus-vendedores)
 3. [Lenguaje Ubicuo (DDD)](#3-lenguaje-ubicuo-ddd)
 4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
-5. [Casos de Uso del Sistema (36 Casos de Uso)](#5-casos-de-uso-del-sistema-36-casos-de-uso)
+5. [Casos de Uso del Sistema (37 Casos de Uso)](#5-casos-de-uso-del-sistema-37-casos-de-uso)
 6. [Arquitectura del Software (Clean Architecture)](#6-arquitectura-del-software-clean-architecture)
 7. [Cómo ejecutar las pruebas](#7-cómo-ejecutar-las-pruebas)
+8. [Gestión del Proyecto (Trello)](#8-gestión-del-proyecto-trello)
 
 ---
 
@@ -86,7 +87,7 @@ Categorías habilitadas en el catálogo:
 
 ---
 
-## 5. Casos de Uso del Sistema (36 Casos de Uso)
+## 5. Casos de Uso del Sistema (37 Casos de Uso)
 
 **Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
@@ -95,13 +96,13 @@ Categorías habilitadas en el catálogo:
 | Módulo | ✅ Implementados | 🟡 Parciales | ⏳ Especificados | Total |
 | :--- | :---: | :---: | :---: | :---: |
 | Compras y Checkout | 4 | 0 | 2 | 6 |
-| Productos y Catálogo | 3 | 1 | 4 | 8 |
+| Productos y Catálogo | 3 | 2 | 4 | 9 |
 | Combos Promocionales | 2 | 0 | 0 | 2 |
 | Reseñas, Puntos y Recompensas | 3 | 0 | 1 | 4 |
 | Lista de Deseos (Wishlist) y Notificaciones | 3 | 0 | 0 | 3 |
 | Usuarios, Vendedores y Autenticación | 2 | 0 | 3 | 5 |
 | Consultas, Métricas y Reportes | 1 | 0 | 7 | 8 |
-| **Total** | **18** | **1** | **17** | **36** |
+| **Total** | **18** | **2** | **17** | **37** |
 
 ### 🛒 Módulo 1: Compras y Checkout
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -124,6 +125,7 @@ Categorías habilitadas en el catálogo:
 | `CU-20` | **Filtrar y Buscar Productos** | ⏳ Especificado | Comprador | Búsqueda avanzada por gama, categoría, precio y preventas. |
 | `CU-21` | **Activar / Pausar Publicación** | ⏳ Especificado | Vendedor | Alterna la visibilidad del producto en el catálogo sin borrarlo. |
 | `CU-22` | **Configurar Descuento Promocional** | 🟡 Parcial | Vendedor | Aplica un porcentaje de descuento a un producto y notifica a quienes lo tienen en su Wishlist (`AplicarDescuentoUseCase`). Falta la vigencia temporal del descuento. |
+| `CU-37` | **Programar Preventa** | 🟡 Parcial | Vendedor | Control de disponibilidad de lanzamientos respetando la fecha estipulada (Regla 4). El dominio está listo (`Preventa.programar`) y `RealizarCompraUseCase` respeta la fecha; falta el caso de uso `ProgramarPreventaUseCase`. |
 
 ### 🎁 Módulo 3: Combos Promocionales
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -203,3 +205,24 @@ backend/src/main/java/com/uniquindio/backend/
 cd backend
 .\gradlew.bat test
 ```
+
+---
+
+## 8. Gestión del Proyecto (Trello)
+
+El avance de la Entrega 1 se gestiona en un tablero público de Trello:
+
+👉 **[Marketplace Gamer — Backend & DDD (Entrega 1)](https://trello.com/b/pmz32QJB/marketplace-gamer-backend-ddd-entrega-1)**
+
+**Listas del tablero**
+
+| Lista | Qué contiene |
+| :--- | :--- |
+| 📥 Backlog / Por Hacer | Casos de uso y tareas técnicas pendientes. |
+| ⚙️ En Proceso | Trabajo en desarrollo. |
+| 🔍 En Revisión / Code Review | Trabajo terminado a la espera de revisión del equipo. |
+| ✅ Completado | Trabajo implementado y revisado. |
+
+**Etiquetas:** `Caso de Uso`, `Comprador`, `Vendedor` e `Infraestructura`.
+
+**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 5 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
