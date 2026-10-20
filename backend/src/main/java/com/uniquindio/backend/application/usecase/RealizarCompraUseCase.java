@@ -9,6 +9,7 @@ import com.uniquindio.backend.domain.repository.*;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ public class RealizarCompraUseCase {
     private final PreventaRepository preventaRepository;
     private final Clock clock;
 
+    @Transactional
     public Compra ejecutar(UUID usuarioId, UUID productoId, int cantidad) {
         LocalDateTime ahora = LocalDateTime.now(clock);
 
