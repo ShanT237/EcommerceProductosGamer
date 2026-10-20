@@ -15,4 +15,6 @@ public interface RegaloRepository {
     Optional<Regalo> obtenerPorId(UUID id);
 
     void guardar(Regalo regalo);
+
+    long contarAsignadosA(UUID usuarioId);
 }
