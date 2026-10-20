@@ -6,6 +6,7 @@ import com.uniquindio.backend.domain.repository.VendedorRepository;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ public class RegistrarVendedorUseCase {
 
     private final VendedorRepository vendedorRepository;
 
+    @Transactional
     public Vendedor ejecutar(UUID id, String nombre, String correo, TipoVendedor tipo, String documento) {
         if (vendedorRepository.existeConDocumento(documento)) {
             throw new ReglaDominioException("Ya existe un vendedor con ese documento");
