@@ -8,6 +8,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Limitación: no hay autenticación ni autorización. El {@code productoId} viaja
+ * en el body; cualquiera podría aplicar un descuento a un producto ajeno (CU-27 pendiente).
+ */
 @RestController
 @RequestMapping("/api/descuentos")
 public class DescuentoController {
