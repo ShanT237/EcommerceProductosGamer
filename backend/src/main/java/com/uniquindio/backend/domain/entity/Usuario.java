@@ -18,7 +18,7 @@ import java.util.UUID;
 public class Usuario {
 
     private final UUID id;
-    private final String nombre;
+    private String nombre;
     private String correo;
     private int puntos;
     private boolean activo;
@@ -122,6 +122,20 @@ public class Usuario {
 
     public void activar() {
         this.activo = true;
+    }
+
+    /**
+     * Actualiza nombre y correo juntos: valida ambos ANTES de cambiar cualquiera.
+     */
+    public void actualizarPerfil(String nuevoNombre, String nuevoCorreo) {
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new ReglaDominioException("El nombre del usuario no puede estar vacío");
+        }
+        if (nuevoCorreo == null || !nuevoCorreo.contains("@")) {
+            throw new ReglaDominioException("El correo del usuario no es válido");
+        }
+        this.nombre = nuevoNombre;
+        this.correo = nuevoCorreo;
     }
 
     public void actualizarCorreo(String nuevoCorreo) {
