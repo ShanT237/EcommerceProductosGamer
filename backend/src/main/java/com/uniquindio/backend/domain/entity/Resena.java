@@ -68,6 +68,16 @@ public class Resena {
         return new Resena(id, idCompra, idProducto, idUsuario, calificacion, comentario, LocalDateTime.now());
     }
 
+
+    public static Resena reconstruir(String id, String idCompra, String idProducto, String idUsuario,
+                                     Calificacion calificacion, String comentario, LocalDateTime fechaCreacion,
+                                     String respuestaVendedor, LocalDateTime fechaRespuesta) {
+        Resena resena = new Resena(id, idCompra, idProducto, idUsuario, calificacion, comentario, fechaCreacion);
+        resena.respuestaVendedor = respuestaVendedor;
+        resena.fechaRespuesta = fechaRespuesta;
+        return resena;
+    }
+
     /**
      * El vendedor responde a la reseña. Solo se permite una vez definida
      * la respuesta (no hay setter directo sobre respuestaVendedor).
