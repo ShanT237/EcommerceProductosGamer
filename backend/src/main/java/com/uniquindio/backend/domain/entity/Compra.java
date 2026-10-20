@@ -65,6 +65,21 @@ public class Compra {
     }
 
     /**
+     * Solo para el adaptador de persistencia: "revive" una compra que YA existía.
+     * NO valida: esos datos ya pasaron por realizar(...) cuando la compra nació.
+     */
+    public static Compra reconstruir(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                     LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
+                                     boolean resenada, boolean puntosAsignados, boolean descargado) {
+        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario);
+        compra.estado = estado;
+        compra.resenada = resenada;
+        compra.puntosAsignados = puntosAsignados;
+        compra.descargado = descargado;
+        return compra;
+    }
+
+    /**
      * Subtotal de la compra: precio unitario guardado en el momento de comprar,
      * multiplicado por la cantidad. No depende del precio actual del producto.
      */
