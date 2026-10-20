@@ -44,6 +44,18 @@ public class Regalo {
         return new Regalo(id, idProducto, idCombo);
     }
 
+
+    public static Regalo reconstruir(UUID id, EstadoRegalo estado, LocalDateTime fechaCreacion,
+                                     LocalDateTime fechaEntrega, UUID idProducto, UUID idUsuario,
+                                     UUID idCombo, boolean notificado) {
+        Regalo regalo = new Regalo(id, idProducto, idCombo);
+        regalo.estado = estado;
+        regalo.fechaEntrega = fechaEntrega;
+        regalo.idUsuario = idUsuario;
+        regalo.notificado = notificado;
+        return regalo;
+    }
+
     private void verificarTransicion(EstadoRegalo siguiente) {
         if (estado.esFinal()) {
             throw new ReglaDominioException(
