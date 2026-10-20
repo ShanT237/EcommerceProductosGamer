@@ -3,7 +3,9 @@ package com.uniquindio.backend.infrastructure.persistence;
 import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.repository.VendedorRepository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,5 +28,10 @@ public class VendedorRepositoryEnMemoria implements VendedorRepository {
     public boolean existeConDocumento(String documento) {
         return vendedores.values().stream()
                 .anyMatch(v -> v.getDocumento().equals(documento));
+    }
+
+    @Override
+    public List<Vendedor> obtenerTodos() {
+        return new ArrayList<>(vendedores.values());
     }
 }
