@@ -3,13 +3,11 @@ package com.uniquindio.backend.infrastructure.persistence;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.repository.RegaloRepository;
 import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
-import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 
 public class RegaloRepositoryEnMemoria implements RegaloRepository {
 
