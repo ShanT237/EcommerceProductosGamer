@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Repository
+
 public class ResenaRepositoryEnMemoria implements ResenaRepository {
 
     private final Map<String, Resena> resenas = new HashMap<>();
