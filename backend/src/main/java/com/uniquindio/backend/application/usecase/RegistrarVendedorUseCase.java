@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 /**
- * Caso de uso: RegistrarVendedor (CU-11).
+ * Caso de uso: RegistrarVendedor (CU-11)
  * Impide registros duplicados por documento (cédula o NIT).
  */
 @Service
