@@ -96,13 +96,13 @@ Categorías habilitadas en el catálogo:
 | Módulo | ✅ Implementados | 🟡 Parciales | ⏳ Especificados | Total |
 | :--- | :---: | :---: | :---: | :---: |
 | Compras y Checkout | 4 | 0 | 2 | 6 |
-| Productos y Catálogo | 3 | 2 | 4 | 9 |
+| Productos y Catálogo | 4 | 1 | 4 | 9 |
 | Combos Promocionales | 2 | 0 | 0 | 2 |
 | Reseñas, Puntos y Recompensas | 3 | 0 | 1 | 4 |
 | Lista de Deseos (Wishlist) y Notificaciones | 3 | 0 | 0 | 3 |
 | Usuarios, Vendedores y Autenticación | 2 | 0 | 3 | 5 |
 | Consultas, Métricas y Reportes | 1 | 0 | 7 | 8 |
-| **Total** | **18** | **2** | **17** | **37** |
+| **Total** | **19** | **1** | **17** | **37** |
 
 ### 🛒 Módulo 1: Compras y Checkout
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -125,7 +125,7 @@ Categorías habilitadas en el catálogo:
 | `CU-20` | **Filtrar y Buscar Productos** | ⏳ Especificado | Comprador | Búsqueda avanzada por gama, categoría, precio y preventas. |
 | `CU-21` | **Activar / Pausar Publicación** | ⏳ Especificado | Vendedor | Alterna la visibilidad del producto en el catálogo sin borrarlo. |
 | `CU-22` | **Configurar Descuento Promocional** | 🟡 Parcial | Vendedor | Aplica un porcentaje de descuento a un producto y notifica a quienes lo tienen en su Wishlist (`AplicarDescuentoUseCase`). Falta la vigencia temporal del descuento. |
-| `CU-37` | **Programar Preventa** | 🟡 Parcial | Vendedor | Control de disponibilidad de lanzamientos respetando la fecha estipulada (Regla 4). El dominio está listo (`Preventa.programar`) y `RealizarCompraUseCase` respeta la fecha; falta el caso de uso `ProgramarPreventaUseCase`. |
+| `CU-37` | **Programar Preventa** | ✅ Implementado | Vendedor | Programa una preventa con fecha de lanzamiento futura, un producto del vendedor y sin preventa duplicada (`ProgramarPreventaUseCase`). `RealizarCompraUseCase` respeta esa fecha (Regla 4). |
 
 ### 🎁 Módulo 3: Combos Promocionales
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -183,9 +183,9 @@ backend/src/main/java/com/uniquindio/backend/
 │   ├── repository/          # Interfaces de Repositorio de Dominio
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (20 casos de uso)
+│   ├── usecase/             # Lógica de Orquestación (21 casos de uso)
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, ConsultarHistorialCompras
-│   │   ├── Productos: PublicarProducto, EliminarProducto, AplicarDescuento
+│   │   ├── Productos: PublicarProducto, EliminarProducto, AplicarDescuento, ProgramarPreventa
 │   │   ├── Combos:    CrearCombo, ModificarProductosCombo
 │   │   ├── Reseñas y recompensas: SubirResena, RedimirPuntos, EnviarRegalo, ConfirmarEntregaRegalo
 │   │   ├── Wishlist:  AnadirAWishlist, QuitarDeWishlist, NotificarDescuentoWishlist

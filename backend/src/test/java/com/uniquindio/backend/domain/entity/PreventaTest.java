@@ -35,6 +35,22 @@ class PreventaTest {
     }
 
     @Test
+    @DisplayName("programar con hoy exige fecha de lanzamiento estrictamente futura")
+    void programarExigeFechaFutura() {
+        LocalDate hoy = LocalDate.of(2026, 10, 20);
+        UUID id = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+
+        Preventa preventa = Preventa.programar(id, productoId, hoy.plusDays(1), "Mañana", hoy);
+        assertEquals(hoy.plusDays(1), preventa.getFechaLanzamiento());
+
+        assertThrows(ReglaDominioException.class,
+                () -> Preventa.programar(id, productoId, hoy, "Hoy", hoy));
+        assertThrows(ReglaDominioException.class,
+                () -> Preventa.programar(id, productoId, hoy.minusDays(1), "Ayer", hoy));
+    }
+
+    @Test
     @DisplayName("El producto de preventa está disponible en la fecha de lanzamiento o después")
     void disponibleEnFechaODespues() {
         LocalDate fechaLanzamiento = LocalDate.of(2026, 10, 15);

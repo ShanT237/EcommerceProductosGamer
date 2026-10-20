@@ -40,6 +40,21 @@ public class Preventa {
     }
 
     /**
+     * Factory de programación: exige que la fecha de lanzamiento sea estrictamente posterior a {@code hoy}.
+     */
+    public static Preventa programar(UUID id, UUID productoId, LocalDate fechaLanzamiento,
+                                     String descripcion, LocalDate hoy) {
+        Objects.requireNonNull(hoy, "La fecha actual es obligatoria");
+        if (fechaLanzamiento == null) {
+            throw new ReglaDominioException("La fecha de lanzamiento es obligatoria");
+        }
+        if (!fechaLanzamiento.isAfter(hoy)) {
+            throw new ReglaDominioException("La fecha de lanzamiento debe ser futura");
+        }
+        return programar(id, productoId, fechaLanzamiento, descripcion);
+    }
+
+    /**
      * Indica si el producto de preventa ya está disponible para acceso.
      */
     public boolean estaDisponible(LocalDate fechaActual) {
