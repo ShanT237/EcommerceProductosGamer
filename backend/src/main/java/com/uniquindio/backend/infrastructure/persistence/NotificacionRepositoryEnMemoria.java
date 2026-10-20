@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Repository
+
 public class NotificacionRepositoryEnMemoria implements NotificacionRepository {
 
     private final Map<UUID, Notificacion> storage = new ConcurrentHashMap<>();
