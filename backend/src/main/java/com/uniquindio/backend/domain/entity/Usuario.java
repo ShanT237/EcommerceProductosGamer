@@ -20,6 +20,8 @@ public class Usuario {
     private String correo;
     private int puntos;
     private boolean activo;
+    /** Versión de lock optimista; la asigna el adaptador JPA al reconstruir. */
+    private Long version;
 
     // Usuario
     private Usuario(UUID id, String nombre, String correo) {
@@ -47,9 +49,15 @@ public class Usuario {
      */
     public static Usuario reconstruir(UUID id, String nombre, String correo,
                                       int puntos, boolean activo) {
+        return reconstruir(id, nombre, correo, puntos, activo, null);
+    }
+
+    public static Usuario reconstruir(UUID id, String nombre, String correo,
+                                      int puntos, boolean activo, Long version) {
         Usuario usuario = new Usuario(id, nombre, correo);
         usuario.puntos = puntos;
         usuario.activo = activo;
+        usuario.version = version;
         return usuario;
     }
 
