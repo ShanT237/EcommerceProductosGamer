@@ -10,9 +10,9 @@ INSERT INTO productos (id, vendedor_id, nombre, descripcion, precio, stock, gama
                                                                                                                ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'Figura coleccionable limitada', 'Edición numerada de colección',   350000,  5, 'ALTA',  'EXCLUSIVO', false);
 
 -- Usuarios
-INSERT INTO usuarios (id, nombre, correo, puntos, activo) VALUES
-                                                              ('cccccccc-cccc-cccc-cccc-ccccccccccc1', 'Jose', 'jose.demo@correo.com', 0, true),
-                                                              ('cccccccc-cccc-cccc-cccc-ccccccccccc2', 'Ana',  'ana.demo@correo.com',  0, true);
+INSERT INTO usuarios (id, nombre, correo, puntos, activo, version) VALUES
+                                                              ('cccccccc-cccc-cccc-cccc-ccccccccccc1', 'Jose', 'jose.demo@correo.com', 0, true, 0),
+                                                              ('cccccccc-cccc-cccc-cccc-ccccccccccc2', 'Ana',  'ana.demo@correo.com',  0, true, 0);
 
 -- Compras (el stock de los productos ya descuenta estas cantidades)
 INSERT INTO compras (id, usuario_id, producto_id, cantidad, fecha, precio_unitario, estado, resenada, puntos_asignados, descargado) VALUES

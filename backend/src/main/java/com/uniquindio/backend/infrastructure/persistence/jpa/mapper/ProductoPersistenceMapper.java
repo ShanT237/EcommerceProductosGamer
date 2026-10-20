@@ -15,6 +15,7 @@ public class ProductoPersistenceMapper {
         entity.setNombre(producto.getNombre());
         entity.setDescripcion(producto.getDescripcion());
         entity.setPrecio(producto.getPrecio());
+        entity.setPrecioOriginal(producto.getPrecioOriginal());
         entity.setStock(producto.getStock());
         entity.setGama(producto.getGama());
         entity.setExclusividad(producto.getExclusividad());
@@ -33,6 +34,7 @@ public class ProductoPersistenceMapper {
                 entity.getStock(),
                 entity.getGama(),
                 entity.getExclusividad(),
-                entity.isEliminado());
+                entity.isEliminado(),
+                entity.getPrecioOriginal());
     }
 }

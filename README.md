@@ -17,8 +17,9 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
 5. [Casos de Uso del Sistema (37 Casos de Uso)](#5-casos-de-uso-del-sistema-37-casos-de-uso)
 6. [Arquitectura del Software (Clean Architecture)](#6-arquitectura-del-software-clean-architecture)
-7. [Cómo ejecutar las pruebas](#7-cómo-ejecutar-las-pruebas)
-8. [Gestión del Proyecto (Trello)](#8-gestión-del-proyecto-trello)
+7. [Limitaciones conocidas](#7-limitaciones-conocidas)
+8. [Cómo ejecutar las pruebas](#8-cómo-ejecutar-las-pruebas)
+9. [Gestión del Proyecto (Trello)](#9-gestión-del-proyecto-trello)
 
 ---
 
@@ -199,7 +200,15 @@ backend/src/main/java/com/uniquindio/backend/
 
 ---
 
-## 7. Cómo ejecutar las pruebas
+## 7. Limitaciones conocidas
+
+El curso aún no exige seguridad (CU-27 *Iniciar Sesión* está pendiente). **No hay Spring Security**: los endpoints aceptan `usuarioId` / `vendedorId` en el body o en la URL, así que un cliente podría redimir puntos de otro usuario, aplicar descuentos a productos ajenos o dar de baja a un vendedor.
+
+Los precios y porcentajes se modelan con `double` y el value object `Precio`. Una migración a `BigDecimal` queda pendiente.
+
+---
+
+## 8. Cómo ejecutar las pruebas
 
 ```powershell
 cd backend
@@ -208,7 +217,7 @@ cd backend
 
 ---
 
-## 8. Gestión del Proyecto (Trello)
+## 9. Gestión del Proyecto (Trello)
 
 El avance de la Entrega 1 se gestiona en un tablero público de Trello:
 

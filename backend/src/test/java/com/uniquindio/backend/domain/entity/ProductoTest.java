@@ -108,9 +108,25 @@ class ProductoTest {
 
         producto.aplicarDescuento(10);
         assertEquals(90.0, producto.getPrecio(), 0.001);
+        assertEquals(100.0, producto.getPrecioOriginal());
 
         assertThrows(ReglaDominioException.class, () -> producto.aplicarDescuento(0));
         assertThrows(ReglaDominioException.class, () -> producto.aplicarDescuento(100));
+    }
+
+    @Test
+    @DisplayName("Rechaza aplicar un segundo descuento sobre el precio ya rebajado")
+    void rechazaDescuentoAcumulado() {
+        Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Desc",
+                100, 5, Gama.MEDIA, Exclusividad.NORMAL);
+
+        producto.aplicarDescuento(10);
+
+        ReglaDominioException ex = assertThrows(ReglaDominioException.class,
+                () -> producto.aplicarDescuento(10));
+        assertEquals("El producto ya tiene un descuento activo", ex.getMessage());
+        assertEquals(90.0, producto.getPrecio(), 0.001);
+        assertEquals(100.0, producto.getPrecioOriginal());
     }
 
     @Test

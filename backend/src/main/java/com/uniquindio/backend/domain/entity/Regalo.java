@@ -28,12 +28,17 @@ public class Regalo {
     private final UUID idCombo;
     private boolean notificado;
 
-    private Regalo(UUID id, UUID idProducto, UUID idCombo) {
+    /**
+     * Constructor base: recibe {@code fechaCreacion} explícitamente para que
+     * {@link #reconstruir} pueda restaurar la fecha original de la BD sin
+     * pisar {@code LocalDateTime.now()}.
+     */
+    private Regalo(UUID id, UUID idProducto, UUID idCombo, LocalDateTime fechaCreacion) {
         this.id = Objects.requireNonNull(id, "El id del regalo es obligatorio");
         this.idProducto = idProducto;
         this.idCombo = idCombo;
         this.estado = EstadoRegalo.DISPONIBLE;
-        this.fechaCreacion = LocalDateTime.now();
+        this.fechaCreacion = Objects.requireNonNull(fechaCreacion, "La fecha de creación es obligatoria");
     }
 
     public static Regalo crear(UUID id, UUID idProducto, UUID idCombo) {
@@ -41,7 +46,22 @@ public class Regalo {
             throw new ReglaDominioException(
                     "Un regalo debe estar asociado a un producto o a un combo, pero no a ambos");
         }
-        return new Regalo(id, idProducto, idCombo);
+        return new Regalo(id, idProducto, idCombo, LocalDateTime.now());
+    }
+
+    /**
+     * Solo para el adaptador de persistencia: "revive" un regalo que YA existía.
+     * Preserva la {@code fechaCreacion} original — NO llama a {@code LocalDateTime.now()}.
+     */
+    public static Regalo reconstruir(UUID id, EstadoRegalo estado, LocalDateTime fechaCreacion,
+                                     LocalDateTime fechaEntrega, UUID idProducto, UUID idUsuario,
+                                     UUID idCombo, boolean notificado) {
+        Regalo regalo = new Regalo(id, idProducto, idCombo, fechaCreacion);
+        regalo.estado = estado;
+        regalo.fechaEntrega = fechaEntrega;
+        regalo.idUsuario = idUsuario;
+        regalo.notificado = notificado;
+        return regalo;
     }
 
     private void verificarTransicion(EstadoRegalo siguiente) {

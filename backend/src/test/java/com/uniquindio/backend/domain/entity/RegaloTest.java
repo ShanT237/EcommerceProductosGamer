@@ -5,11 +5,25 @@ import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class RegaloTest {
+
+    @Test
+    @DisplayName("reconstruir preserva la fecha de creación original")
+    void reconstruirPreservaFechaCreacion() {
+        UUID id = UUID.randomUUID();
+        UUID idProducto = UUID.randomUUID();
+        LocalDateTime fechaOriginal = LocalDateTime.of(2024, 1, 15, 10, 30);
+
+        Regalo regalo = Regalo.reconstruir(id, EstadoRegalo.DISPONIBLE, fechaOriginal,
+                null, idProducto, null, null, false);
+
+        assertEquals(fechaOriginal, regalo.getFechaCreacion());
+    }
 
     @Test
     @DisplayName("Crea un regalo disponible y falla si no tiene producto ni combo")
@@ -44,7 +58,7 @@ class RegaloTest {
         assertNotNull(regalo.getFechaEntrega());
     }
 
-    @Test   
+    @Test
     @DisplayName("Rechaza enviar un regalo que no ha sido elegido, y el estado no cambia")
     void rechazaEnviarSinElegir() {
         Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);

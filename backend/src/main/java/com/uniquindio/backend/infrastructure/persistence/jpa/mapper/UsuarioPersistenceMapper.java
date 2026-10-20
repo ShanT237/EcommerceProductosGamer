@@ -14,6 +14,7 @@ public class UsuarioPersistenceMapper {
         entity.setCorreo(usuario.getCorreo());
         entity.setPuntos(usuario.getPuntos());
         entity.setActivo(usuario.isActivo());
+        entity.setVersion(usuario.getVersion());
         return entity;
     }
 
@@ -23,6 +24,7 @@ public class UsuarioPersistenceMapper {
                 entity.getNombre(),
                 entity.getCorreo(),
                 entity.getPuntos(),
-                entity.isActivo());
+                entity.isActivo(),
+                entity.getVersion());
     }
 }
