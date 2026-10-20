@@ -35,6 +35,15 @@ public class Wishlist {
         return new Wishlist(id, usuarioId);
     }
 
+    public static Wishlist reconstruir(UUID id, UUID usuarioId, List<UUID> productos) {
+        Wishlist wishlist = new Wishlist(id, usuarioId);
+        if (productos != null) {
+            wishlist.productos.addAll(productos);
+        }
+        return wishlist;
+    }
+
+
     public List<UUID> getProductos() {
         return List.copyOf(productos);
     }
