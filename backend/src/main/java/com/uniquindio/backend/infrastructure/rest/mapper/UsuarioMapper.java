@@ -1,5 +1,6 @@
 package com.uniquindio.backend.infrastructure.rest.mapper;
 
+import com.uniquindio.backend.application.dto.response.PuntosResponse;
 import com.uniquindio.backend.application.dto.response.RegistrarUsuarioResponse;
 import com.uniquindio.backend.domain.entity.Usuario;
 import org.springframework.stereotype.Component;
@@ -15,5 +16,9 @@ public class UsuarioMapper {
                 usuario.getPuntos(),
                 usuario.isActivo()
         );
+    }
+
+    public PuntosResponse toPuntosResponse(Usuario usuario) {
+        return PuntosResponse.desde(usuario);
     }
 }
