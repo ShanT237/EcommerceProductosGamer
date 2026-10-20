@@ -1,6 +1,8 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.service.HashContrasena;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -22,6 +24,8 @@ public class Usuario {
     private boolean activo;
     /** Versión de lock optimista; la asigna el adaptador JPA al reconstruir. */
     private Long version;
+    @Getter(AccessLevel.NONE)
+    private String contrasenaHash;
 
     // Usuario
     private Usuario(UUID id, String nombre, String correo) {
@@ -76,6 +80,20 @@ public class Usuario {
             throw new ReglaDominioException("Saldo de puntos insuficiente");
         }
         this.puntos -= cantidad;
+    }
+
+    /**
+     * Guarda el hash de la contraseña (nunca la contraseña en claro).
+     */
+    public void definirContrasena(String hash) {
+        if (hash == null || hash.isBlank()) {
+            throw new ReglaDominioException("El hash de la contraseña no puede estar vacío");
+        }
+        this.contrasenaHash = hash;
+    }
+
+    public boolean verificarContrasena(String plana, HashContrasena hasher) {
+        return contrasenaHash != null && hasher.coincide(plana, contrasenaHash);
     }
 
     public void asegurarActivo() {
