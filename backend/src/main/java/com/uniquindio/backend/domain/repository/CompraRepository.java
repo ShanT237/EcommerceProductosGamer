@@ -36,4 +36,7 @@ public interface CompraRepository {
      * La usa EliminarProductoUseCase para validar la Regla 3.
      */
     boolean existeCompraActivaDeProducto(UUID productoId);
+
+
+    long contarCompletadasDe(UUID usuarioId);
 }
