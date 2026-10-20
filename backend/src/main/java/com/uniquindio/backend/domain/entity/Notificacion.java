@@ -50,6 +50,14 @@ public class Notificacion {
                 mensaje, LocalDateTime.now());
     }
 
+    public static Notificacion reconstruir(UUID id, UUID usuarioId, UUID productoId,
+                                           TipoNotificacion tipo, String mensaje,
+                                           LocalDateTime fecha, boolean leida) {
+        Notificacion n = new Notificacion(id, usuarioId, productoId, tipo, mensaje, fecha);
+        n.leida = leida;
+        return n;
+    }
+
     public void marcarComoLeida() {
         this.leida = true;
     }
