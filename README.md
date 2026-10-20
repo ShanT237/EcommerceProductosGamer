@@ -76,7 +76,7 @@ Categorías habilitadas en el catálogo:
 | 7 | Un producto no se repite en la Wishlist ni se agregan productos eliminados. | `Wishlist.agregarProducto`, `AnadirAWishlistUseCase` | ✅ |
 | 8 | Solo se notifica a quienes tienen el producto en su Wishlist, y solo cuando hay descuento. | `Producto.aplicarDescuento`, `AplicarDescuentoUseCase`, `NotificarDescuentoWishlistUseCase` | ✅ |
 | 9 | Un producto exclusivo se compra una sola vez por usuario y de a una unidad. | `Producto.validarCompraExclusiva` | ✅ |
-| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo`, `EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase` | 🟡 Ciclo del regalo listo; falta la **meta de compras** que lo dispara (CU-10) |
+| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo`, `EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase` |✅|
 
 ### Reglas adicionales que el código garantiza
 
@@ -98,11 +98,11 @@ Categorías habilitadas en el catálogo:
 | Compras y Checkout | 4 | 0 | 2 | 6 |
 | Productos y Catálogo | 4 | 1 | 4 | 9 |
 | Combos Promocionales | 2 | 0 | 0 | 2 |
-| Reseñas, Puntos y Recompensas | 3 | 0 | 1 | 4 |
+| Reseñas, Puntos y Recompensas | 4 | 0 | 0 | 4 |
 | Lista de Deseos (Wishlist) y Notificaciones | 3 | 0 | 0 | 3 |
 | Usuarios, Vendedores y Autenticación | 2 | 0 | 3 | 5 |
 | Consultas, Métricas y Reportes | 1 | 0 | 7 | 8 |
-| **Total** | **19** | **1** | **17** | **37** |
+| **Total** | **20** | **1** | **16** | **37** |
 
 ### 🛒 Módulo 1: Compras y Checkout
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -138,7 +138,7 @@ Categorías habilitadas en el catálogo:
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-02` | **Subir Reseña y Asignar Puntos** | ✅ Implementado | Comprador | Publica reseña sobre compra completada, valida 1 reseña por usuario/producto y asigna puntos (`SubirResenaUseCase`). |
 | `CU-08` | **Redimir Puntos por Beneficios** | ✅ Implementado | Comprador | Canjea puntos acumulados con validación de saldo positivo (`RedimirPuntosUseCase`, `Usuario.redimirPuntos`). |
-| `CU-10` | **Asignar Regalo por Meta** | ⏳ Especificado | Admin / Sistema | Concede regalos del catálogo al cumplir metas acumuladas de compra. |
+| `CU-10` | **Asignar Regalo por Meta** | ✅ Implementado | Admin / Sistema | Asigna un regalo disponible al usuario por cada 5 compras `COMPLETADA`, siempre que no posea ya el producto (o alguno de los del combo) (`AsignarRegaloPorMetaUseCase`). |
 | `CU-24` | **Enviar / Confirmar Entrega Regalo** | ✅ Implementado | Admin / Sistema / Comprador | Administra el cambio de estado del regalo: el envío exige que esté elegido y la entrega la confirma solo el destinatario (`EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase`). |
 
 ### ❤️ Módulo 5: Lista de Deseos (Wishlist) y Notificaciones
@@ -187,7 +187,7 @@ backend/src/main/java/com/uniquindio/backend/
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, ConsultarHistorialCompras
 │   │   ├── Productos: PublicarProducto, EliminarProducto, AplicarDescuento, ProgramarPreventa
 │   │   ├── Combos:    CrearCombo, ModificarProductosCombo
-│   │   ├── Reseñas y recompensas: SubirResena, RedimirPuntos, EnviarRegalo, ConfirmarEntregaRegalo
+│   │   ├── Reseñas y recompensas: SubirResena, RedimirPuntos, EnviarRegalo, ConfirmarEntregaRegalo, AsignarRegaloPorMeta
 │   │   ├── Wishlist:  AnadirAWishlist, QuitarDeWishlist, NotificarDescuentoWishlist
 │   │   └── Cuentas:   RegistrarUsuario, RegistrarVendedor, DarDeBajaVendedor
 │   └── dto/                 # Data Transfer Objects (request y response)
