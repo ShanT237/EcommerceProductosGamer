@@ -35,6 +35,9 @@ public class ProductoEntity {
     @Column(nullable = false)
     private double precio;
 
+    @Column(name = "precio_original")
+    private Double precioOriginal;
+
     @Column(nullable = false)
     private int stock;
 
