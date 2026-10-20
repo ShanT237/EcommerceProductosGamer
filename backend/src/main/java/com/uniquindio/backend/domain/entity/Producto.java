@@ -89,6 +89,12 @@ public class Producto {
         }
     }
 
+    public void asegurarPerteneceA(UUID vendedorId) {
+        if (!this.vendedorId.equals(vendedorId)) {
+            throw new ReglaDominioException("El producto no pertenece al vendedor");
+        }
+    }
+
     /**
      * Regla 1: el stock no puede ser negativo.
      */
