@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+
 public class WishlistRepositoryEnMemoria implements WishlistRepository {
 
     private final Map<UUID, Wishlist> wishlists = new HashMap<>();
