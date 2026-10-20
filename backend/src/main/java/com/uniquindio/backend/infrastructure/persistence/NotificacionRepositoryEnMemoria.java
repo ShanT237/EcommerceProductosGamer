@@ -2,7 +2,6 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.Notificacion;
 import com.uniquindio.backend.domain.repository.NotificacionRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
 
 public class NotificacionRepositoryEnMemoria implements NotificacionRepository {
 
