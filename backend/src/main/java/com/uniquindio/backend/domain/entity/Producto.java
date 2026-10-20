@@ -26,6 +26,8 @@ public class Producto {
     private final String nombre;
     private final String descripcion;
     private double precio;
+    /** Precio anterior al descuento activo; {@code null} si no hay descuento. */
+    private Double precioOriginal;
     private int stock;
     private final Gama gama;
     private final Exclusividad exclusividad;
@@ -38,6 +40,7 @@ public class Producto {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
+        this.precioOriginal = null;
         this.stock = stock;
         this.gama = gama;
         this.exclusividad = exclusividad;
@@ -73,9 +76,17 @@ public class Producto {
     public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
                                        double precio, int stock, Gama gama, Exclusividad exclusividad,
                                        boolean eliminado) {
+        return reconstruir(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                eliminado, null);
+    }
+
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado, Double precioOriginal) {
         Producto producto = new Producto(id, vendedorId, nombre, descripcion,
                 precio, stock, gama, exclusividad);
         producto.eliminado = eliminado;
+        producto.precioOriginal = precioOriginal;
         return producto;
     }
 
@@ -154,9 +165,13 @@ public class Producto {
 
     public void aplicarDescuento(double porcentaje) {
         asegurarNoEliminado();
+        if (precioOriginal != null) {
+            throw new ReglaDominioException("El producto ya tiene un descuento activo");
+        }
         if (porcentaje <= 0) {
             throw new ReglaDominioException("El descuento debe ser mayor a cero");
         }
+        this.precioOriginal = this.precio;
         this.precio = new Precio(this.precio).aplicarDescuento(porcentaje).valor();
     }
 
