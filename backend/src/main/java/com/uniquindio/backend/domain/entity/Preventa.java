@@ -29,6 +29,11 @@ public class Preventa {
         this.descripcion = descripcion;
     }
 
+
+    public static Preventa reconstruir(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
+        return new Preventa(id, productoId, fechaLanzamiento, descripcion);
+    }
+
     public static Preventa programar(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
         Objects.requireNonNull(id, "El id de la preventa es obligatorio");
         Objects.requireNonNull(productoId, "El id del producto es obligatorio");
