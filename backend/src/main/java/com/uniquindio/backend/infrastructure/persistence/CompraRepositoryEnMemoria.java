@@ -47,6 +47,14 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
                 .anyMatch(c -> c.getProductoId().equals(productoId) && esActiva(c));
     }
 
+    @Override
+    public long contarCompletadasDe(UUID usuarioId) {
+        return compras.values().stream()
+                .filter(c -> c.getUsuarioId().equals(usuarioId)
+                        && c.getEstado() == EstadoCompra.COMPLETADA)
+                .count();
+    }
+
     private static boolean esActiva(Compra c) {
         return c.getEstado() == EstadoCompra.PENDIENTE
                 || c.getEstado() == EstadoCompra.COMPLETADA;
