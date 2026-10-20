@@ -41,6 +41,18 @@ public class Usuario {
         return new Usuario(id, nombre, correo);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" un usuario que YA existía.
+     * NO valida: esos datos ya pasaron por registrar(...) cuando el usuario nació.
+     */
+    public static Usuario reconstruir(UUID id, String nombre, String correo,
+                                      int puntos, boolean activo) {
+        Usuario usuario = new Usuario(id, nombre, correo);
+        usuario.puntos = puntos;
+        usuario.activo = activo;
+        return usuario;
+    }
+
     public void acumularPuntos(int cantidad) {
         if (cantidad <= 0) {
             throw new ReglaDominioException("La cantidad de puntos a acumular debe ser positiva");
