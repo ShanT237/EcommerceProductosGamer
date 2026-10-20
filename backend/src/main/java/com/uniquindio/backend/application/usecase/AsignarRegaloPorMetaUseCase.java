@@ -60,9 +60,11 @@ public class AsignarRegaloPorMetaUseCase {
         if (regalo.getIdProducto() != null) {
             return compraRepository.existeCompraDe(usuarioId, regalo.getIdProducto());
         }
+        if (regalo.getIdCombo() == null) {
+            throw new ReglaDominioException("El regalo no tiene producto ni combo asociado");
+        }
         Combo combo = comboRepository.obtenerPorId(regalo.getIdCombo())
                 .orElseThrow(() -> new NoSuchElementException("El combo del regalo no existe"));
-        return combo.getProductos().stream()
-                .anyMatch(productoId -> compraRepository.existeCompraDe(usuarioId, productoId));
+        return compraRepository.existeCompraDeAlguno(usuarioId, combo.getProductos());
     }
 }

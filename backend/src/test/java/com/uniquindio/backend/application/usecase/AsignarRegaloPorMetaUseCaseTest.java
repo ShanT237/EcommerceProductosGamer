@@ -147,17 +147,44 @@ class AsignarRegaloPorMetaUseCaseTest {
         assertEquals(EstadoRegalo.DISPONIBLE, regaloRepository.obtenerPorId(regalo.getId()).get().getEstado());
     }
 
-    @Test
-    @DisplayName("Rechaza un regalo-combo si el usuario ya posee alguno de sus productos")
-    void rechazaComboConProductoYaPoseido() {
-        UUID yaComprado = comprasCompletadas(5);
-        Combo combo = Combo.crear(UUID.randomUUID(), UUID.randomUUID(), "Combo", "Setup", 10.0,
-                List.of(yaComprado, UUID.randomUUID()));
+    private Regalo regaloDeCombo(List<UUID> productos) {
+        Combo combo = Combo.crear(UUID.randomUUID(), UUID.randomUUID(), "Combo", "Setup", 10.0, productos);
         comboRepository.guardar(combo);
         Regalo regalo = Regalo.crear(UUID.randomUUID(), null, combo.getId());
         regaloRepository.guardar(regalo);
+        return regalo;
+    }
+
+    @Test
+    @DisplayName("Rechaza un regalo-combo si el usuario ya posee su primer producto")
+    void rechazaComboConProductoYaPoseido() {
+        UUID yaComprado = comprasCompletadas(5);
+        Regalo regalo = regaloDeCombo(List.of(yaComprado, UUID.randomUUID()));
 
         assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(usuarioId, regalo.getId()));
+        assertEquals(EstadoRegalo.DISPONIBLE, regaloRepository.obtenerPorId(regalo.getId()).get().getEstado());
+    }
+
+    @Test
+    @DisplayName("Rechaza un regalo-combo si el usuario ya posee otro de sus productos (no el primero)")
+    void rechazaComboConSegundoProductoPoseido() {
+        UUID yaComprado = comprasCompletadas(5);
+        Regalo regalo = regaloDeCombo(List.of(UUID.randomUUID(), yaComprado));
+
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(usuarioId, regalo.getId()));
+        assertEquals(EstadoRegalo.DISPONIBLE, regaloRepository.obtenerPorId(regalo.getId()).get().getEstado());
+    }
+
+    @Test
+    @DisplayName("Asigna un regalo-combo si el usuario no posee ninguno de sus productos")
+    void asignaComboSinProductosPoseidos() {
+        comprasCompletadas(5);
+        Regalo regalo = regaloDeCombo(List.of(UUID.randomUUID(), UUID.randomUUID()));
+
+        Regalo r = useCase.ejecutar(usuarioId, regalo.getId());
+
+        assertEquals(EstadoRegalo.ELEGIDO, r.getEstado());
+        assertEquals(usuarioId, r.getIdUsuario());
     }
 
     @Test

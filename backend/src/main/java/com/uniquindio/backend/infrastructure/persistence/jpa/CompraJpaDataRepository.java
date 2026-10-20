@@ -19,4 +19,7 @@ interface CompraJpaDataRepository extends JpaRepository<CompraEntity, UUID> {
 
 
     long countByUsuarioIdAndEstado(UUID usuarioId, EstadoCompra estado);
+
+    boolean existsByUsuarioIdAndProductoIdInAndEstadoIn(
+            UUID usuarioId, Collection<UUID> productoIds, Collection<EstadoCompra> estados);
 }
