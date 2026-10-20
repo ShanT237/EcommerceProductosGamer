@@ -180,6 +180,19 @@ public class Producto {
         this.stock -= cantidad;
     }
 
+    /**
+     * Verifica que hay stock para la cantidad pedida SIN modificarlo; permite validar
+     * varios productos antes de descontar cualquiera (compra de combos).
+     */
+    public void asegurarStock(int cantidad) {
+        if (cantidad <= 0) {
+            throw new ReglaDominioException("La cantidad debe ser positiva");
+        }
+        if (this.stock < cantidad) {
+            throw new ReglaDominioException("No hay suficiente stock disponible");
+        }
+    }
+
     public void aumentarStock(int cantidad) {
         if (cantidad <= 0) {
             throw new ReglaDominioException("La cantidad a aumentar debe ser positiva");
