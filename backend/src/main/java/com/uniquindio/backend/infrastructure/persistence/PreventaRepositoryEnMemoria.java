@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+
 public class PreventaRepositoryEnMemoria implements PreventaRepository {
 
     private final Map<UUID, Preventa> preventas = new HashMap<>();
