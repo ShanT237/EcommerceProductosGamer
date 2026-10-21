@@ -6,6 +6,7 @@ import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.VendedorPers
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,5 +30,10 @@ public class VendedorRepositoryJpa implements VendedorRepository {
     @Override
     public boolean existeConDocumento(String documento) {
         return dataRepository.existsByDocumento(documento);
+    }
+
+    @Override
+    public List<Vendedor> obtenerTodos() {
+        return dataRepository.findAll().stream().map(mapper::toDomain).toList();
     }
 }

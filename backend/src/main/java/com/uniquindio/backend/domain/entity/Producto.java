@@ -264,12 +264,6 @@ public class Producto {
         this.descripcion = nuevaDescripcion;
     }
 
-    public void asegurarPerteneceA(UUID vendedorId) {
-        if (!this.vendedorId.equals(vendedorId)) {
-            throw new ReglaDominioException("El producto no pertenece a este vendedor");
-        }
-    }
-
     public void aplicarDescuento(double porcentaje) {
         asegurarNoEliminado();
         if (precioOriginal != null) {
