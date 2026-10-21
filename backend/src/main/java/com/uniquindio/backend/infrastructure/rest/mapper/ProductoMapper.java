@@ -6,6 +6,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import org.springframework.stereotype.Component;
 import com.uniquindio.backend.application.dto.response.EditarInformacionProductoResponse;
 import com.uniquindio.backend.application.dto.response.CambiarVisibilidadProductoResponse;
+import com.uniquindio.backend.application.dto.response.BuscarProductoResponse;
 
 @Component
 public class ProductoMapper {
@@ -47,6 +48,20 @@ public class ProductoMapper {
                 producto.getVendedorId(),
                 producto.getNombre(),
                 producto.isPausado()
+        );
+    }
+
+    public BuscarProductoResponse toBuscarResponse(Producto producto) {
+        return new BuscarProductoResponse(
+                producto.getId(),
+                producto.getVendedorId(),
+                producto.getNombre(),
+                producto.getDescripcion(),
+                producto.getPrecio(),
+                producto.getStock(),
+                producto.getGama(),
+                producto.getExclusividad(),
+                producto.getCategoria()
         );
     }
 }
