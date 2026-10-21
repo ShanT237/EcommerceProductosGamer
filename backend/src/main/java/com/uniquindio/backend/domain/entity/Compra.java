@@ -72,11 +72,20 @@ public class Compra {
     public static Compra reconstruir(UUID id, UUID usuarioId, UUID productoId, int cantidad,
                                      LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
                                      boolean resenada, boolean puntosAsignados, boolean descargado) {
+        return reconstruir(id, usuarioId, productoId, cantidad, fecha, precioUnitario, estado,
+                resenada, puntosAsignados, descargado, false);
+    }
+
+    public static Compra reconstruir(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                     LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
+                                     boolean resenada, boolean puntosAsignados, boolean descargado,
+                                     boolean cuponAplicado) {
         Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario);
         compra.estado = estado;
         compra.resenada = resenada;
         compra.puntosAsignados = puntosAsignados;
         compra.descargado = descargado;
+        compra.cuponAplicado = cuponAplicado;
         return compra;
     }
 
