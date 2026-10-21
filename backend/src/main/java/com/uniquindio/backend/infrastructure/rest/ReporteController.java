@@ -1,9 +1,11 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.dto.response.MetricasResenasResponse;
 import com.uniquindio.backend.application.dto.response.ProductoStockBajoResponse;
 import com.uniquindio.backend.application.dto.response.ProductoVendidoResponse;
 import com.uniquindio.backend.application.dto.response.ReporteVentasResponse;
 import com.uniquindio.backend.application.usecase.AlertasStockBajoUseCase;
+import com.uniquindio.backend.application.usecase.MetricasResenasUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
@@ -27,16 +29,19 @@ public class ReporteController {
     private final ReporteVentasVendedorUseCase reporteVentasVendedorUseCase;
     private final ReporteMasVendidosUseCase reporteMasVendidosUseCase;
     private final AlertasStockBajoUseCase alertasStockBajoUseCase;
-    private final ProductoMapper stockBajoMapper;
+    private final MetricasResenasUseCase metricasResenasUseCase;
+    private final ProductoMapper productoMapper;
 
     public ReporteController(ReporteVentasVendedorUseCase reporteVentasVendedorUseCase,
                              ReporteMasVendidosUseCase reporteMasVendidosUseCase,
                              AlertasStockBajoUseCase alertasStockBajoUseCase,
-                             ProductoMapper stockBajoMapper) {
+                             MetricasResenasUseCase metricasResenasUseCase,
+                             ProductoMapper productoMapper) {
         this.reporteVentasVendedorUseCase = reporteVentasVendedorUseCase;
         this.reporteMasVendidosUseCase = reporteMasVendidosUseCase;
         this.alertasStockBajoUseCase = alertasStockBajoUseCase;
-        this.stockBajoMapper = stockBajoMapper;
+        this.metricasResenasUseCase = metricasResenasUseCase;
+        this.productoMapper = productoMapper;
     }
 
     // CU-29 Reporte de Ventas por Vendedor
@@ -59,8 +64,14 @@ public class ReporteController {
             @RequestParam UUID vendedorId,
             @RequestParam(defaultValue = "5") int umbral) {
         List<ProductoStockBajoResponse> respuesta = alertasStockBajoUseCase.ejecutar(vendedorId, umbral).stream()
-                .map(stockBajoMapper::toStockBajoResponse)
+                .map(productoMapper::toStockBajoResponse)
                 .toList();
         return ResponseEntity.ok(respuesta); // 200 OK
+    }
+
+    // CU-35 Métricas de Reseñas (promedio, distribución por estrellas, positivas y negativas)
+    @GetMapping("/metricas-resenas")
+    public ResponseEntity<MetricasResenasResponse> metricasResenas(@RequestParam UUID vendedorId) {
+        return ResponseEntity.ok(metricasResenasUseCase.ejecutar(vendedorId)); // 200 OK
     }
 }
