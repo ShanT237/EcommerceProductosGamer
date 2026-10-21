@@ -5,6 +5,8 @@ import com.uniquindio.backend.application.dto.response.RegistrarUsuarioResponse;
 import com.uniquindio.backend.application.usecase.RegistrarUsuarioUseCase;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.infrastructure.rest.mapper.UsuarioMapper;
+import com.uniquindio.backend.application.dto.request.EditarPerfilRequest;
+import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +21,14 @@ import java.util.UUID;
 public class UsuarioController {
 
     private final RegistrarUsuarioUseCase registrarUsuarioUseCase;
+    private final EditarPerfilUseCase editarPerfilUseCase;
     private final UsuarioMapper mapper;
 
     public UsuarioController(RegistrarUsuarioUseCase registrarUsuarioUseCase,
+                             EditarPerfilUseCase editarPerfilUseCase,
                              UsuarioMapper mapper) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
+        this.editarPerfilUseCase = editarPerfilUseCase;
         this.mapper = mapper;
     }
 
@@ -46,5 +51,14 @@ public class UsuarioController {
                 .buildAndExpand(usuario.getId())
                 .toUri();
         return ResponseEntity.created(location).body(response); // 201 = created
+    }
+
+    // CU-26 Editar Perfil (nombre y correo)
+    @PutMapping("/{id}/perfil")
+    public ResponseEntity<RegistrarUsuarioResponse> editarPerfil(
+            @PathVariable UUID id,
+            @Valid @RequestBody EditarPerfilRequest request) {
+        Usuario usuario = editarPerfilUseCase.ejecutar(id, request.nombre(), request.correo());
+        return ResponseEntity.ok(mapper.toRegistrarResponse(usuario)); // 200 OK
     }
 }
