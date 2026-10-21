@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.entity.Resena;
 import com.uniquindio.backend.domain.repository.ResenaRepository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,5 +26,12 @@ public class ResenaRepositoryEnMemoria implements ResenaRepository {
     public boolean existeResenaDeUsuarioYProducto(String usuarioId, String productoId) {
         return resenas.values().stream()
                 .anyMatch(r -> r.getIdUsuario().equals(usuarioId) && r.getIdProducto().equals(productoId));
+    }
+
+    @Override
+    public List<Resena> obtenerPorProductoId(String productoId) {
+        return resenas.values().stream()
+                .filter(r -> r.getIdProducto().equals(productoId))
+                .toList();
     }
 }
