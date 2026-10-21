@@ -58,10 +58,17 @@ public class Usuario {
 
     public static Usuario reconstruir(UUID id, String nombre, String correo,
                                       int puntos, boolean activo, Long version) {
+        return reconstruir(id, nombre, correo, puntos, activo, version, null);
+    }
+
+    public static Usuario reconstruir(UUID id, String nombre, String correo,
+                                      int puntos, boolean activo, Long version,
+                                      String contrasenaHash) {
         Usuario usuario = new Usuario(id, nombre, correo);
         usuario.puntos = puntos;
         usuario.activo = activo;
         usuario.version = version;
+        usuario.contrasenaHash = contrasenaHash;
         return usuario;
     }
 
@@ -90,6 +97,13 @@ public class Usuario {
             throw new ReglaDominioException("El hash de la contraseña no puede estar vacío");
         }
         this.contrasenaHash = hash;
+    }
+
+    /**
+     * Solo para el adaptador de persistencia: devuelve el hash guardado (nunca la contraseña en claro).
+     */
+    public String obtenerHashContrasena() {
+        return contrasenaHash;
     }
 
     public boolean verificarContrasena(String plana, HashContrasena hasher) {
