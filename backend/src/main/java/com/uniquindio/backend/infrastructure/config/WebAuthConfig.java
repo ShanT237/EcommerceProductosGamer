@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Protege /api/** con JWT; solo /api/auth/** (login) es público.
+ * Protege /api/** con JWT; login y los endpoints de registro son públicos.
  */
 @Configuration
 public class WebAuthConfig implements WebMvcConfigurer {
