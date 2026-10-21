@@ -6,11 +6,19 @@ import com.uniquindio.backend.application.usecase.CrearComboUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductosComboUseCase;
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.infrastructure.rest.mapper.ComboMapper;
+import com.uniquindio.backend.application.dto.request.ComprarComboRequest;
+import com.uniquindio.backend.application.dto.response.ComprarComboResponse;
+import com.uniquindio.backend.application.usecase.ComprarComboUseCase;
+import com.uniquindio.backend.domain.entity.Compra;
+import org.springframework.http.HttpStatus;
+
+
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.List;
 import java.net.URI;
 import java.util.UUID;
 
@@ -24,13 +32,16 @@ public class ComboController {
 
     private final CrearComboUseCase crearComboUseCase;
     private final ModificarProductosComboUseCase modificarProductosComboUseCase;
+    private final ComprarComboUseCase comprarComboUseCase;
     private final ComboMapper mapper;
 
     public ComboController(CrearComboUseCase crearComboUseCase,
                            ModificarProductosComboUseCase modificarProductosComboUseCase,
+                           ComprarComboUseCase comprarComboUseCase,
                            ComboMapper mapper) {
         this.crearComboUseCase = crearComboUseCase;
         this.modificarProductosComboUseCase = modificarProductosComboUseCase;
+        this.comprarComboUseCase = comprarComboUseCase;
         this.mapper = mapper;
     }
 
@@ -72,5 +83,15 @@ public class ComboController {
             @PathVariable UUID productoId) {
         Combo combo = modificarProductosComboUseCase.quitar(id, productoId);
         return ResponseEntity.ok(mapper.toResponse(combo));
+    }
+
+    // CU-16 Comprar Combo
+    @PostMapping("/{id}/comprar")
+    public ResponseEntity<ComprarComboResponse> comprar(
+            @PathVariable UUID id,
+            @Valid @RequestBody ComprarComboRequest request) {
+        List<Compra> compras = comprarComboUseCase.ejecutar(request.usuarioId(), id, request.cantidad());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(mapper.toComprarResponse(id, compras)); // 201 Created
     }
 }
