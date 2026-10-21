@@ -1,9 +1,12 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.dto.response.ProductoStockBajoResponse;
 import com.uniquindio.backend.application.dto.response.ProductoVendidoResponse;
 import com.uniquindio.backend.application.dto.response.ReporteVentasResponse;
+import com.uniquindio.backend.application.usecase.AlertasStockBajoUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
+import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,11 +26,17 @@ public class ReporteController {
 
     private final ReporteVentasVendedorUseCase reporteVentasVendedorUseCase;
     private final ReporteMasVendidosUseCase reporteMasVendidosUseCase;
+    private final AlertasStockBajoUseCase alertasStockBajoUseCase;
+    private final ProductoMapper stockBajoMapper;
 
     public ReporteController(ReporteVentasVendedorUseCase reporteVentasVendedorUseCase,
-                             ReporteMasVendidosUseCase reporteMasVendidosUseCase) {
+                             ReporteMasVendidosUseCase reporteMasVendidosUseCase,
+                             AlertasStockBajoUseCase alertasStockBajoUseCase,
+                             ProductoMapper stockBajoMapper) {
         this.reporteVentasVendedorUseCase = reporteVentasVendedorUseCase;
         this.reporteMasVendidosUseCase = reporteMasVendidosUseCase;
+        this.alertasStockBajoUseCase = alertasStockBajoUseCase;
+        this.stockBajoMapper = stockBajoMapper;
     }
 
     // CU-29 Reporte de Ventas por Vendedor
@@ -42,5 +51,16 @@ public class ReporteController {
             @RequestParam(required = false) UUID vendedorId,
             @RequestParam(defaultValue = "10") int top) {
         return ResponseEntity.ok(reporteMasVendidosUseCase.ejecutar(vendedorId, top)); // 200 OK
+    }
+
+    // CU-34 Alertas de Stock Bajo (agotados primero)
+    @GetMapping("/stock-bajo")
+    public ResponseEntity<List<ProductoStockBajoResponse>> stockBajo(
+            @RequestParam UUID vendedorId,
+            @RequestParam(defaultValue = "5") int umbral) {
+        List<ProductoStockBajoResponse> respuesta = alertasStockBajoUseCase.ejecutar(vendedorId, umbral).stream()
+                .map(stockBajoMapper::toStockBajoResponse)
+                .toList();
+        return ResponseEntity.ok(respuesta); // 200 OK
     }
 }
