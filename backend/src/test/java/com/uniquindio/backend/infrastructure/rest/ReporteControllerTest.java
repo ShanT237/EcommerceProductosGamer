@@ -1,8 +1,10 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.dto.response.MetricasResenasResponse;
 import com.uniquindio.backend.application.dto.response.ProductoVendidoResponse;
 import com.uniquindio.backend.application.dto.response.ReporteVentasResponse;
 import com.uniquindio.backend.application.usecase.AlertasStockBajoUseCase;
+import com.uniquindio.backend.application.usecase.MetricasResenasUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
@@ -19,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -45,6 +48,9 @@ class ReporteControllerTest {
 
     @MockitoBean
     private AlertasStockBajoUseCase alertasStockBajoUseCase;
+
+    @MockitoBean
+    private MetricasResenasUseCase metricasResenasUseCase;
 
     // /api/** exige JWT; aquí el interceptor se simula como "token válido".
     @MockitoBean
@@ -176,6 +182,37 @@ class ReporteControllerTest {
     @Test
     void stockBajoSinVendedorIdRetorna400() throws Exception {
         mockMvc.perform(get("/api/reportes/stock-bajo"))
+                .andExpect(status().isBadRequest());              // 400
+    }
+
+    // ===================== CU-35 =====================
+
+    @Test
+    void metricasResenasDevuelvePromedioDistribucionYConteos() throws Exception {
+        when(metricasResenasUseCase.ejecutar(vendedorId)).thenReturn(new MetricasResenasResponse(
+                3.0, 5, Map.of(1, 1L, 2, 1L, 3, 1L, 4, 1L, 5, 1L), 2, 2));
+
+        mockMvc.perform(get("/api/reportes/metricas-resenas").param("vendedorId", vendedorId.toString()))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.promedio").value(3.0))
+                .andExpect(jsonPath("$.total").value(5))
+                .andExpect(jsonPath("$.distribucion['5']").value(1))
+                .andExpect(jsonPath("$.positivas").value(2))
+                .andExpect(jsonPath("$.negativas").value(2));
+    }
+
+    @Test
+    void metricasResenasConVendedorInexistenteRetorna404() throws Exception {
+        when(metricasResenasUseCase.ejecutar(vendedorId))
+                .thenThrow(new NoSuchElementException("El vendedor no existe"));
+
+        mockMvc.perform(get("/api/reportes/metricas-resenas").param("vendedorId", vendedorId.toString()))
+                .andExpect(status().isNotFound());                // 404
+    }
+
+    @Test
+    void metricasResenasSinVendedorIdRetorna400() throws Exception {
+        mockMvc.perform(get("/api/reportes/metricas-resenas"))
                 .andExpect(status().isBadRequest());              // 400
     }
 }
