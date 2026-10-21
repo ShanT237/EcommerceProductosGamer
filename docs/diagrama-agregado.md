@@ -15,6 +15,8 @@
 - El precio de un producto debe ser siempre positivo.
 - Un producto exclusivo solo puede comprarse una vez por usuario y de a una unidad.
 - Un descuento debe ser mayor a 0 y menor a 100, y no puede aplicarse a un producto eliminado.
+- Un producto pausado o eliminado no se puede comprar; solo su vendedor dueño lo modifica, edita o pausa.
+- La categoría del producto es obligatoria.
 
 ---
 
@@ -58,8 +60,20 @@
 ### Invariantes
 
 - Una compra nace PENDIENTE y solo puede confirmarse una vez.
-- El precio unitario queda fijo al crear la compra; cambios posteriores del producto no la afectan.
+- El precio unitario queda fijo respecto al producto; cambios posteriores del producto no la afectan. Un cupón puede rebajarlo una sola vez, y solo mientras la compra está PENDIENTE.
 - Solo se reseña una compra COMPLETADA, y máximo una vez.
 - Los puntos solo se asignan después de reseñar, y una sola vez.
 - Una compra solo se reembolsa si está COMPLETADA, dentro de 48 horas, sin descarga y sin puntos asignados.
 - Una compra REEMBOLSADA, CANCELADA o EXPIRADA no puede cambiar de estado.
+
+---
+
+## Agregados de apoyo (Promocion, Cupon, MetaRecompensa, ValoracionVendedor, MovimientoPuntos)
+
+Todos referencian a otros agregados solo por id.
+
+- **Promocion** (raíz): descuento de 0 a 100 exclusivo, con vigencia entre dos fechas inclusive. No se solapa con otra promoción del mismo producto y no modifica el precio base.
+- **Cupon** (raíz): código único en mayúsculas, descuento de 0 a 100 exclusivo, válido hasta su vencimiento y mientras tenga usos disponibles.
+- **MetaRecompensa** (raíz): umbral de compras completadas positivo, ligado a un producto regalo; se desactiva una sola vez, nunca se borra.
+- **ValoracionVendedor** (raíz): una por compra completada; calificación obligatoria y comentario opcional de máximo 500 caracteres.
+- **MovimientoPuntos** (raíz, inmutable): registro de puntos ganados o redimidos con cantidad positiva; el saldo vigente sigue en `Usuario`.
