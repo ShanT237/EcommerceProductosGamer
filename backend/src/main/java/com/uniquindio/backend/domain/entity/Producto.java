@@ -105,8 +105,16 @@ public class Producto {
     public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
                                        double precio, int stock, Gama gama, Exclusividad exclusividad,
                                        boolean eliminado, Double precioOriginal, boolean pausado) {
+        return reconstruir(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                eliminado, precioOriginal, pausado, CATEGORIA_POR_DEFECTO);
+    }
+
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado, Double precioOriginal, boolean pausado,
+                                       String categoria) {
         Producto producto = new Producto(id, vendedorId, nombre, descripcion,
-                precio, stock, gama, exclusividad);
+                precio, stock, gama, exclusividad, categoria);
         producto.eliminado = eliminado;
         producto.precioOriginal = precioOriginal;
         producto.pausado = pausado;
