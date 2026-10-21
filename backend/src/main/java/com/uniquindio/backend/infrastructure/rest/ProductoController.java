@@ -15,12 +15,16 @@ import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCa
 import com.uniquindio.backend.application.dto.request.CambiarVisibilidadProductoRequest;
 import com.uniquindio.backend.application.dto.response.CambiarVisibilidadProductoResponse;
 import com.uniquindio.backend.application.usecase.CambiarVisibilidadProductoUseCase;
+import com.uniquindio.backend.application.dto.request.BuscarProductosRequest;
+import com.uniquindio.backend.application.dto.response.BuscarProductoResponse;
+import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.List;
 import java.net.URI;
 import java.util.UUID;
 
@@ -33,6 +37,7 @@ public class ProductoController {
     private final ModificarProductoUseCase modificarProductoUseCase;
     private final EditarInformacionProductoUseCase editarInformacionProductoUseCase;
     private final CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase;
+    private final BuscarProductosUseCase buscarProductosUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
@@ -40,12 +45,14 @@ public class ProductoController {
                               ModificarProductoUseCase modificarProductoUseCase,
                               EditarInformacionProductoUseCase editarInformacionProductoUseCase,
                               CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase,
+                              BuscarProductosUseCase buscarProductosUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
         this.modificarProductoUseCase = modificarProductoUseCase;
         this.editarInformacionProductoUseCase = editarInformacionProductoUseCase;
         this.cambiarVisibilidadProductoUseCase = cambiarVisibilidadProductoUseCase;
+        this.buscarProductosUseCase = buscarProductosUseCase;
         this.mapper = mapper;
     }
 
@@ -98,6 +105,14 @@ public class ProductoController {
         Producto producto = editarInformacionProductoUseCase.ejecutar(
                 id, request.vendedorId(), request.nombre(), request.descripcion());
         return ResponseEntity.ok(mapper.toEditarInformacionResponse(producto)); // 200 OK
+    }
+
+    // CU-20 Filtrar y Buscar Productos (solo visibles: no eliminados ni pausados)
+    @GetMapping
+    public List<BuscarProductoResponse> buscar(BuscarProductosRequest request) {
+        return buscarProductosUseCase.ejecutar(request.aFiltro()).stream()
+                .map(mapper::toBuscarResponse)
+                .toList();
     }
 
     // CU-21 Activar / Pausar Publicación
