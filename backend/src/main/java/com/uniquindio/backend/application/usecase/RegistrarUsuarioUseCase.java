@@ -38,6 +38,7 @@ public class RegistrarUsuarioUseCase {
     /**
      * Registro con credenciales: valida la contraseña segura y guarda solo su hash.
      */
+    @Transactional
     public Usuario ejecutar(UUID id, String nombre, String correo, String contrasena) {
         if (usuarioRepository.existeConCorreo(correo)) {
             throw new ReglaDominioException("Ya existe un usuario con ese correo");

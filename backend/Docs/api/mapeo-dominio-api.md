@@ -16,6 +16,8 @@ Cada operación del dominio y el endpoint REST que la expone.
 
 ## Notas
 
+- `POST /api/usuarios` requiere `nombre`, `correo` y `contrasena`; la contraseña debe tener al menos 8 caracteres, una mayúscula y un número. `POST /api/usuarios` y `POST /api/vendedores` son públicos para permitir el registro; las demás rutas `/api/**`, excepto `/api/auth/**`, requieren `Authorization: Bearer {JWT}`.
+- Usuarios de demo para `POST /api/auth/login`: `jose.demo@correo.com` / `JoseGamer2026` y `ana.demo@correo.com` / `AnaGamer2026`.
 - `usuarioId` va como parámetro en la URL (`?usuarioId=...`) y se usa para verificar que la compra pertenece a ese usuario.
 - Los errores de reglas del dominio responden **400** con un mensaje; los recursos que no existen en `Producto` responden **404**.
 - Documentación interactiva: `http://localhost:8080/swagger-ui.html`.

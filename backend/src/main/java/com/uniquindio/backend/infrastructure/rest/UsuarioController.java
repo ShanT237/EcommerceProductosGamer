@@ -34,7 +34,8 @@ public class UsuarioController {
         Usuario usuario = registrarUsuarioUseCase.ejecutar(
                 UUID.randomUUID(),
                 request.nombre(),
-                request.correo()
+                request.correo(),
+                request.contrasena()
         );
 
         RegistrarUsuarioResponse response = mapper.toRegistrarResponse(usuario);
