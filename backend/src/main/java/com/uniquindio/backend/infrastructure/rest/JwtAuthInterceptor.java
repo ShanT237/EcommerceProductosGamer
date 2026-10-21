@@ -30,6 +30,9 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
+        if (esRegistroPublico(request)) {
+            return true;
+        }
         String cabecera = request.getHeader("Authorization");
         if (cabecera != null && cabecera.startsWith(PREFIJO)) {
             Optional<UUID> usuarioId = emisorToken.validar(cabecera.substring(PREFIJO.length()).trim());
@@ -40,5 +43,13 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         }
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         return false;
+    }
+
+    private boolean esRegistroPublico(HttpServletRequest request) {
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            return false;
+        }
+        String ruta = request.getServletPath();
+        return "/api/usuarios".equals(ruta) || "/api/vendedores".equals(ruta);
     }
 }
