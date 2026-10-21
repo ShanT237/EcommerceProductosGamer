@@ -12,6 +12,9 @@ import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
 import com.uniquindio.backend.application.dto.request.EditarInformacionProductoRequest;
 import com.uniquindio.backend.application.dto.response.EditarInformacionProductoResponse;
 import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCase;
+import com.uniquindio.backend.application.dto.request.CambiarVisibilidadProductoRequest;
+import com.uniquindio.backend.application.dto.response.CambiarVisibilidadProductoResponse;
+import com.uniquindio.backend.application.usecase.CambiarVisibilidadProductoUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -29,17 +32,20 @@ public class ProductoController {
     private final EliminarProductoUseCase eliminarProductoUseCase;
     private final ModificarProductoUseCase modificarProductoUseCase;
     private final EditarInformacionProductoUseCase editarInformacionProductoUseCase;
+    private final CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
                               EliminarProductoUseCase eliminarProductoUseCase,
                               ModificarProductoUseCase modificarProductoUseCase,
                               EditarInformacionProductoUseCase editarInformacionProductoUseCase,
+                              CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
         this.modificarProductoUseCase = modificarProductoUseCase;
         this.editarInformacionProductoUseCase = editarInformacionProductoUseCase;
+        this.cambiarVisibilidadProductoUseCase = cambiarVisibilidadProductoUseCase;
         this.mapper = mapper;
     }
 
@@ -92,5 +98,15 @@ public class ProductoController {
         Producto producto = editarInformacionProductoUseCase.ejecutar(
                 id, request.vendedorId(), request.nombre(), request.descripcion());
         return ResponseEntity.ok(mapper.toEditarInformacionResponse(producto)); // 200 OK
+    }
+
+    // CU-21 Activar / Pausar Publicación
+    @PutMapping("/{id}/visibilidad")
+    public ResponseEntity<CambiarVisibilidadProductoResponse> cambiarVisibilidad(
+            @PathVariable UUID id,
+            @Valid @RequestBody CambiarVisibilidadProductoRequest request) {
+        Producto producto = cambiarVisibilidadProductoUseCase.ejecutar(
+                id, request.vendedorId(), request.activo());
+        return ResponseEntity.ok(mapper.toVisibilidadResponse(producto)); // 200 OK
     }
 }
