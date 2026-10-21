@@ -62,4 +62,11 @@ public class CompraRepositoryJpa implements CompraRepository {
         return dataRepository.existsByUsuarioIdAndProductoIdInAndEstadoIn(
                 usuarioId, productoIds, ESTADOS_ACTIVOS);
     }
+
+    @Override
+    public List<Compra> obtenerTodas() {
+        return dataRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }
