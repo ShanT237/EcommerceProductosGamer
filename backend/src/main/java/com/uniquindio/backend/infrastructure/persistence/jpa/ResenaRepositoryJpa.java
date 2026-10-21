@@ -6,6 +6,7 @@ import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.ResenaPersis
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,5 +29,12 @@ public class ResenaRepositoryJpa implements ResenaRepository {
     @Override
     public boolean existeResenaDeUsuarioYProducto(String usuarioId, String productoId) {
         return dataRepository.existsByIdUsuarioAndIdProducto(usuarioId, productoId);
+    }
+
+    @Override
+    public List<Resena> obtenerPorProductoId(String productoId) {
+        return dataRepository.findByIdProducto(productoId).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }
