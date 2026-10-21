@@ -5,6 +5,7 @@ import com.uniquindio.backend.application.dto.response.RegaloResponse;
 import com.uniquindio.backend.application.usecase.AsignarRegaloPorMetaUseCase;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.infrastructure.rest.mapper.RegaloMapper;
+import com.uniquindio.backend.application.usecase.EnviarRegaloUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,11 +25,14 @@ import java.util.UUID;
 public class RegaloController {
 
     private final AsignarRegaloPorMetaUseCase asignarRegaloPorMetaUseCase;
+    private final EnviarRegaloUseCase enviarRegaloUseCase;
     private final RegaloMapper mapper;
 
     public RegaloController(AsignarRegaloPorMetaUseCase asignarRegaloPorMetaUseCase,
+                            EnviarRegaloUseCase enviarRegaloUseCase,
                             RegaloMapper mapper) {
         this.asignarRegaloPorMetaUseCase = asignarRegaloPorMetaUseCase;
+        this.enviarRegaloUseCase = enviarRegaloUseCase;
         this.mapper = mapper;
     }
 
@@ -38,6 +42,13 @@ public class RegaloController {
             @PathVariable UUID id,
             @Valid @RequestBody AsignarRegaloRequest request) {
         Regalo regalo = asignarRegaloPorMetaUseCase.ejecutar(request.usuarioId(), id);
+        return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
+    }
+
+    // CU-24 Enviar Regalo (solo si ya fue elegido)
+    @PutMapping("/{id}/enviar")
+    public ResponseEntity<RegaloResponse> enviar(@PathVariable UUID id) {
+        Regalo regalo = enviarRegaloUseCase.ejecutar(id);
         return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
     }
 }
