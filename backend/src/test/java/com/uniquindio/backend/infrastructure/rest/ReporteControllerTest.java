@@ -2,13 +2,19 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.response.ProductoVendidoResponse;
 import com.uniquindio.backend.application.dto.response.ReporteVentasResponse;
+import com.uniquindio.backend.application.usecase.AlertasStockBajoUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
+import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.Exclusividad;
+import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReporteController.class)
+@Import(ProductoMapper.class)
 class ReporteControllerTest {
 
     @Autowired
@@ -36,6 +43,9 @@ class ReporteControllerTest {
     @MockitoBean
     private ReporteMasVendidosUseCase reporteMasVendidosUseCase;
 
+    @MockitoBean
+    private AlertasStockBajoUseCase alertasStockBajoUseCase;
+
     // /api/** exige JWT; aquí el interceptor se simula como "token válido".
     @MockitoBean
     private JwtAuthInterceptor jwtAuthInterceptor;
@@ -46,6 +56,11 @@ class ReporteControllerTest {
     }
 
     private final UUID vendedorId = UUID.randomUUID();
+
+    private Producto producto(String nombre, int stock) {
+        return Producto.publicar(UUID.randomUUID(), vendedorId, nombre, "Desc", 100, stock,
+                Gama.MEDIA, Exclusividad.NORMAL);
+    }
 
     // ===================== CU-29 =====================
 
@@ -108,6 +123,59 @@ class ReporteControllerTest {
                 .thenThrow(new ReglaDominioException("El tamaño del escalafón debe ser positivo"));
 
         mockMvc.perform(get("/api/reportes/mas-vendidos").param("top", "0"))
+                .andExpect(status().isBadRequest());              // 400
+    }
+
+    // ===================== CU-34 =====================
+
+    @Test
+    void stockBajoListaProductosYMarcaLosAgotados() throws Exception {
+        when(alertasStockBajoUseCase.ejecutar(vendedorId, 5))
+                .thenReturn(List.of(producto("Agotado", 0), producto("Bajo", 3)));
+
+        mockMvc.perform(get("/api/reportes/stock-bajo").param("vendedorId", vendedorId.toString()))
+                .andExpect(status().isOk())                       // 200, umbral por defecto 5
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].nombre").value("Agotado"))
+                .andExpect(jsonPath("$[0].agotado").value(true))
+                .andExpect(jsonPath("$[1].stock").value(3))
+                .andExpect(jsonPath("$[1].agotado").value(false));
+    }
+
+    @Test
+    void stockBajoUsaElUmbralRecibido() throws Exception {
+        when(alertasStockBajoUseCase.ejecutar(vendedorId, 10)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/reportes/stock-bajo")
+                        .param("vendedorId", vendedorId.toString())
+                        .param("umbral", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void stockBajoConUmbralNoPositivoRetorna400() throws Exception {
+        when(alertasStockBajoUseCase.ejecutar(vendedorId, 0))
+                .thenThrow(new ReglaDominioException("El umbral de stock debe ser positivo"));
+
+        mockMvc.perform(get("/api/reportes/stock-bajo")
+                        .param("vendedorId", vendedorId.toString())
+                        .param("umbral", "0"))
+                .andExpect(status().isBadRequest());              // 400
+    }
+
+    @Test
+    void stockBajoConVendedorInexistenteRetorna404() throws Exception {
+        when(alertasStockBajoUseCase.ejecutar(vendedorId, 5))
+                .thenThrow(new NoSuchElementException("El vendedor no existe"));
+
+        mockMvc.perform(get("/api/reportes/stock-bajo").param("vendedorId", vendedorId.toString()))
+                .andExpect(status().isNotFound());                // 404
+    }
+
+    @Test
+    void stockBajoSinVendedorIdRetorna400() throws Exception {
+        mockMvc.perform(get("/api/reportes/stock-bajo"))
                 .andExpect(status().isBadRequest());              // 400
     }
 }
