@@ -7,6 +7,8 @@ import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.infrastructure.rest.mapper.UsuarioMapper;
 import com.uniquindio.backend.application.dto.request.EditarPerfilRequest;
 import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
+import com.uniquindio.backend.application.dto.request.CambiarContrasenaRequest;
+import com.uniquindio.backend.application.usecase.CambiarContrasenaUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +24,16 @@ public class UsuarioController {
 
     private final RegistrarUsuarioUseCase registrarUsuarioUseCase;
     private final EditarPerfilUseCase editarPerfilUseCase;
+    private final CambiarContrasenaUseCase cambiarContrasenaUseCase;
     private final UsuarioMapper mapper;
 
     public UsuarioController(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                              EditarPerfilUseCase editarPerfilUseCase,
+                             CambiarContrasenaUseCase cambiarContrasenaUseCase,
                              UsuarioMapper mapper) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.editarPerfilUseCase = editarPerfilUseCase;
+        this.cambiarContrasenaUseCase = cambiarContrasenaUseCase;
         this.mapper = mapper;
     }
 
@@ -60,5 +65,14 @@ public class UsuarioController {
             @Valid @RequestBody EditarPerfilRequest request) {
         Usuario usuario = editarPerfilUseCase.ejecutar(id, request.nombre(), request.correo());
         return ResponseEntity.ok(mapper.toRegistrarResponse(usuario)); // 200 OK
+    }
+
+    // CU-26 Cambiar Contraseña (exige la actual; la nueva debe ser segura y distinta)
+    @PutMapping("/{id}/contrasena")
+    public ResponseEntity<Void> cambiarContrasena(
+            @PathVariable UUID id,
+            @Valid @RequestBody CambiarContrasenaRequest request) {
+        cambiarContrasenaUseCase.ejecutar(id, request.contrasenaActual(), request.contrasenaNueva());
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }
