@@ -27,4 +27,14 @@ public class UsuarioRepositoryEnMemoria implements UsuarioRepository {
         return usuarios.values().stream()
                 .anyMatch(u -> u.getCorreo().equals(correo));
     }
+
+    @Override
+    public Optional<Usuario> obtenerPorCorreo(String correo) {
+        if (correo == null) {
+            return Optional.empty();
+        }
+        return usuarios.values().stream()
+                .filter(u -> u.getCorreo().equalsIgnoreCase(correo.trim()))
+                .findFirst();
+    }
 }

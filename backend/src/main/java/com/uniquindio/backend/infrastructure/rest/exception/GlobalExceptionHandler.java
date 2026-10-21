@@ -1,5 +1,6 @@
 package com.uniquindio.backend.infrastructure.rest.exception;
 
+import com.uniquindio.backend.domain.exception.AutenticacionException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ReglaDominioException.class)
     public ResponseEntity<Map<String, Object>> manejarReglaDominio(ReglaDominioException ex) {
         return construirRespuesta(HttpStatus.BAD_REQUEST, ex.getMessage()); // -> 400
+    }
+
+    @ExceptionHandler(AutenticacionException.class)
+    public ResponseEntity<Map<String, Object>> manejarAutenticacion(AutenticacionException ex) {
+        return construirRespuesta(HttpStatus.UNAUTHORIZED, ex.getMessage()); // -> 401
     }
 
     // Falla la validación Jakarta (@Valid) de un Request DTO

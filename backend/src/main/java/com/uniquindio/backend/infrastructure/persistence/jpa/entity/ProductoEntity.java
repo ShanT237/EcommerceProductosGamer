@@ -51,4 +51,11 @@ public class ProductoEntity {
 
     @Column(nullable = false)
     private boolean eliminado;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean pausado;
+
+    // Nullable: las filas anteriores a CU-20 (p. ej. data.sql) no traen categoria.
+    @Column(length = 50)
+    private String categoria;
 }

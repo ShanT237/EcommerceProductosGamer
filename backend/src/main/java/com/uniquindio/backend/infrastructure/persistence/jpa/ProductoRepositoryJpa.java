@@ -6,6 +6,7 @@ import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.ProductoPers
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,5 +25,10 @@ public class ProductoRepositoryJpa implements ProductoRepository {
     @Override
     public void guardar(Producto producto) {
         dataRepository.save(mapper.toEntity(producto));
+    }
+
+    @Override
+    public List<Producto> obtenerTodos() {
+        return dataRepository.findAll().stream().map(mapper::toDomain).toList();
     }
 }

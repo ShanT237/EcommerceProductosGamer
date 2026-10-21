@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Vendedor;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,4 +23,6 @@ public interface VendedorRepository {
      * el caso de uso tenga que decidir nada por su cuenta.
      */
     boolean existeConDocumento(String documento);
+
+    List<Vendedor> obtenerTodos();
 }
