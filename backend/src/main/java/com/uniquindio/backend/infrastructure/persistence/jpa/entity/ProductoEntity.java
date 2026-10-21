@@ -51,4 +51,7 @@ public class ProductoEntity {
 
     @Column(nullable = false)
     private boolean eliminado;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean pausado;
 }

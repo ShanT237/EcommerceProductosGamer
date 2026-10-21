@@ -20,6 +20,7 @@ public class ProductoPersistenceMapper {
         entity.setGama(producto.getGama());
         entity.setExclusividad(producto.getExclusividad());
         entity.setEliminado(producto.isEliminado());
+        entity.setPausado(producto.isPausado());
         return entity;
     }
 
@@ -35,6 +36,7 @@ public class ProductoPersistenceMapper {
                 entity.getGama(),
                 entity.getExclusividad(),
                 entity.isEliminado(),
-                entity.getPrecioOriginal());
+                entity.getPrecioOriginal(),
+                entity.isPausado());
     }
 }
