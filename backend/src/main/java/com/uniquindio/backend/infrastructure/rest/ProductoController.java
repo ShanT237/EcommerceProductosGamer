@@ -6,6 +6,9 @@ import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
+import com.uniquindio.backend.application.dto.request.ModificarProductoRequest;
+import com.uniquindio.backend.application.dto.response.ModificarProductoResponse;
+import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +24,16 @@ public class ProductoController {
 
     private final PublicarProductoUseCase publicarProductoUseCase;
     private final EliminarProductoUseCase eliminarProductoUseCase;
+    private final ModificarProductoUseCase modificarProductoUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
                               EliminarProductoUseCase eliminarProductoUseCase,
+                              ModificarProductoUseCase modificarProductoUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
+        this.modificarProductoUseCase = modificarProductoUseCase;
         this.mapper = mapper;
     }
 
@@ -55,10 +61,21 @@ public class ProductoController {
         return ResponseEntity.created(location).body(response); // -> 201 Created
     }
 
+
+    // CU-05 Modificar Producto (precio)
+    @PutMapping("/{id}/precio")
+    public ResponseEntity<ModificarProductoResponse> modificarPrecio(
+            @PathVariable UUID id,
+            @Valid @RequestBody ModificarProductoRequest request) {
+        Producto producto = modificarProductoUseCase.ejecutar(id, request.vendedorId(), request.nuevoPrecio());
+        return ResponseEntity.ok(mapper.toModificarResponse(producto)); // 200 OK
+    }
+
     // CU-06 Eliminar Producto (eliminación lógica, Regla 3)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         eliminarProductoUseCase.ejecutar(id);
         return ResponseEntity.noContent().build(); // -> 204 No Content
     }
+
 }
