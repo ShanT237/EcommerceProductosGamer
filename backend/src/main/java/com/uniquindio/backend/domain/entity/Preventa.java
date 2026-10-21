@@ -21,16 +21,42 @@ public class Preventa {
     private final LocalDate fechaLanzamiento;
     private final String descripcion;
 
-    public Preventa(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
-        this.id = Objects.requireNonNull(id, "El id de la preventa es obligatorio");
-        this.productoId = Objects.requireNonNull(productoId, "El id del producto es obligatorio");
-        this.fechaLanzamiento = Objects.requireNonNull(fechaLanzamiento, "La fecha de lanzamiento es obligatoria");
+    // Preventa
+    private Preventa(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
+        this.id = id;
+        this.productoId = productoId;
+        this.fechaLanzamiento = fechaLanzamiento;
+        this.descripcion = descripcion;
+    }
 
+
+    public static Preventa reconstruir(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
+        return new Preventa(id, productoId, fechaLanzamiento, descripcion);
+    }
+
+    public static Preventa programar(UUID id, UUID productoId, LocalDate fechaLanzamiento, String descripcion) {
+        Objects.requireNonNull(id, "El id de la preventa es obligatorio");
+        Objects.requireNonNull(productoId, "El id del producto es obligatorio");
+        Objects.requireNonNull(fechaLanzamiento, "La fecha de lanzamiento es obligatoria");
         if (descripcion == null || descripcion.isBlank()) {
             throw new ReglaDominioException("La descripción de la preventa no puede estar vacía");
         }
+        return new Preventa(id, productoId, fechaLanzamiento, descripcion);
+    }
 
-        this.descripcion = descripcion;
+    /**
+     * Factory de programación: exige que la fecha de lanzamiento sea estrictamente posterior a {@code hoy}.
+     */
+    public static Preventa programar(UUID id, UUID productoId, LocalDate fechaLanzamiento,
+                                     String descripcion, LocalDate hoy) {
+        Objects.requireNonNull(hoy, "La fecha actual es obligatoria");
+        if (fechaLanzamiento == null) {
+            throw new ReglaDominioException("La fecha de lanzamiento es obligatoria");
+        }
+        if (!fechaLanzamiento.isAfter(hoy)) {
+            throw new ReglaDominioException("La fecha de lanzamiento debe ser futura");
+        }
+        return programar(id, productoId, fechaLanzamiento, descripcion);
     }
 
     /**

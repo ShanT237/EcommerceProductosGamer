@@ -13,7 +13,7 @@ class UsuarioTest {
     @Test
     @DisplayName("Crea usuario con valores válidos, acumula y redime puntos correctamente")
     void acumulaYRedimePuntos() {
-        Usuario usuario = new Usuario(UUID.randomUUID(), "Gamer1", "gamer@test.com");
+        Usuario usuario = Usuario.registrar(UUID.randomUUID(), "Gamer1", "gamer@test.com");
         assertTrue(usuario.isActivo());
         assertEquals(0, usuario.getPuntos());
 
@@ -30,7 +30,7 @@ class UsuarioTest {
     @Test
     @DisplayName("Permite desactivar y activar un usuario")
     void estadoActivoEInactivo() {
-        Usuario usuario = new Usuario(UUID.randomUUID(), "Gamer2", "gamer2@test.com");
+        Usuario usuario = Usuario.registrar(UUID.randomUUID(), "Gamer2", "gamer2@test.com");
         assertTrue(usuario.isActivo());
 
         usuario.desactivar();

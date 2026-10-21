@@ -1,6 +1,5 @@
 package com.uniquindio.backend.infrastructure.persistence;
 
-import org.springframework.stereotype.Repository;
 import com.uniquindio.backend.domain.entity.Resena;
 import com.uniquindio.backend.domain.repository.ResenaRepository;
 
@@ -8,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Repository
 public class ResenaRepositoryEnMemoria implements ResenaRepository {
 
     private final Map<String, Resena> resenas = new HashMap<>();

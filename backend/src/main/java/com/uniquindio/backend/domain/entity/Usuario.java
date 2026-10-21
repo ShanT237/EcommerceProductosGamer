@@ -20,21 +20,45 @@ public class Usuario {
     private String correo;
     private int puntos;
     private boolean activo;
+    /** Versión de lock optimista; la asigna el adaptador JPA al reconstruir. */
+    private Long version;
 
-    public Usuario(UUID id, String nombre, String correo) {
-        this.id = Objects.requireNonNull(id, "El id del usuario es obligatorio");
+    // Usuario
+    private Usuario(UUID id, String nombre, String correo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.puntos = 0;
+        this.activo = true;
+    }
 
+    public static Usuario registrar(UUID id, String nombre, String correo) {
+        Objects.requireNonNull(id, "El id del usuario es obligatorio");
         if (nombre == null || nombre.isBlank()) {
             throw new ReglaDominioException("El nombre del usuario no puede estar vacío");
         }
         if (correo == null || !correo.contains("@")) {
             throw new ReglaDominioException("El correo del usuario no es válido");
         }
+        return new Usuario(id, nombre, correo);
+    }
 
-        this.nombre = nombre;
-        this.correo = correo;
-        this.puntos = 0;
-        this.activo = true;
+    /**
+     * Solo para el adaptador de persistencia: "revive" un usuario que YA existía.
+     * NO valida: esos datos ya pasaron por registrar(...) cuando el usuario nació.
+     */
+    public static Usuario reconstruir(UUID id, String nombre, String correo,
+                                      int puntos, boolean activo) {
+        return reconstruir(id, nombre, correo, puntos, activo, null);
+    }
+
+    public static Usuario reconstruir(UUID id, String nombre, String correo,
+                                      int puntos, boolean activo, Long version) {
+        Usuario usuario = new Usuario(id, nombre, correo);
+        usuario.puntos = puntos;
+        usuario.activo = activo;
+        usuario.version = version;
+        return usuario;
     }
 
     public void acumularPuntos(int cantidad) {

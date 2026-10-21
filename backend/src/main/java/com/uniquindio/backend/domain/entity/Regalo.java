@@ -26,32 +26,62 @@ public class Regalo {
     private final UUID idProducto;
     private UUID idUsuario;
     private final UUID idCombo;
+    private boolean notificado;
 
-    private Regalo(UUID id, UUID idProducto, UUID idCombo) {
+    /**
+     * Constructor base: recibe {@code fechaCreacion} explícitamente para que
+     * {@link #reconstruir} pueda restaurar la fecha original de la BD sin
+     * pisar {@code LocalDateTime.now()}.
+     */
+    private Regalo(UUID id, UUID idProducto, UUID idCombo, LocalDateTime fechaCreacion) {
         this.id = Objects.requireNonNull(id, "El id del regalo es obligatorio");
         this.idProducto = idProducto;
         this.idCombo = idCombo;
         this.estado = EstadoRegalo.DISPONIBLE;
-        this.fechaCreacion = LocalDateTime.now();
+        this.fechaCreacion = Objects.requireNonNull(fechaCreacion, "La fecha de creación es obligatoria");
     }
 
     public static Regalo crear(UUID id, UUID idProducto, UUID idCombo) {
-        if (idProducto == null && idCombo == null) {
-            throw new ReglaDominioException("Un regalo debe estar asociado a un producto o a un combo");
+        if ((idProducto == null) == (idCombo == null)) {
+            throw new ReglaDominioException(
+                    "Un regalo debe estar asociado a un producto o a un combo, pero no a ambos");
         }
-        return new Regalo(id, idProducto, idCombo);
+        return new Regalo(id, idProducto, idCombo, LocalDateTime.now());
+    }
+
+    /**
+     * Solo para el adaptador de persistencia: "revive" un regalo que YA existía.
+     * Preserva la {@code fechaCreacion} original — NO llama a {@code LocalDateTime.now()}.
+     */
+    public static Regalo reconstruir(UUID id, EstadoRegalo estado, LocalDateTime fechaCreacion,
+                                     LocalDateTime fechaEntrega, UUID idProducto, UUID idUsuario,
+                                     UUID idCombo, boolean notificado) {
+        Regalo regalo = new Regalo(id, idProducto, idCombo, fechaCreacion);
+        regalo.estado = estado;
+        regalo.fechaEntrega = fechaEntrega;
+        regalo.idUsuario = idUsuario;
+        regalo.notificado = notificado;
+        return regalo;
+    }
+
+    private void verificarTransicion(EstadoRegalo siguiente) {
+        if (estado.esFinal()) {
+            throw new ReglaDominioException(
+                    "Un regalo " + estado.name().toLowerCase() + " no puede cambiar de estado");
+        }
+        if (!estado.puedeTransicionarA(siguiente)) {
+            throw new ReglaDominioException(
+                    "No se puede pasar de " + estado + " a " + siguiente);
+        }
     }
 
     public void elegir(UUID idUsuario, boolean usuarioYaPoseeElProducto) {
         Objects.requireNonNull(idUsuario, "El id del usuario es obligatorio para elegir el regalo");
 
-        if (this.estado != EstadoRegalo.DISPONIBLE) {
-            throw new ReglaDominioException("El regalo ya fue elegido, no se puede reasignar a otro usuario");
-        }
+        verificarTransicion(EstadoRegalo.ELEGIDO);
         if (usuarioYaPoseeElProducto) {
             throw new ReglaDominioException("El regalo no puede elegirse a un usuario que ya posee ese producto");
         }
-
         this.idUsuario = idUsuario;
         this.estado = EstadoRegalo.ELEGIDO;
     }
@@ -63,30 +93,28 @@ public class Regalo {
         if (!this.idUsuario.equals(idUsuario)) {
             throw new ReglaDominioException("Solo se notifica al usuario al que se le eligió el regalo");
         }
+        if (this.notificado) {
+            throw new ReglaDominioException("El regalo ya fue notificado al usuario");
+        }
+        this.notificado = true;
     }
 
     public void enviar() {
-        if (this.estado != EstadoRegalo.ELEGIDO) {
-            throw new ReglaDominioException("Un regalo no puede enviarse si no ha sido elegido");
-        }
+        verificarTransicion(EstadoRegalo.ENVIADO);
         this.estado = EstadoRegalo.ENVIADO;
     }
 
-    public void confirmarEntrega() {
-        if (this.estado != EstadoRegalo.ENVIADO) {
-            throw new ReglaDominioException("Un regalo no puede entregarse si no ha sido enviado");
+    public void confirmarEntrega(UUID idUsuarioQueConfirma) {
+        verificarTransicion(EstadoRegalo.ENTREGADO);
+        if (!this.idUsuario.equals(idUsuarioQueConfirma)) {
+            throw new ReglaDominioException("Solo el usuario destinatario puede confirmar la recepción");
         }
         this.estado = EstadoRegalo.ENTREGADO;
         this.fechaEntrega = LocalDateTime.now();
     }
 
     public void cancelarRegalo() {
-        if (this.estado == EstadoRegalo.ENTREGADO) {
-            throw new ReglaDominioException("Un regalo entregado no puede cambiar de estado");
-        }
-        if (this.estado == EstadoRegalo.CANCELADO) {
-            throw new ReglaDominioException("El regalo ya está cancelado");
-        }
+        verificarTransicion(EstadoRegalo.CANCELADO);
         this.estado = EstadoRegalo.CANCELADO;
     }
 

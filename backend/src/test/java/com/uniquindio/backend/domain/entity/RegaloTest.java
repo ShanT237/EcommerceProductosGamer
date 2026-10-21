@@ -5,11 +5,25 @@ import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class RegaloTest {
+
+    @Test
+    @DisplayName("reconstruir preserva la fecha de creación original")
+    void reconstruirPreservaFechaCreacion() {
+        UUID id = UUID.randomUUID();
+        UUID idProducto = UUID.randomUUID();
+        LocalDateTime fechaOriginal = LocalDateTime.of(2024, 1, 15, 10, 30);
+
+        Regalo regalo = Regalo.reconstruir(id, EstadoRegalo.DISPONIBLE, fechaOriginal,
+                null, idProducto, null, null, false);
+
+        assertEquals(fechaOriginal, regalo.getFechaCreacion());
+    }
 
     @Test
     @DisplayName("Crea un regalo disponible y falla si no tiene producto ni combo")
@@ -39,12 +53,12 @@ class RegaloTest {
         regalo.enviar();
         assertEquals(EstadoRegalo.ENVIADO, regalo.getEstado());
 
-        regalo.confirmarEntrega();
+        regalo.confirmarEntrega(idUsuario);
         assertEquals(EstadoRegalo.ENTREGADO, regalo.getEstado());
         assertNotNull(regalo.getFechaEntrega());
     }
 
-    @Test   
+    @Test
     @DisplayName("Rechaza enviar un regalo que no ha sido elegido, y el estado no cambia")
     void rechazaEnviarSinElegir() {
         Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
@@ -68,9 +82,10 @@ class RegaloTest {
     @DisplayName("Un regalo entregado no puede cambiar de estado nunca más")
     void rechazaCambiarEstadoDespuesDeEntregado() {
         Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
-        regalo.elegir(UUID.randomUUID(), false);
+        UUID idUsuario = UUID.randomUUID();
+        regalo.elegir(idUsuario, false);
         regalo.enviar();
-        regalo.confirmarEntrega();
+        regalo.confirmarEntrega(idUsuario);
 
         assertThrows(ReglaDominioException.class, regalo::cancelarRegalo);
         assertEquals(EstadoRegalo.ENTREGADO, regalo.getEstado());
@@ -87,5 +102,76 @@ class RegaloTest {
         assertEquals(regalo1, regalo2);
         assertEquals(regalo1.hashCode(), regalo2.hashCode());
         assertNotEquals(regalo1, regalo3);
+    }
+
+    private Regalo regaloElegido(UUID idUsuario) {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        regalo.elegir(idUsuario, false);
+        return regalo;
+    }
+
+    @Test
+    @DisplayName("Rechaza un regalo asociado a producto y combo a la vez")
+    void rechazaProductoYComboJuntos() {
+        assertThrows(ReglaDominioException.class,
+                () -> Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
+    }
+
+    @Test
+    @DisplayName("Notifica una sola vez, y solo al usuario elegido")
+    void notificarReglas() {
+        UUID idUsuario = UUID.randomUUID();
+        Regalo regalo = regaloElegido(idUsuario);
+
+        assertThrows(ReglaDominioException.class, () -> regalo.notificar(UUID.randomUUID()));
+        regalo.notificar(idUsuario);
+        assertTrue(regalo.isNotificado());
+        assertThrows(ReglaDominioException.class, () -> regalo.notificar(idUsuario));
+    }
+
+    @Test
+    @DisplayName("No se notifica un regalo que sigue DISPONIBLE")
+    void rechazaNotificarSinElegir() {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        assertThrows(ReglaDominioException.class, () -> regalo.notificar(UUID.randomUUID()));
+    }
+
+    @Test
+    @DisplayName("Solo el destinatario confirma la entrega, y solo si fue enviado")
+    void confirmarEntregaReglas() {
+        UUID idUsuario = UUID.randomUUID();
+        Regalo regalo = regaloElegido(idUsuario);
+
+        assertThrows(ReglaDominioException.class, () -> regalo.confirmarEntrega(idUsuario)); // sin enviar
+        regalo.enviar();
+        assertThrows(ReglaDominioException.class, () -> regalo.confirmarEntrega(UUID.randomUUID()));
+        assertEquals(EstadoRegalo.ENVIADO, regalo.getEstado());
+    }
+
+    @Test
+    @DisplayName("Cancela un regalo elegido y rechaza cancelar o enviar después")
+    void cancelarRegalo() {
+        Regalo regalo = regaloElegido(UUID.randomUUID());
+
+        regalo.cancelarRegalo();
+
+        assertEquals(EstadoRegalo.CANCELADO, regalo.getEstado());
+        assertThrows(ReglaDominioException.class, regalo::cancelarRegalo);
+        assertThrows(ReglaDominioException.class, regalo::enviar);
+    }
+
+    @Test
+    @DisplayName("Se puede cancelar un regalo ya enviado, pero un cancelado no vuelve a elegirse")
+    void canceladoEsFinal() {
+        UUID idUsuario = UUID.randomUUID();
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+        regalo.elegir(idUsuario, false);
+        regalo.enviar();
+
+        regalo.cancelarRegalo();
+
+        assertEquals(EstadoRegalo.CANCELADO, regalo.getEstado());
+        assertThrows(ReglaDominioException.class, () -> regalo.elegir(UUID.randomUUID(), false));
+        assertThrows(ReglaDominioException.class, () -> regalo.confirmarEntrega(idUsuario));
     }
 }

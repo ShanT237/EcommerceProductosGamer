@@ -1,6 +1,5 @@
 package com.uniquindio.backend.infrastructure.persistence;
 
-import org.springframework.stereotype.Repository;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 
@@ -9,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public class UsuarioRepositoryEnMemoria implements UsuarioRepository {
 
     private final Map<UUID, Usuario> usuarios = new HashMap<>();
@@ -22,5 +20,11 @@ public class UsuarioRepositoryEnMemoria implements UsuarioRepository {
     @Override
     public void guardar(Usuario usuario) {
         usuarios.put(usuario.getId(), usuario);
+    }
+
+    @Override
+    public boolean existeConCorreo(String correo) {
+        return usuarios.values().stream()
+                .anyMatch(u -> u.getCorreo().equals(correo));
     }
 }

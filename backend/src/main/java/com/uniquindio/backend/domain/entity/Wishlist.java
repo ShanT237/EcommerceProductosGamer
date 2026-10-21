@@ -22,11 +22,27 @@ public class Wishlist {
     private final UUID usuarioId;
     private final List<UUID> productos;
 
-    public Wishlist(UUID id, UUID usuarioId) {
-        this.id = Objects.requireNonNull(id, "El id de la wishlist es obligatorio");
-        this.usuarioId = Objects.requireNonNull(usuarioId, "La wishlist debe pertenecer a un usuario");
+    // Wishlist
+    private Wishlist(UUID id, UUID usuarioId) {
+        this.id = id;
+        this.usuarioId = usuarioId;
         this.productos = new ArrayList<>();
     }
+
+    public static Wishlist crear(UUID id, UUID usuarioId) {
+        Objects.requireNonNull(id, "El id de la wishlist es obligatorio");
+        Objects.requireNonNull(usuarioId, "La wishlist debe pertenecer a un usuario");
+        return new Wishlist(id, usuarioId);
+    }
+
+    public static Wishlist reconstruir(UUID id, UUID usuarioId, List<UUID> productos) {
+        Wishlist wishlist = new Wishlist(id, usuarioId);
+        if (productos != null) {
+            wishlist.productos.addAll(productos);
+        }
+        return wishlist;
+    }
+
 
     public List<UUID> getProductos() {
         return List.copyOf(productos);

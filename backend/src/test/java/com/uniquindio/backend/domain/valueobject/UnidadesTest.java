@@ -15,18 +15,17 @@ class UnidadesTest {
     }
 
     @Test
-    void deberiaLanzarExcepcionSiCantidadEsCero() {
-        ReglaDominioException excepcion = assertThrows(
-                ReglaDominioException.class,
-                () -> new Unidades(0)
-        );
-        assertEquals("Las unidades deben ser mayores a cero", excepcion.getMessage());
+    void deberiaPermitirCantidadCero() {
+        assertEquals(0, new Unidades(0).cantidad());
     }
 
     @Test
     void deberiaLanzarExcepcionSiCantidadEsNegativa() {
-        assertThrows(ReglaDominioException.class, () -> new Unidades(-5));
+        ReglaDominioException excepcion = assertThrows(
+                ReglaDominioException.class, () -> new Unidades(-5));
+        assertEquals("Las unidades no pueden ser negativas", excepcion.getMessage());
     }
+
 
     @Test
     void restarDebeRetornarNuevasUnidadesConLaResta() {
@@ -47,21 +46,21 @@ class UnidadesTest {
     }
 
     @Test
-    void restarHastaDejarEnCeroDebeLanzarExcepcion() {
-        Unidades unidades = new Unidades(5);
-
-        assertThrows(ReglaDominioException.class, () -> unidades.restar(5));
+    void restarHastaDejarEnCeroDebeRetornarCero() {
+        assertEquals(0, new Unidades(5).restar(5).cantidad());
     }
 
     @Test
     void restarUnaCantidadMayorALaExistenteDebeLanzarExcepcion() {
-        Unidades unidades = new Unidades(5);
-
         ReglaDominioException excepcion = assertThrows(
-                ReglaDominioException.class,
-                () -> unidades.restar(10)
-        );
-        assertEquals("Las unidades deben ser mayores a cero", excepcion.getMessage());
+                ReglaDominioException.class, () -> new Unidades(5).restar(10));
+        assertEquals("No hay unidades suficientes", excepcion.getMessage());
+    }
+
+    @Test
+    void restarCantidadNoPositivaDebeLanzarExcepcion() {
+        assertThrows(ReglaDominioException.class, () -> new Unidades(5).restar(0));
+        assertThrows(ReglaDominioException.class, () -> new Unidades(5).restar(-1));
     }
 
     @Test

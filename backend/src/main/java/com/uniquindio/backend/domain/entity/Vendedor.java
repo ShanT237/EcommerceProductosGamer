@@ -25,10 +25,20 @@ public class Vendedor {
     private final String documento;
     private boolean activo;
 
-    public Vendedor(UUID id, String nombre, String correo, TipoVendedor tipo, String documento) {
-        this.id = Objects.requireNonNull(id, "El id del vendedor es obligatorio");
-        this.tipo = Objects.requireNonNull(tipo, "El tipo de vendedor es obligatorio");
+    // Vendedor
+    private Vendedor(UUID id, String nombre, String correo, TipoVendedor tipo, String documento) {
+        this.id = id;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.tipo = tipo;
+        this.documento = documento;
+        this.activo = true;
+    }
 
+    public static Vendedor registrar(UUID id, String nombre, String correo,
+                                     TipoVendedor tipo, String documento) {
+        Objects.requireNonNull(id, "El id del vendedor es obligatorio");
+        Objects.requireNonNull(tipo, "El tipo de vendedor es obligatorio");
         if (nombre == null || nombre.isBlank()) {
             throw new ReglaDominioException("El nombre del vendedor no puede estar vacío");
         }
@@ -37,11 +47,18 @@ public class Vendedor {
             throw new ReglaDominioException(
                     "El documento del vendedor (" + tipo.tipoDocumento() + ") no puede estar vacío");
         }
+        return new Vendedor(id, nombre, correo, tipo, documento);
+    }
 
-        this.nombre = nombre;
-        this.correo = correo;
-        this.documento = documento;
-        this.activo = true;
+    /**
+     * Solo para el adaptador de persistencia: "revive" un vendedor que YA existía.
+     * NO valida: esos datos ya pasaron por registrar(...) cuando el vendedor nació.
+     */
+    public static Vendedor reconstruir(UUID id, String nombre, String correo,
+                                       TipoVendedor tipo, String documento, boolean activo) {
+        Vendedor vendedor = new Vendedor(id, nombre, correo, tipo, documento);
+        vendedor.activo = activo;
+        return vendedor;
     }
 
     public boolean esEmpresa() {

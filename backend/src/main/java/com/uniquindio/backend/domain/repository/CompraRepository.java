@@ -2,6 +2,8 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Compra;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,17 +19,27 @@ public interface CompraRepository {
     void guardar(Compra compra);
 
     /**
-     * Indica si el usuario ya tiene una compra registrada de ese producto.
-     * La usa RealizarCompraUseCase para poder validar la Regla 9
-     * (un producto exclusivo solo se compra una vez por usuario) sin que
-     * el caso de uso tenga que decidir nada por su cuenta.
+     * Todas las compras del usuario (cualquier estado). La usa ConsultarHistorialComprasUseCase.
+     */
+    List<Compra> obtenerPorUsuarioId(UUID usuarioId);
+
+    /**
+     * Indica si el usuario ya tiene una compra activa de ese producto.
+     * Una compra es activa cuando está PENDIENTE o COMPLETADA; las REEMBOLSADA,
+     * CANCELADA y EXPIRADA no cuentan.
+     * La usa RealizarCompraUseCase para validar la Regla 9 (un producto exclusivo
+     * se compra una sola vez por usuario).
      */
     boolean existeCompraDe(UUID usuarioId, UUID productoId);
 
     /**
-     * Indica si el producto tiene compras activas (PENDIENTE o COMPLETADA, es decir,
-     * no reembolsadas). La usa EliminarProductoUseCase para poder validar la Regla 3
-     * sin que el caso de uso tenga que decidir nada por su cuenta.
+     * Indica si el producto tiene alguna compra activa (PENDIENTE o COMPLETADA).
+     * La usa EliminarProductoUseCase para validar la Regla 3.
      */
     boolean existeCompraActivaDeProducto(UUID productoId);
+
+
+    long contarCompletadasDe(UUID usuarioId);
+
+    boolean existeCompraDeAlguno(UUID usuarioId, Collection<UUID> productoIds);
 }

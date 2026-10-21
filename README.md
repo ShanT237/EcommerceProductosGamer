@@ -209,7 +209,15 @@ backend/src/main/java/com/uniquindio/backend/
 
 ---
 
-## 7. Cómo ejecutar las pruebas
+## 7. Limitaciones conocidas
+
+El curso aún no exige seguridad (CU-27 *Iniciar Sesión* está pendiente). **No hay Spring Security**: los endpoints aceptan `usuarioId` / `vendedorId` en el body o en la URL, así que un cliente podría redimir puntos de otro usuario, aplicar descuentos a productos ajenos o dar de baja a un vendedor.
+
+Los precios y porcentajes se modelan con `double` y el value object `Precio`. Una migración a `BigDecimal` queda pendiente.
+
+---
+
+## 8. Cómo ejecutar las pruebas
 
 ```powershell
 cd backend

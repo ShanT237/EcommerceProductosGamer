@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.request.PublicarProductoRequest;
 import com.uniquindio.backend.application.dto.response.PublicarProductoResponse;
+import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
@@ -19,11 +20,14 @@ import java.util.UUID;
 public class ProductoController {
 
     private final PublicarProductoUseCase publicarProductoUseCase;
+    private final EliminarProductoUseCase eliminarProductoUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
+                              EliminarProductoUseCase eliminarProductoUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
+        this.eliminarProductoUseCase = eliminarProductoUseCase;
         this.mapper = mapper;
     }
 
@@ -48,6 +52,13 @@ public class ProductoController {
                 .path("/{id}")
                 .buildAndExpand(producto.getId())
                 .toUri();
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(response); // -> 201 Created
+    }
+
+    // CU-06 Eliminar Producto (eliminación lógica, Regla 3)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
+        eliminarProductoUseCase.ejecutar(id);
+        return ResponseEntity.noContent().build(); // -> 204 No Content
     }
 }

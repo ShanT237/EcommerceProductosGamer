@@ -14,7 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,12 +29,16 @@ class CancelarYReembolsarUseCaseTest {
     private CancelarCompraUseCase cancelarUseCase;
     private SolicitarReembolsoUseCase reembolsoUseCase;
 
+    private static final ZoneId ZONA = ZoneId.systemDefault();
+    private static final LocalDateTime AHORA = LocalDateTime.of(2026, 9, 18, 10, 0);
+    private static final Clock RELOJ = Clock.fixed(AHORA.atZone(ZONA).toInstant(), ZONA);
+
     @BeforeEach
     void setUp() {
         compraRepository = new CompraRepositoryEnMemoria();
         productoRepository = new ProductoRepositoryEnMemoria();
         cancelarUseCase = new CancelarCompraUseCase(compraRepository, productoRepository);
-        reembolsoUseCase = new SolicitarReembolsoUseCase(compraRepository, productoRepository);
+        reembolsoUseCase = new SolicitarReembolsoUseCase(compraRepository, productoRepository, RELOJ);
     }
 
     @Test
@@ -39,11 +46,11 @@ class CancelarYReembolsarUseCaseTest {
     void cancelarCompraRestituyeStock() {
         UUID usuarioId = UUID.randomUUID();
         UUID vendedorId = UUID.randomUUID();
-        Producto producto = new Producto(UUID.randomUUID(), vendedorId, "Silla Gamer", "Ergonómica", 200.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Silla Gamer", "Ergonómica", 200.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
         producto.reducirStock(2); // Quedan 8
         productoRepository.guardar(producto);
 
-        Compra compra = new Compra(UUID.randomUUID(), usuarioId, producto.getId(), 2, LocalDate.now(), new Precio(200.0));
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), 2, AHORA.minusHours(24), new Precio(200.0));
         compraRepository.guardar(compra);
 
         Compra compraCancelada = cancelarUseCase.ejecutar(compra.getId(), usuarioId);
@@ -57,15 +64,15 @@ class CancelarYReembolsarUseCaseTest {
     void reembolsarCompraRestituyeStock() {
         UUID usuarioId = UUID.randomUUID();
         UUID vendedorId = UUID.randomUUID();
-        Producto producto = new Producto(UUID.randomUUID(), vendedorId, "Headset Gamer", "7.1 Surround", 80.0, 5, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Headset Gamer", "7.1 Surround", 80.0, 5, Gama.MEDIA, Exclusividad.NORMAL);
         producto.reducirStock(1); // Quedan 4
         productoRepository.guardar(producto);
 
-        Compra compra = new Compra(UUID.randomUUID(), usuarioId, producto.getId(), 1, LocalDate.now(), new Precio(80.0));
+        Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), 1, AHORA.minusHours(24), new Precio(80.0));
         compra.confirmar(); // PENDIENTE -> COMPLETADA
         compraRepository.guardar(compra);
 
-        Compra compraReembolsada = reembolsoUseCase.ejecutar(compra.getId(), usuarioId, LocalDate.now(), 30);
+        Compra compraReembolsada = reembolsoUseCase.ejecutar(compra.getId(), usuarioId);
 
         assertEquals(EstadoCompra.REEMBOLSADA, compraReembolsada.getEstado());
         assertEquals(5, productoRepository.obtenerPorId(producto.getId()).get().getStock());

@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ public class CancelarCompraUseCase {
     private final CompraRepository compraRepository;
     private final ProductoRepository productoRepository;
 
+    @Transactional
     public Compra ejecutar(UUID compraId, UUID usuarioId) {
         Compra compra = compraRepository.obtenerPorId(compraId)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));

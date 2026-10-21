@@ -17,7 +17,7 @@ class PreventaTest {
         UUID id = UUID.randomUUID();
         UUID productoId = UUID.randomUUID();
         LocalDate fecha = LocalDate.of(2026, 12, 25);
-        Preventa preventa = new Preventa(id, productoId, fecha, "Edición especial navideña");
+        Preventa preventa = Preventa.programar(id, productoId, fecha, "Edición especial navideña");
 
         assertEquals(id, preventa.getId());
         assertEquals(productoId, preventa.getProductoId());
@@ -25,20 +25,36 @@ class PreventaTest {
         assertEquals("Edición especial navideña", preventa.getDescripcion());
 
         assertThrows(ReglaDominioException.class,
-                () -> new Preventa(id, productoId, fecha, ""));
+                () -> Preventa.programar(id, productoId, fecha, ""));
         assertThrows(ReglaDominioException.class,
-                () -> new Preventa(id, productoId, fecha, "   "));
+                () -> Preventa.programar(id, productoId, fecha, "   "));
         assertThrows(NullPointerException.class,
-                () -> new Preventa(id, productoId, null, "Descripción válida"));
+                () -> Preventa.programar(id, productoId, null, "Descripción válida"));
         assertThrows(NullPointerException.class,
-                () -> new Preventa(id, null, fecha, "Descripción válida"));
+                () -> Preventa.programar(id, null, fecha, "Descripción válida"));
+    }
+
+    @Test
+    @DisplayName("programar con hoy exige fecha de lanzamiento estrictamente futura")
+    void programarExigeFechaFutura() {
+        LocalDate hoy = LocalDate.of(2026, 10, 20);
+        UUID id = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+
+        Preventa preventa = Preventa.programar(id, productoId, hoy.plusDays(1), "Mañana", hoy);
+        assertEquals(hoy.plusDays(1), preventa.getFechaLanzamiento());
+
+        assertThrows(ReglaDominioException.class,
+                () -> Preventa.programar(id, productoId, hoy, "Hoy", hoy));
+        assertThrows(ReglaDominioException.class,
+                () -> Preventa.programar(id, productoId, hoy.minusDays(1), "Ayer", hoy));
     }
 
     @Test
     @DisplayName("El producto de preventa está disponible en la fecha de lanzamiento o después")
     void disponibleEnFechaODespues() {
         LocalDate fechaLanzamiento = LocalDate.of(2026, 10, 15);
-        Preventa preventa = new Preventa(UUID.randomUUID(), UUID.randomUUID(),
+        Preventa preventa = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(),
                 fechaLanzamiento, "Lanzamiento octubre");
 
         assertTrue(preventa.estaDisponible(LocalDate.of(2026, 10, 15)));
@@ -50,7 +66,7 @@ class PreventaTest {
     @DisplayName("El producto de preventa NO está disponible antes de la fecha de lanzamiento")
     void noDisponibleAntesDeFecha() {
         LocalDate fechaLanzamiento = LocalDate.of(2026, 10, 15);
-        Preventa preventa = new Preventa(UUID.randomUUID(), UUID.randomUUID(),
+        Preventa preventa = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(),
                 fechaLanzamiento, "Lanzamiento octubre");
 
         assertFalse(preventa.estaDisponible(LocalDate.of(2026, 10, 14)));
@@ -61,7 +77,7 @@ class PreventaTest {
     @DisplayName("validarAcceso lanza excepción si se intenta acceder antes de la fecha de lanzamiento")
     void validarAccesoAntesDeFecha() {
         LocalDate fechaLanzamiento = LocalDate.of(2026, 12, 1);
-        Preventa preventa = new Preventa(UUID.randomUUID(), UUID.randomUUID(),
+        Preventa preventa = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(),
                 fechaLanzamiento, "Producto de fin de año");
 
         assertThrows(ReglaDominioException.class,
@@ -72,7 +88,7 @@ class PreventaTest {
     @DisplayName("validarAcceso no lanza excepción en la fecha de lanzamiento o después")
     void validarAccesoEnFechaODespues() {
         LocalDate fechaLanzamiento = LocalDate.of(2026, 12, 1);
-        Preventa preventa = new Preventa(UUID.randomUUID(), UUID.randomUUID(),
+        Preventa preventa = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(),
                 fechaLanzamiento, "Producto de fin de año");
 
         assertDoesNotThrow(() -> preventa.validarAcceso(LocalDate.of(2026, 12, 1)));
@@ -83,11 +99,11 @@ class PreventaTest {
     @DisplayName("La identidad de la preventa depende solo del id")
     void identidadPorId() {
         UUID id = UUID.randomUUID();
-        Preventa preventa1 = new Preventa(id, UUID.randomUUID(),
+        Preventa preventa1 = Preventa.programar(id, UUID.randomUUID(),
                 LocalDate.of(2026, 6, 1), "Preventa A");
-        Preventa preventa2 = new Preventa(id, UUID.randomUUID(),
+        Preventa preventa2 = Preventa.programar(id, UUID.randomUUID(),
                 LocalDate.of(2027, 1, 1), "Preventa B");
-        Preventa preventa3 = new Preventa(UUID.randomUUID(), UUID.randomUUID(),
+        Preventa preventa3 = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(),
                 LocalDate.of(2026, 6, 1), "Preventa A");
 
         assertEquals(preventa1, preventa2);
