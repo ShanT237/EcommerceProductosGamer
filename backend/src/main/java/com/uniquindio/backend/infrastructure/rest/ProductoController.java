@@ -5,6 +5,7 @@ import com.uniquindio.backend.application.dto.response.PublicarProductoResponse;
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.valueobject.Pagina;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import com.uniquindio.backend.application.dto.request.ModificarProductoRequest;
 import com.uniquindio.backend.application.dto.response.ModificarProductoResponse;
@@ -17,6 +18,7 @@ import com.uniquindio.backend.application.dto.response.CambiarVisibilidadProduct
 import com.uniquindio.backend.application.usecase.CambiarVisibilidadProductoUseCase;
 import com.uniquindio.backend.application.dto.request.BuscarProductosRequest;
 import com.uniquindio.backend.application.dto.response.BuscarProductoResponse;
+import com.uniquindio.backend.application.dto.response.PaginaResponse;
 import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 
 import jakarta.validation.Valid;
@@ -109,10 +111,20 @@ public class ProductoController {
 
     // CU-20 Filtrar y Buscar Productos (solo visibles: no eliminados ni pausados)
     @GetMapping
-    public List<BuscarProductoResponse> buscar(BuscarProductosRequest request) {
-        return buscarProductosUseCase.ejecutar(request.aFiltro()).stream()
+    public PaginaResponse<BuscarProductoResponse> buscar(
+            @ModelAttribute BuscarProductosRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pagina<Producto> pagina = buscarProductosUseCase.ejecutar(request.aFiltro(), page, size);
+        List<BuscarProductoResponse> contenido = pagina.contenido().stream()
                 .map(mapper::toBuscarResponse)
                 .toList();
+        return new PaginaResponse<>(
+                contenido,
+                pagina.pagina(),
+                pagina.tamano(),
+                pagina.totalElementos(),
+                pagina.totalPaginas());
     }
 
     // CU-21 Activar / Pausar Publicación
