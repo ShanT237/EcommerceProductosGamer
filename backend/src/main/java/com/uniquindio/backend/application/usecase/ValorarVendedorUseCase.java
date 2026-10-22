@@ -10,6 +10,7 @@ import com.uniquindio.backend.domain.repository.ValoracionVendedorRepository;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ public class ValorarVendedorUseCase {
     private final ValoracionVendedorRepository valoracionRepository;
     private final Clock clock;
 
+    @Transactional
     public ValoracionVendedor ejecutar(UUID compraId, UUID usuarioId, int estrellas, String comentario) {
         Compra compra = compraRepository.obtenerPorId(compraId)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
