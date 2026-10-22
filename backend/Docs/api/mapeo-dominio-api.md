@@ -23,7 +23,7 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `Producto.editarInformacion(...)` | PUT | `/api/productos/{id}/informacion` | 200 OK |
 | `Producto.pausar()` / `activar()` | PUT | `/api/productos/{id}/visibilidad` | 200 OK |
 | `Producto.eliminar(...)` | DELETE | `/api/productos/{id}` | 204 No Content |
-| Filtrar y buscar productos | GET | `/api/productos` | 200 OK |
+| Buscar productos paginados | GET | `/api/productos?texto=&categoria=&gama=&precioMin=&precioMax=&soloPreventa=&page=0&size=20` | 200 OK |
 | `Producto.aplicarDescuento(...)` | POST | `/api/descuentos` | 200 OK |
 | `Promocion.programar(...)` | POST | `/api/promociones` | 201 Created |
 | `Preventa.programar(...)` | POST | `/api/preventas` | 201 Created |
@@ -81,7 +81,7 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `PUT /api/productos/{id}/precio` | `vendedorId`, `nuevoPrecio` |
 | `PUT /api/productos/{id}/informacion` | `vendedorId`, `nombre`, `descripcion` |
 | `PUT /api/productos/{id}/visibilidad` | `vendedorId`, `activo` (`true` activa, `false` pausa) |
-| `GET /api/productos` | Filtros opcionales por query: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa` |
+| `GET /api/productos` | Filtros opcionales: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa`; paginación: `page` (desde 0), `size` (1–100) |
 | `PUT /api/compras/{id}/cupon` | `usuarioId`, `codigo` |
 | `PUT /api/regalos/{id}/asignar` | `usuarioId` |
 | `PUT /api/regalos/{id}/enviar` | Sin cuerpo |
@@ -90,6 +90,8 @@ Cada operación del dominio y el endpoint REST que la expone.
 ## Notas
 
 - `POST /api/usuarios` requiere `nombre`, `correo` y `contrasena`; la contraseña debe tener al menos 8 caracteres, una mayúscula y un número. `POST /api/usuarios` y `POST /api/vendedores` son públicos para permitir el registro; las demás rutas `/api/**`, excepto `/api/auth/**`, requieren `Authorization: Bearer {JWT}`.
+- La búsqueda responde con `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`; `page` empieza en 0 y `size` admite valores de 1 a 100. Los filtros y la paginación se ejecutan en JPQL.
+- El ranking agrupa en base de datos las unidades vendidas de compras `COMPLETADA` mediante `JOIN`, `GROUP BY` y `SUM`.
 - Usuarios de demo para `POST /api/auth/login`: `jose.demo@correo.com` / `JoseGamer2026` y `ana.demo@correo.com` / `AnaGamer2026`.
 - `usuarioId` y `vendedorId` van en el body o como parámetro en la URL. Sirven para verificar pertenencia, pero no se cruzan con el JWT (no hay roles).
 - Errores: las reglas del dominio responden **400** con un mensaje; un recurso que no existe responde **404**; una violación de integridad o un conflicto de concurrencia responde **409**; sin token válido responde **401**.
