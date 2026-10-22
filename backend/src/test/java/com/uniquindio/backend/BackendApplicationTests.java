@@ -24,6 +24,8 @@ class BackendApplicationTests {
 				"jose.demo@correo.com", "JoseGamer2026").isBlank());
 		Assertions.assertFalse(iniciarSesionUseCase.ejecutar(
 				"ana.demo@correo.com", "AnaGamer2026").isBlank());
+		Assertions.assertFalse(iniciarSesionUseCase.ejecutar(
+				"demo@gamerzone.com", "GamerZone2026").isBlank());
 	}
 
 }
