@@ -3,7 +3,7 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
-import com.uniquindio.backend.infrastructure.security.Pbkdf2HashContrasena;
+import com.uniquindio.backend.infrastructure.security.BCryptHashContrasena;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,14 +15,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class CambiarContrasenaUseCaseTest {
 
     private UsuarioRepositoryEnMemoria usuarioRepository;
-    private Pbkdf2HashContrasena hasher;
+    private BCryptHashContrasena hasher;
     private CambiarContrasenaUseCase useCase;
     private UUID id;
 
     @BeforeEach
     void setUp() {
         usuarioRepository = new UsuarioRepositoryEnMemoria();
-        hasher = new Pbkdf2HashContrasena();
+        hasher = new BCryptHashContrasena();
         useCase = new CambiarContrasenaUseCase(usuarioRepository, hasher);
         id = UUID.randomUUID();
         new RegistrarUsuarioUseCase(usuarioRepository, hasher).ejecutar(id, "Gamer", "g@test.com", "Gamer2026");

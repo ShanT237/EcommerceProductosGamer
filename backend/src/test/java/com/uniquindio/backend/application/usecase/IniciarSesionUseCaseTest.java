@@ -5,7 +5,7 @@ import com.uniquindio.backend.domain.exception.AutenticacionException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.security.JwtEmisorToken;
-import com.uniquindio.backend.infrastructure.security.Pbkdf2HashContrasena;
+import com.uniquindio.backend.infrastructure.security.BCryptHashContrasena;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class IniciarSesionUseCaseTest {
 
     private UsuarioRepositoryEnMemoria usuarioRepository;
-    private Pbkdf2HashContrasena hasher;
+    private BCryptHashContrasena hasher;
     private JwtEmisorToken emisor;
     private IniciarSesionUseCase useCase;
     private UUID id;
@@ -25,7 +25,7 @@ class IniciarSesionUseCaseTest {
     @BeforeEach
     void setUp() {
         usuarioRepository = new UsuarioRepositoryEnMemoria();
-        hasher = new Pbkdf2HashContrasena();
+        hasher = new BCryptHashContrasena();
         emisor = new JwtEmisorToken("secreto-de-prueba-con-mas-de-32-caracteres", 2, Clock.systemUTC());
         useCase = new IniciarSesionUseCase(usuarioRepository, hasher, emisor);
         id = UUID.randomUUID();

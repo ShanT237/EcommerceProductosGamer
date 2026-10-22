@@ -18,7 +18,7 @@ class RegistrarUsuarioUseCaseTest {
     @BeforeEach
     void setUp() {
         usuarioRepository = new UsuarioRepositoryEnMemoria();
-        useCase = new RegistrarUsuarioUseCase(usuarioRepository, new com.uniquindio.backend.infrastructure.security.Pbkdf2HashContrasena());
+        useCase = new RegistrarUsuarioUseCase(usuarioRepository, new com.uniquindio.backend.infrastructure.security.BCryptHashContrasena());
     }
 
     @Test
