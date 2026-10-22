@@ -48,6 +48,14 @@ public class MovimientoPuntos {
         return new MovimientoPuntos(UUID.randomUUID(), usuarioId, cantidad, tipo, fecha);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" un movimiento que YA existía.
+     * NO valida ni genera id: esos datos ya pasaron por ganado(...) o redimido(...).
+     */
+    public static MovimientoPuntos reconstruir(UUID id, UUID usuarioId, int cantidad,
+                                               TipoMovimientoPuntos tipo, LocalDateTime fecha) {
+        return new MovimientoPuntos(id, usuarioId, cantidad, tipo, fecha);
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

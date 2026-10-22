@@ -12,6 +12,7 @@ import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ public class SubirResenaUseCase {
     private final MovimientoPuntosRepository movimientoRepository;
     private final Clock clock;
 
+    @Transactional
     public Resena ejecutar(UUID idCompra, UUID idUsuario, int valorCalificacion, String comentario) {
         Compra compra = compraRepository.obtenerPorId(idCompra)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
