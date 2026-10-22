@@ -1,6 +1,7 @@
 package com.uniquindio.backend.infrastructure.rest.mapper;
 
 import com.uniquindio.backend.application.dto.response.PublicarProductoResponse;
+import com.uniquindio.backend.application.dto.response.ModificarProductoResponse;
 import com.uniquindio.backend.domain.entity.Producto;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,15 @@ public class ProductoMapper {
                 producto.getStock(),
                 producto.getGama(),
                 producto.getExclusividad()
+        );
+    }
+
+    public ModificarProductoResponse toModificarResponse(Producto producto) {
+        return new ModificarProductoResponse(
+                producto.getId(),
+                producto.getVendedorId(),
+                producto.getNombre(),
+                producto.getPrecio()
         );
     }
 }
