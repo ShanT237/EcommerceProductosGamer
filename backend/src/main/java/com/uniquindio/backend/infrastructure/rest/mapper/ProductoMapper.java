@@ -4,6 +4,7 @@ import com.uniquindio.backend.application.dto.response.PublicarProductoResponse;
 import com.uniquindio.backend.application.dto.response.ModificarProductoResponse;
 import com.uniquindio.backend.domain.entity.Producto;
 import org.springframework.stereotype.Component;
+import com.uniquindio.backend.application.dto.response.EditarInformacionProductoResponse;
 
 @Component
 public class ProductoMapper {
@@ -27,6 +28,15 @@ public class ProductoMapper {
                 producto.getVendedorId(),
                 producto.getNombre(),
                 producto.getPrecio()
+        );
+    }
+
+    public EditarInformacionProductoResponse toEditarInformacionResponse(Producto producto) {
+        return new EditarInformacionProductoResponse(
+                producto.getId(),
+                producto.getVendedorId(),
+                producto.getNombre(),
+                producto.getDescripcion()
         );
     }
 }
