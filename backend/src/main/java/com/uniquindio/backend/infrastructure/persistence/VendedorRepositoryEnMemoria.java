@@ -34,4 +34,19 @@ public class VendedorRepositoryEnMemoria implements VendedorRepository {
     public List<Vendedor> obtenerTodos() {
         return new ArrayList<>(vendedores.values());
     }
+
+    @Override
+    public Optional<Vendedor> obtenerPorCorreo(String correo) {
+        if (correo == null) {
+            return Optional.empty();
+        }
+        return vendedores.values().stream()
+                .filter(v -> v.getCorreo().equalsIgnoreCase(correo.trim()))
+                .findFirst();
+    }
+
+    @Override
+    public boolean existeConCorreo(String correo) {
+        return obtenerPorCorreo(correo).isPresent();
+    }
 }

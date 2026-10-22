@@ -36,4 +36,17 @@ public class VendedorRepositoryJpa implements VendedorRepository {
     public List<Vendedor> obtenerTodos() {
         return dataRepository.findAll().stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public Optional<Vendedor> obtenerPorCorreo(String correo) {
+        if (correo == null) {
+            return Optional.empty();
+        }
+        return dataRepository.findByCorreoIgnoreCase(correo.trim()).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean existeConCorreo(String correo) {
+        return correo != null && dataRepository.existsByCorreoIgnoreCase(correo.trim());
+    }
 }

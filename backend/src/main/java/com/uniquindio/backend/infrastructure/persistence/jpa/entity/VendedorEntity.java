@@ -25,7 +25,7 @@ public class VendedorEntity {
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, unique = true, length = 150)
     private String correo;
 
     @Enumerated(EnumType.STRING)

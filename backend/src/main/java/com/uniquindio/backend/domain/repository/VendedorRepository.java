@@ -25,4 +25,14 @@ public interface VendedorRepository {
     boolean existeConDocumento(String documento);
 
     List<Vendedor> obtenerTodos();
+
+    /**
+     * Busca un vendedor por correo, sin distinguir mayúsculas. La usa el inicio de sesión.
+     */
+    Optional<Vendedor> obtenerPorCorreo(String correo);
+
+    /**
+     * Indica si ya existe un vendedor con ese correo (sin distinguir mayúsculas).
+     */
+    boolean existeConCorreo(String correo);
 }
