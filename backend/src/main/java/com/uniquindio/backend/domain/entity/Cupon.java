@@ -47,6 +47,17 @@ public class Cupon {
         return new Cupon(id, codigo.trim().toUpperCase(), porcentaje, vence, usosMaximos);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" un cupón que YA existía.
+     * NO valida ni normaliza el código: eso ya ocurrió en crear(...).
+     */
+    public static Cupon reconstruir(UUID id, String codigo, double porcentaje, LocalDate vence,
+                                    int usosMaximos, int usos) {
+        Cupon cupon = new Cupon(id, codigo, porcentaje, vence, usosMaximos);
+        cupon.usos = usos;
+        return cupon;
+    }
+
     public void validarUso(LocalDate hoy) {
         if (hoy.isAfter(vence)) {
             throw new ReglaDominioException("El cupón está vencido");
