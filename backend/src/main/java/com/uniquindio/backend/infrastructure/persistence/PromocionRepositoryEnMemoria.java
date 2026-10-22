@@ -2,7 +2,6 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.domain.repository.PromocionRepository;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -11,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public class PromocionRepositoryEnMemoria implements PromocionRepository {
 
     private final Map<UUID, Promocion> promociones = new HashMap<>();

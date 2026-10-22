@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.PromocionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
@@ -24,6 +25,7 @@ public class ConfigurarDescuentoPromocionalUseCase {
     private final ProductoRepository productoRepository;
     private final PromocionRepository promocionRepository;
 
+    @Transactional
     public Promocion ejecutar(UUID productoId, UUID vendedorId, double porcentaje,
                               LocalDate desde, LocalDate hasta) {
         Producto producto = productoRepository.obtenerPorId(productoId)

@@ -45,6 +45,15 @@ public class Promocion {
         return new Promocion(id, productoId, porcentaje, desde, hasta);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" una promoción que YA existía.
+     * NO valida: eso ya ocurrió en programar(...).
+     */
+    public static Promocion reconstruir(UUID id, UUID productoId, double porcentaje,
+                                        LocalDate desde, LocalDate hasta) {
+        return new Promocion(id, productoId, porcentaje, desde, hasta);
+    }
+
     public boolean estaVigente(LocalDate fecha) {
         return !fecha.isBefore(desde) && !fecha.isAfter(hasta);
     }
