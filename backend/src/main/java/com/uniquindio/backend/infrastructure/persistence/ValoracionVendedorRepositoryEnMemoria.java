@@ -2,14 +2,13 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.ValoracionVendedor;
 import com.uniquindio.backend.domain.repository.ValoracionVendedorRepository;
-import org.springframework.stereotype.Repository;
+
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Repository
 public class ValoracionVendedorRepositoryEnMemoria implements ValoracionVendedorRepository {
 
     private final Map<UUID, ValoracionVendedor> valoraciones = new HashMap<>();
