@@ -2,9 +2,11 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.response.MetricasResenasResponse;
 import com.uniquindio.backend.application.dto.response.ProductoVendidoResponse;
+import com.uniquindio.backend.application.dto.response.ReporteGlobalResponse;
 import com.uniquindio.backend.application.dto.response.ReporteVentasResponse;
 import com.uniquindio.backend.application.usecase.AlertasStockBajoUseCase;
 import com.uniquindio.backend.application.usecase.MetricasResenasUseCase;
+import com.uniquindio.backend.application.usecase.ReporteGlobalUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
@@ -51,6 +53,9 @@ class ReporteControllerTest {
 
     @MockitoBean
     private MetricasResenasUseCase metricasResenasUseCase;
+
+    @MockitoBean
+    private ReporteGlobalUseCase reporteGlobalUseCase;
 
     // /api/** exige JWT; aquí el interceptor se simula como "token válido".
     @MockitoBean
@@ -214,5 +219,30 @@ class ReporteControllerTest {
     void metricasResenasSinVendedorIdRetorna400() throws Exception {
         mockMvc.perform(get("/api/reportes/metricas-resenas"))
                 .andExpect(status().isBadRequest());              // 400
+    }
+
+    // ===================== CU-36 =====================
+
+    @Test
+    void reporteGlobalDevuelveElConsolidadoDelMarketplace() throws Exception {
+        when(reporteGlobalUseCase.ejecutar())
+                .thenReturn(new ReporteGlobalResponse(12, 4500.5, 30, 4));
+
+        mockMvc.perform(get("/api/reportes/global"))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.comprasCompletadas").value(12))
+                .andExpect(jsonPath("$.ingresos").value(4500.5))
+                .andExpect(jsonPath("$.productosActivos").value(30))
+                .andExpect(jsonPath("$.vendedoresActivos").value(4));
+    }
+
+    @Test
+    void reporteGlobalConMarketplaceVacioDevuelveCeros() throws Exception {
+        when(reporteGlobalUseCase.ejecutar()).thenReturn(new ReporteGlobalResponse(0, 0.0, 0, 0));
+
+        mockMvc.perform(get("/api/reportes/global"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comprasCompletadas").value(0))
+                .andExpect(jsonPath("$.ingresos").value(0.0));
     }
 }

@@ -3,9 +3,11 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.dto.response.MetricasResenasResponse;
 import com.uniquindio.backend.application.dto.response.ProductoStockBajoResponse;
 import com.uniquindio.backend.application.dto.response.ProductoVendidoResponse;
+import com.uniquindio.backend.application.dto.response.ReporteGlobalResponse;
 import com.uniquindio.backend.application.dto.response.ReporteVentasResponse;
 import com.uniquindio.backend.application.usecase.AlertasStockBajoUseCase;
 import com.uniquindio.backend.application.usecase.MetricasResenasUseCase;
+import com.uniquindio.backend.application.usecase.ReporteGlobalUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
@@ -19,8 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Limitación: el {@code vendedorId} viaja como parámetro; el JWT valida la sesión pero
- * no se cruza con el vendedor consultado.
+ * Limitación: los reportes de vendedor reciben {@code vendedorId} como parámetro y el
+ * reporte global es de admin, pero no hay roles. El JWT valida la sesión y nada más.
  */
 @RestController
 @RequestMapping("/api/reportes")
@@ -30,17 +32,20 @@ public class ReporteController {
     private final ReporteMasVendidosUseCase reporteMasVendidosUseCase;
     private final AlertasStockBajoUseCase alertasStockBajoUseCase;
     private final MetricasResenasUseCase metricasResenasUseCase;
+    private final ReporteGlobalUseCase reporteGlobalUseCase;
     private final ProductoMapper productoMapper;
 
     public ReporteController(ReporteVentasVendedorUseCase reporteVentasVendedorUseCase,
                              ReporteMasVendidosUseCase reporteMasVendidosUseCase,
                              AlertasStockBajoUseCase alertasStockBajoUseCase,
                              MetricasResenasUseCase metricasResenasUseCase,
+                             ReporteGlobalUseCase reporteGlobalUseCase,
                              ProductoMapper productoMapper) {
         this.reporteVentasVendedorUseCase = reporteVentasVendedorUseCase;
         this.reporteMasVendidosUseCase = reporteMasVendidosUseCase;
         this.alertasStockBajoUseCase = alertasStockBajoUseCase;
         this.metricasResenasUseCase = metricasResenasUseCase;
+        this.reporteGlobalUseCase = reporteGlobalUseCase;
         this.productoMapper = productoMapper;
     }
 
@@ -73,5 +78,11 @@ public class ReporteController {
     @GetMapping("/metricas-resenas")
     public ResponseEntity<MetricasResenasResponse> metricasResenas(@RequestParam UUID vendedorId) {
         return ResponseEntity.ok(metricasResenasUseCase.ejecutar(vendedorId)); // 200 OK
+    }
+
+    // CU-36 Reporte Global del Marketplace (compras completadas, ingresos, productos y vendedores activos)
+    @GetMapping("/global")
+    public ResponseEntity<ReporteGlobalResponse> global() {
+        return ResponseEntity.ok(reporteGlobalUseCase.ejecutar()); // 200 OK
     }
 }
