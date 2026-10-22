@@ -37,4 +37,8 @@ public class VendedorEntity {
 
     @Column(nullable = false)
     private boolean activo;
+
+    // Nullable: los vendedores creados sin credenciales no tienen contraseña.
+    @Column(name = "contrasena_hash", length = 255)
+    private String contrasenaHash;
 }

@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import com.uniquindio.backend.domain.service.HashContrasena;
 
 import java.util.UUID;
 
@@ -110,5 +111,37 @@ class VendedorTest {
         assertEquals(vendedor1, vendedor2);
         assertEquals(vendedor1.hashCode(), vendedor2.hashCode());
         assertNotEquals(vendedor1, vendedor3);
+    }
+    private final HashContrasena hasher = new HashContrasena() {
+        @Override
+        public String hashear(String plana) {
+            return "hash:" + plana;
+        }
+
+        @Override
+        public boolean coincide(String plana, String hashAlmacenado) {
+            return hashAlmacenado.equals("hash:" + plana);
+        }
+    };
+
+    @Test
+    @DisplayName("definirContrasena guarda el hash y verificarContrasena solo acepta la correcta")
+    void definirYVerificarContrasena() {
+        Vendedor vendedor = crearVendedorValido();
+
+        vendedor.definirContrasena(hasher.hashear("Vendedor2026"));
+
+        assertTrue(vendedor.verificarContrasena("Vendedor2026", hasher));
+        assertFalse(vendedor.verificarContrasena("otra", hasher));
+    }
+
+    @Test
+    @DisplayName("Un vendedor sin contraseña nunca verifica y no acepta un hash vacío")
+    void vendedorSinContrasena() {
+        Vendedor vendedor = crearVendedorValido();
+
+        assertFalse(vendedor.verificarContrasena("Vendedor2026", hasher));
+        assertThrows(ReglaDominioException.class, () -> vendedor.definirContrasena(" "));
+        assertThrows(ReglaDominioException.class, () -> vendedor.definirContrasena(null));
     }
 }

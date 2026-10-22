@@ -15,6 +15,7 @@ public class VendedorPersistenceMapper {
         entity.setTipo(vendedor.getTipo());
         entity.setDocumento(vendedor.getDocumento());
         entity.setActivo(vendedor.isActivo());
+        entity.setContrasenaHash(vendedor.obtenerHashContrasena());
         return entity;
     }
 
@@ -25,6 +26,7 @@ public class VendedorPersistenceMapper {
                 entity.getCorreo(),
                 entity.getTipo(),
                 entity.getDocumento(),
-                entity.isActivo());
+                entity.isActivo(),
+                entity.getContrasenaHash());
     }
 }
