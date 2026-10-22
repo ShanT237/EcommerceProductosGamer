@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.service.HashContrasena;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.uniquindio.backend.domain.valueobject.Rol;
 
 /**
  * Caso de uso: IniciarSesion (CU-27).
@@ -35,6 +36,6 @@ public class IniciarSesionUseCase {
         }
         usuario.asegurarActivo();
 
-        return emisorToken.emitir(usuario.getId(), usuario.getCorreo());
+        return emisorToken.emitir(usuario.getId(), usuario.getCorreo(), Rol.COMPRADOR);
     }
 }

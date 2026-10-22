@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import com.uniquindio.backend.domain.service.SesionToken;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +36,8 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         }
         String cabecera = request.getHeader("Authorization");
         if (cabecera != null && cabecera.startsWith(PREFIJO)) {
-            Optional<UUID> usuarioId = emisorToken.validar(cabecera.substring(PREFIJO.length()).trim());
+            Optional<UUID> usuarioId = emisorToken.validar(cabecera.substring(PREFIJO.length()).trim())
+                    .map(SesionToken::usuarioId);
             if (usuarioId.isPresent()) {
                 request.setAttribute(ATRIBUTO_USUARIO_ID, usuarioId.get());
                 return true;

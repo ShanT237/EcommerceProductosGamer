@@ -1,11 +1,18 @@
 package com.uniquindio.backend.infrastructure.security;
 
+import com.uniquindio.backend.domain.service.SesionToken;
+import com.uniquindio.backend.domain.valueobject.Rol;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,32 +27,49 @@ class JwtEmisorTokenTest {
     }
 
     @Test
-    void emiteUnTokenQueSeValidaYDevuelveElUsuario() {
+    void emiteUnTokenQueSeValidaYDevuelveUsuarioYRol() {
         UUID id = UUID.randomUUID();
-        String token = emisor(SECRETO, AHORA).emitir(id, "gamer@test.com");
+        String token = emisor(SECRETO, AHORA).emitir(id, "gamer@test.com", Rol.VENDEDOR);
 
         assertEquals(3, token.split("\\.").length);
-        assertEquals(id, emisor(SECRETO, AHORA.plusSeconds(60)).validar(token).orElseThrow());
+        SesionToken sesion = emisor(SECRETO, AHORA.plusSeconds(60)).validar(token).orElseThrow();
+        assertEquals(id, sesion.usuarioId());
+        assertEquals(Rol.VENDEDOR, sesion.rol());
     }
 
     @Test
     void rechazaTokenExpirado() {
-        String token = emisor(SECRETO, AHORA).emitir(UUID.randomUUID(), "gamer@test.com");
+        String token = emisor(SECRETO, AHORA).emitir(UUID.randomUUID(), "gamer@test.com", Rol.COMPRADOR);
 
-        assertTrue(emisor(SECRETO, AHORA.plus(Duration.ofHours(2))).validar(token).isEmpty());
+        assertTrue(emisor(SECRETO, AHORA.plus(Duration.ofHours(2)).plusSeconds(1)).validar(token).isEmpty());
         assertTrue(emisor(SECRETO, AHORA.plus(Duration.ofHours(2)).minusSeconds(1)).validar(token).isPresent());
     }
 
     @Test
     void rechazaTokenFirmadoConOtroSecretoOAlterado() {
         UUID id = UUID.randomUUID();
-        String token = emisor(SECRETO, AHORA).emitir(id, "gamer@test.com");
+        String token = emisor(SECRETO, AHORA).emitir(id, "gamer@test.com", Rol.COMPRADOR);
 
         assertTrue(emisor("otro-secreto-distinto-con-mas-de-32-caracteres", AHORA).validar(token).isEmpty());
 
         String[] partes = token.split("\\.");
-        String otroPayload = emisor(SECRETO, AHORA).emitir(UUID.randomUUID(), "otro@test.com").split("\\.")[1];
+        String otroPayload = emisor(SECRETO, AHORA)
+                .emitir(UUID.randomUUID(), "otro@test.com", Rol.VENDEDOR).split("\\.")[1];
         assertTrue(emisor(SECRETO, AHORA).validar(partes[0] + "." + otroPayload + "." + partes[2]).isEmpty());
+    }
+
+    @Test
+    void rechazaTokenSinClaimDeRolOConRolDesconocido() {
+        SecretKey clave = Keys.hmacShaKeyFor(SECRETO.getBytes(StandardCharsets.UTF_8));
+        Date expira = Date.from(AHORA.plusSeconds(3600));
+
+        String sinRol = Jwts.builder().subject(UUID.randomUUID().toString())
+                .expiration(expira).signWith(clave).compact();
+        String rolDesconocido = Jwts.builder().subject(UUID.randomUUID().toString())
+                .claim("rol", "SUPERADMIN").expiration(expira).signWith(clave).compact();
+
+        assertTrue(emisor(SECRETO, AHORA).validar(sinRol).isEmpty());
+        assertTrue(emisor(SECRETO, AHORA).validar(rolDesconocido).isEmpty());
     }
 
     @Test

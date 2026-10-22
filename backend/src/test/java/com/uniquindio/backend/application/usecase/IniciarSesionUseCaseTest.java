@@ -3,6 +3,8 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.AutenticacionException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.service.SesionToken;
+import com.uniquindio.backend.domain.valueobject.Rol;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.security.JwtEmisorToken;
 import com.uniquindio.backend.infrastructure.security.BCryptHashContrasena;
@@ -36,7 +38,9 @@ class IniciarSesionUseCaseTest {
     void credencialesValidasDevuelvenUnTokenDelUsuario() {
         String token = useCase.ejecutar("gamer@test.com", "Gamer2026");
 
-        assertEquals(id, emisor.validar(token).orElseThrow());
+        SesionToken sesion = emisor.validar(token).orElseThrow();
+        assertEquals(id, sesion.usuarioId());
+        assertEquals(Rol.COMPRADOR, sesion.rol());
     }
 
     @Test
