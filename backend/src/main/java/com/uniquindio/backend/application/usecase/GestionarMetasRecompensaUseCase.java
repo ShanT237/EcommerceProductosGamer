@@ -6,6 +6,7 @@ import com.uniquindio.backend.domain.repository.MetaRecompensaRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -22,6 +23,7 @@ public class GestionarMetasRecompensaUseCase {
     private final MetaRecompensaRepository metaRepository;
     private final ProductoRepository productoRepository;
 
+    @Transactional
     public MetaRecompensa crear(UUID id, int comprasRequeridas, UUID productoRegaloId) {
         Producto regalo = productoRepository.obtenerPorId(productoRegaloId)
                 .orElseThrow(() -> new NoSuchElementException("El producto regalo no existe"));
