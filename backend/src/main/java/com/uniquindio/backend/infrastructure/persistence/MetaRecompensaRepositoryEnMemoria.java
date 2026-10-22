@@ -2,7 +2,6 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.MetaRecompensa;
 import com.uniquindio.backend.domain.repository.MetaRecompensaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public class MetaRecompensaRepositoryEnMemoria implements MetaRecompensaRepository {
 
     private final Map<UUID, MetaRecompensa> metas = new HashMap<>();
