@@ -32,6 +32,17 @@ public class MetaRecompensa {
         return new MetaRecompensa(id, comprasRequeridas, productoRegaloId);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" una meta que YA existía.
+     * NO valida: eso ya ocurrió en crear(...).
+     */
+    public static MetaRecompensa reconstruir(UUID id, int comprasRequeridas,
+                                             UUID productoRegaloId, boolean activa) {
+        MetaRecompensa meta = new MetaRecompensa(id, comprasRequeridas, productoRegaloId);
+        meta.activa = activa;
+        return meta;
+    }
+
     public void actualizarUmbral(int nuevoUmbral) {
         validarUmbral(nuevoUmbral);
         this.comprasRequeridas = nuevoUmbral;
