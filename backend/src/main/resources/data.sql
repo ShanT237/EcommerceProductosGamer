@@ -18,3 +18,7 @@ INSERT INTO usuarios (id, nombre, correo, puntos, activo, contrasena_hash, versi
 INSERT INTO compras (id, usuario_id, producto_id, cantidad, fecha, precio_unitario, estado, resenada, puntos_asignados, descargado) VALUES
                                                                                                                                         ('dddddddd-dddd-dddd-dddd-ddddddddddd1', 'cccccccc-cccc-cccc-cccc-ccccccccccc1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 2, '2026-10-19 10:00:00', 250000, 'PENDIENTE',  false, false, false),
                                                                                                                                         ('dddddddd-dddd-dddd-dddd-ddddddddddd2', 'cccccccc-cccc-cccc-cccc-ccccccccccc2', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', 1, '2026-10-19 11:30:00', 120000, 'COMPLETADA', false, false, false);
+
+-- Valoraciones de vendedor (Ana valoró a GamerZone por su compra completada)
+INSERT INTO valoraciones_vendedor (id, compra_id, usuario_id, vendedor_id, calificacion, comentario, fecha) VALUES
+    ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1', 'dddddddd-dddd-dddd-dddd-ddddddddddd2', 'cccccccc-cccc-cccc-cccc-ccccccccccc2', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 5, 'Envío rápido y buen trato', '2026-10-19 12:00:00');
