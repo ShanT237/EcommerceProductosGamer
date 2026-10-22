@@ -183,10 +183,17 @@ Categorías habilitadas en el catálogo:
 
 El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructurado en capas desacopladas:
 
+### Raíces de agregado para la sustentación
+
+- **Producto**: raíz del agregado de catálogo e inventario. Protege invariantes como stock no negativo, baja lógica y visibilidad. El vendedor se referencia por `vendedorId`; no se carga como parte de este agregado.
+- **Compra**: raíz del agregado de compra. Controla cantidad, precio unitario congelado y transiciones de estado, además de las reglas de reseña, puntos y reembolso. Referencia `usuarioId` y `productoId` sin contener esos agregados.
+
+Los casos de uso coordinan cambios que afectan a más de un agregado; cada entidad protege sus propias reglas. Las entidades JPA son adaptadores de persistencia separadas de estas raíces de dominio.
+
 ```
 backend/src/main/java/com/uniquindio/backend/
 ├── domain/                  # Capa de Dominio (Sin dependencias de frameworks)
-│   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion, Promocion, Cupon, MetaRecompensa, MovimientoPuntos, ValoracionVendedor)
+│   ├── entity/              # Entidades del dominio (Producto y Compra son las raíces elegidas para la sustentación)
 │   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Contrasena, TipoMovimientoPuntos)
 │   ├── repository/          # Interfaces de Repositorio de Dominio
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException)
@@ -217,6 +224,18 @@ El login con JWT (CU-27) ya está implementado y `/api/**` exige token, salvo `/
 
 Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`).
 ---
+
+## Base de datos y consultas
+
+El perfil predeterminado usa H2 para desarrollo y pruebas. Para MariaDB, crear la base `ecommerce_productos_gamer` y arrancar desde `backend` con:
+
+```bash
+DB_URL=jdbc:mariadb://localhost:3306/ecommerce_productos_gamer \
+DB_USERNAME=usuario DB_PASSWORD=contraseña \
+./gradlew bootRun --args='--spring.profiles.active=mariadb'
+```
+
+El catálogo se busca con `GET /api/productos?texto=mouse&categoria=Perifericos&page=0&size=20`; la respuesta contiene `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. `GET /api/reportes/mas-vendidos` agrupa ventas completadas en la base de datos.
 
 ## 8. Cómo ejecutar las pruebas
 
