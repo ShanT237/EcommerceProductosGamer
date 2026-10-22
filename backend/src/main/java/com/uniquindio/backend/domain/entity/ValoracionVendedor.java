@@ -59,6 +59,15 @@ public class ValoracionVendedor {
         return new ValoracionVendedor(id, compraId, usuarioId, vendedorId, calificacion, texto, fecha);
     }
 
+    /**
+     * Solo para el adaptador de persistencia: "revive" una valoración que YA existía.
+     * NO valida: esos datos ya pasaron por crear(...) cuando la valoración nació.
+     */
+    public static ValoracionVendedor reconstruir(UUID id, UUID compraId, UUID usuarioId, UUID vendedorId,
+                                                 Calificacion calificacion, String comentario,
+                                                 LocalDateTime fecha) {
+        return new ValoracionVendedor(id, compraId, usuarioId, vendedorId, calificacion, comentario, fecha);
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
