@@ -49,6 +49,11 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
                 .count();
     }
 
+    @Override
+    public List<Compra> obtenerTodas() {
+        return List.copyOf(compras.values());
+    }
+
     private static boolean esActiva(Compra c) {
         return c.getEstado() == EstadoCompra.PENDIENTE
                 || c.getEstado() == EstadoCompra.COMPLETADA;

@@ -50,4 +50,7 @@ public class CompraEntity {
 
     @Column(nullable = false)
     private boolean descargado;
+
+    @Column(name = "cupon_aplicado", nullable = false, columnDefinition = "boolean default false")
+    private boolean cuponAplicado;
 }

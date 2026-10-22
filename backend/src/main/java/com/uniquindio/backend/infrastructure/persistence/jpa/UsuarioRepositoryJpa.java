@@ -22,6 +22,11 @@ public class UsuarioRepositoryJpa implements UsuarioRepository {
     }
 
     @Override
+    public Optional<Usuario> obtenerPorCorreo(String correo) {
+        return dataRepository.findByCorreo(correo).map(mapper::toDomain);
+    }
+
+    @Override
     public void guardar(Usuario usuario) {
         dataRepository.save(mapper.toEntity(usuario));
     }

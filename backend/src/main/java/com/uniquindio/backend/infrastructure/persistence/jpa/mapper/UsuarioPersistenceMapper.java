@@ -14,6 +14,7 @@ public class UsuarioPersistenceMapper {
         entity.setCorreo(usuario.getCorreo());
         entity.setPuntos(usuario.getPuntos());
         entity.setActivo(usuario.isActivo());
+        entity.setContrasenaHash(usuario.obtenerHashContrasena());
         entity.setVersion(usuario.getVersion());
         return entity;
     }
@@ -25,6 +26,7 @@ public class UsuarioPersistenceMapper {
                 entity.getCorreo(),
                 entity.getPuntos(),
                 entity.isActivo(),
-                entity.getVersion());
+                entity.getVersion(),
+                entity.getContrasenaHash());
     }
 }

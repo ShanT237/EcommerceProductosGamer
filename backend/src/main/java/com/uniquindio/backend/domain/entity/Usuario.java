@@ -1,6 +1,8 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.service.HashContrasena;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -16,12 +18,14 @@ import java.util.UUID;
 public class Usuario {
 
     private final UUID id;
-    private final String nombre;
+    private String nombre;
     private String correo;
     private int puntos;
     private boolean activo;
     /** Versión de lock optimista; la asigna el adaptador JPA al reconstruir. */
     private Long version;
+    @Getter(AccessLevel.NONE)
+    private String contrasenaHash;
 
     // Usuario
     private Usuario(UUID id, String nombre, String correo) {
@@ -54,10 +58,17 @@ public class Usuario {
 
     public static Usuario reconstruir(UUID id, String nombre, String correo,
                                       int puntos, boolean activo, Long version) {
+        return reconstruir(id, nombre, correo, puntos, activo, version, null);
+    }
+
+    public static Usuario reconstruir(UUID id, String nombre, String correo,
+                                      int puntos, boolean activo, Long version,
+                                      String contrasenaHash) {
         Usuario usuario = new Usuario(id, nombre, correo);
         usuario.puntos = puntos;
         usuario.activo = activo;
         usuario.version = version;
+        usuario.contrasenaHash = contrasenaHash;
         return usuario;
     }
 
@@ -78,6 +89,27 @@ public class Usuario {
         this.puntos -= cantidad;
     }
 
+    /**
+     * Guarda el hash de la contraseña (nunca la contraseña en claro).
+     */
+    public void definirContrasena(String hash) {
+        if (hash == null || hash.isBlank()) {
+            throw new ReglaDominioException("El hash de la contraseña no puede estar vacío");
+        }
+        this.contrasenaHash = hash;
+    }
+
+    /**
+     * Solo para el adaptador de persistencia: devuelve el hash guardado (nunca la contraseña en claro).
+     */
+    public String obtenerHashContrasena() {
+        return contrasenaHash;
+    }
+
+    public boolean verificarContrasena(String plana, HashContrasena hasher) {
+        return contrasenaHash != null && hasher.coincide(plana, contrasenaHash);
+    }
+
     public void asegurarActivo() {
         if (!activo) {
             throw new ReglaDominioException("El usuario se encuentra inactivo");
@@ -90,6 +122,20 @@ public class Usuario {
 
     public void activar() {
         this.activo = true;
+    }
+
+    /**
+     * Actualiza nombre y correo juntos: valida ambos ANTES de cambiar cualquiera.
+     */
+    public void actualizarPerfil(String nuevoNombre, String nuevoCorreo) {
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new ReglaDominioException("El nombre del usuario no puede estar vacío");
+        }
+        if (nuevoCorreo == null || !nuevoCorreo.contains("@")) {
+            throw new ReglaDominioException("El correo del usuario no es válido");
+        }
+        this.nombre = nuevoNombre;
+        this.correo = nuevoCorreo;
     }
 
     public void actualizarCorreo(String nuevoCorreo) {

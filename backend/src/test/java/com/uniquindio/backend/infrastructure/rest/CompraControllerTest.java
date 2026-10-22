@@ -7,7 +7,9 @@ import com.uniquindio.backend.application.usecase.SolicitarReembolsoUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import com.uniquindio.backend.infrastructure.rest.mapper.CompraMapper;
+import com.uniquindio.backend.application.usecase.AplicarCuponUseCase;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -45,7 +47,19 @@ class CompraControllerTest {
     private SolicitarReembolsoUseCase solicitarReembolsoUseCase;
 
     @MockitoBean
+    private AplicarCuponUseCase aplicarCuponUseCase;
+
+    @MockitoBean
     private CompraMapper mapper;
+
+    // CU-27: /api/** exige JWT; en este test el interceptor se simula como "token valido".
+    @MockitoBean
+    private JwtAuthInterceptor jwtAuthInterceptor;
+
+    @BeforeEach
+    void permitirPeticiones() throws Exception {
+        when(jwtAuthInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+    }
 
     private final UUID usuarioId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();

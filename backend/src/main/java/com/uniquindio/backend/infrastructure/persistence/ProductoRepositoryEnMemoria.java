@@ -3,7 +3,9 @@ package com.uniquindio.backend.infrastructure.persistence;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,5 +22,10 @@ public class ProductoRepositoryEnMemoria implements ProductoRepository {
     @Override
     public void guardar(Producto producto) {
         productos.put(producto.getId(), producto);
+    }
+
+    @Override
+    public List<Producto> obtenerTodos() {
+        return new ArrayList<>(productos.values());
     }
 }

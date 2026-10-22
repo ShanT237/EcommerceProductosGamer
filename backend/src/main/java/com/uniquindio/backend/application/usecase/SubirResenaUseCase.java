@@ -1,16 +1,21 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Compra;
+import com.uniquindio.backend.domain.entity.MovimientoPuntos;
 import com.uniquindio.backend.domain.entity.Resena;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
+import com.uniquindio.backend.domain.repository.MovimientoPuntosRepository;
 import com.uniquindio.backend.domain.repository.ResenaRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -25,7 +30,10 @@ public class SubirResenaUseCase {
     private final CompraRepository compraRepository;
     private final ResenaRepository resenaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final MovimientoPuntosRepository movimientoRepository;
+    private final Clock clock;
 
+    @Transactional
     public Resena ejecutar(UUID idCompra, UUID idUsuario, int valorCalificacion, String comentario) {
         Compra compra = compraRepository.obtenerPorId(idCompra)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
@@ -50,11 +58,13 @@ public class SubirResenaUseCase {
         );
 
         compra.registrarResena();
-        usuario.acumularPuntos(compra.asignarPuntosPorResena());
+        int puntos = compra.asignarPuntosPorResena();
+        usuario.acumularPuntos(puntos);
 
         resenaRepository.guardar(resena);
         compraRepository.guardar(compra);
         usuarioRepository.guardar(usuario);
+        movimientoRepository.guardar(MovimientoPuntos.ganado(idUsuario, puntos, LocalDateTime.now(clock)));
 
         return resena;
     }

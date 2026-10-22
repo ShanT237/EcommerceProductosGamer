@@ -9,4 +9,5 @@ public interface UsuarioRepository {
     Optional<Usuario> obtenerPorId(UUID id);
     void guardar(Usuario usuario);
     boolean existeConCorreo(String correo);
+    Optional<Usuario> obtenerPorCorreo(String correo);
 }

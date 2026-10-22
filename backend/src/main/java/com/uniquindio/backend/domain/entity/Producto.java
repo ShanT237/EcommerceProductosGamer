@@ -21,20 +21,24 @@ import java.util.UUID;
 @Getter
 public class Producto {
 
+    public static final String CATEGORIA_POR_DEFECTO = "General";
+
     private final UUID id;
     private final UUID vendedorId;
-    private final String nombre;
-    private final String descripcion;
+    private String nombre;
+    private String descripcion;
     private double precio;
     /** Precio anterior al descuento activo; {@code null} si no hay descuento. */
     private Double precioOriginal;
     private int stock;
     private final Gama gama;
     private final Exclusividad exclusividad;
+    private final String categoria;
     private boolean eliminado;
+    private boolean pausado;
 
     private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
-                     double precio, int stock, Gama gama, Exclusividad exclusividad) {
+                     double precio, int stock, Gama gama, Exclusividad exclusividad, String categoria) {
         this.id = id;
         this.vendedorId = vendedorId;
         this.nombre = nombre;
@@ -44,11 +48,19 @@ public class Producto {
         this.stock = stock;
         this.gama = gama;
         this.exclusividad = exclusividad;
+        this.categoria = categoria;
         this.eliminado = false;
     }
 
     public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
                                     double precio, int stock, Gama gama, Exclusividad exclusividad) {
+        return publicar(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                CATEGORIA_POR_DEFECTO);
+    }
+
+    public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                    double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                    String categoria) {
         Objects.requireNonNull(id, "El id del producto es obligatorio");
         Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
         Objects.requireNonNull(gama, "La gama del producto es obligatoria");
@@ -66,7 +78,10 @@ public class Producto {
         if (stock < 0) {
             throw new ReglaDominioException("El stock del producto no puede ser negativo");
         }
-        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad);
+        if (categoria == null || categoria.isBlank()) {
+            throw new ReglaDominioException("La categoría del producto no puede estar vacía");
+        }
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad, categoria);
     }
 
     /**
@@ -83,15 +98,35 @@ public class Producto {
     public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
                                        double precio, int stock, Gama gama, Exclusividad exclusividad,
                                        boolean eliminado, Double precioOriginal) {
+        return reconstruir(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                eliminado, precioOriginal, false);
+    }
+
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado, Double precioOriginal, boolean pausado) {
+        return reconstruir(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                eliminado, precioOriginal, pausado, CATEGORIA_POR_DEFECTO);
+    }
+
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado, Double precioOriginal, boolean pausado,
+                                       String categoria) {
         Producto producto = new Producto(id, vendedorId, nombre, descripcion,
-                precio, stock, gama, exclusividad);
+                precio, stock, gama, exclusividad, categoria);
         producto.eliminado = eliminado;
         producto.precioOriginal = precioOriginal;
+        producto.pausado = pausado;
         return producto;
     }
 
     public boolean esExclusivo() {
         return exclusividad.esExclusivo();
+    }
+
+    public boolean estaVisible() {
+        return !eliminado && !pausado;
     }
 
     public void asegurarNoEliminado() {
@@ -107,6 +142,32 @@ public class Producto {
     }
 
     /**
+     * Un producto solo se puede comprar si no está eliminado ni pausado.
+     */
+    public void asegurarComprable() {
+        asegurarNoEliminado();
+        if (pausado) {
+            throw new ReglaDominioException("El producto se encuentra pausado");
+        }
+    }
+
+    public void pausar() {
+        asegurarNoEliminado();
+        if (pausado) {
+            throw new ReglaDominioException("El producto ya está pausado");
+        }
+        this.pausado = true;
+    }
+
+    public void activar() {
+        asegurarNoEliminado();
+        if (!pausado) {
+            throw new ReglaDominioException("El producto ya está activo");
+        }
+        this.pausado = false;
+    }
+
+    /**
      * Regla 1: el stock no puede ser negativo.
      */
     public void reducirStock(int cantidad) {
@@ -117,6 +178,19 @@ public class Producto {
             throw new ReglaDominioException("No hay suficiente stock disponible");
         }
         this.stock -= cantidad;
+    }
+
+    /**
+     * Verifica que hay stock para la cantidad pedida SIN modificarlo; permite validar
+     * varios productos antes de descontar cualquiera (compra de combos).
+     */
+    public void asegurarStock(int cantidad) {
+        if (cantidad <= 0) {
+            throw new ReglaDominioException("La cantidad debe ser positiva");
+        }
+        if (this.stock < cantidad) {
+            throw new ReglaDominioException("No hay suficiente stock disponible");
+        }
     }
 
     public void aumentarStock(int cantidad) {
@@ -161,6 +235,33 @@ public class Producto {
             throw new ReglaDominioException(
                     "El usuario ya compró este producto exclusivo anteriormente");
         }
+    }
+
+    /**
+     * Cambia el precio base del producto. El precio debe seguir siendo positivo
+     * y un producto eliminado no se modifica.
+     */
+    public void cambiarPrecio(double nuevoPrecio) {
+        asegurarNoEliminado();
+        if (nuevoPrecio <= 0) {
+            throw new ReglaDominioException("El precio del producto debe ser positivo");
+        }
+        this.precio = nuevoPrecio;
+    }
+
+    /**
+     * Actualiza nombre y descripción; ambos siguen siendo obligatorios.
+     */
+    public void editarInformacion(String nuevoNombre, String nuevaDescripcion) {
+        asegurarNoEliminado();
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new ReglaDominioException("El nombre del producto no puede estar vacío");
+        }
+        if (nuevaDescripcion == null || nuevaDescripcion.isBlank()) {
+            throw new ReglaDominioException("La descripción del producto no puede estar vacía");
+        }
+        this.nombre = nuevoNombre;
+        this.descripcion = nuevaDescripcion;
     }
 
     public void aplicarDescuento(double porcentaje) {

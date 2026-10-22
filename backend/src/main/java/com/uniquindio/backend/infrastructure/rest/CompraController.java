@@ -9,6 +9,9 @@ import com.uniquindio.backend.application.usecase.RealizarCompraUseCase;
 import com.uniquindio.backend.application.usecase.SolicitarReembolsoUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.infrastructure.rest.mapper.CompraMapper;
+import com.uniquindio.backend.application.dto.request.AplicarCuponRequest;
+import com.uniquindio.backend.application.dto.response.AplicarCuponResponse;
+import com.uniquindio.backend.application.usecase.AplicarCuponUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -26,17 +29,20 @@ public class CompraController {
     private final ConfirmarCompraUseCase confirmarCompraUseCase;
     private final CancelarCompraUseCase cancelarCompraUseCase;
     private final SolicitarReembolsoUseCase solicitarReembolsoUseCase;
+    private final AplicarCuponUseCase aplicarCuponUseCase;
     private final CompraMapper mapper;
 
     public CompraController(RealizarCompraUseCase realizarCompraUseCase,
                             ConfirmarCompraUseCase confirmarCompraUseCase,
                             CancelarCompraUseCase cancelarCompraUseCase,
                             SolicitarReembolsoUseCase solicitarReembolsoUseCase,
+                            AplicarCuponUseCase aplicarCuponUseCase,
                             CompraMapper mapper) {
         this.realizarCompraUseCase = realizarCompraUseCase;
         this.confirmarCompraUseCase = confirmarCompraUseCase;
         this.cancelarCompraUseCase = cancelarCompraUseCase;
         this.solicitarReembolsoUseCase = solicitarReembolsoUseCase;
+        this.aplicarCuponUseCase = aplicarCuponUseCase;
         this.mapper = mapper;
     }
 
@@ -85,5 +91,14 @@ public class CompraController {
             @RequestParam UUID usuarioId) {
         Compra compra = solicitarReembolsoUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(mapper.toRealizarResponse(compra)); // 200 OK
+    }
+
+    // CU-17 Aplicar Cupón de Descuento
+    @PutMapping("/{id}/cupon")
+    public ResponseEntity<AplicarCuponResponse> aplicarCupon(
+            @PathVariable UUID id,
+            @Valid @RequestBody AplicarCuponRequest request) {
+        Compra compra = aplicarCuponUseCase.ejecutar(id, request.usuarioId(), request.codigo());
+        return ResponseEntity.ok(mapper.toAplicarCuponResponse(compra)); // 200 OK
     }
 }
