@@ -22,3 +22,9 @@ INSERT INTO compras (id, usuario_id, producto_id, cantidad, fecha, precio_unitar
 -- Valoraciones de vendedor (Ana valoró a GamerZone por su compra completada)
 INSERT INTO valoraciones_vendedor (id, compra_id, usuario_id, vendedor_id, calificacion, comentario, fecha) VALUES
     ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1', 'dddddddd-dddd-dddd-dddd-ddddddddddd2', 'cccccccc-cccc-cccc-cccc-ccccccccccc2', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 5, 'Envío rápido y buen trato', '2026-10-19 12:00:00');
+
+
+
+-- Cupones (código de demo: VERANO26)
+INSERT INTO cupones (id, codigo, porcentaje, vence, usos_maximos, usos) VALUES
+    ('ffffffff-ffff-ffff-ffff-fffffffffff1', 'VERANO26', 15, '2026-12-31', 100, 0);
