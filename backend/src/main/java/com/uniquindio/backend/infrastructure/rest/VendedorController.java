@@ -44,7 +44,8 @@ public class VendedorController {
                 request.nombre(),
                 request.correo(),
                 request.tipo(),
-                request.documento()
+                request.documento(),
+                request.contrasena()
         );
 
         RegistrarVendedorResponse response = mapper.toRegistrarResponse(vendedor);
