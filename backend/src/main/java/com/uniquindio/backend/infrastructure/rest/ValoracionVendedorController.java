@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.UUID;
 
 import java.net.URI;
 
 /**
- * Limitación: el {@code usuarioId} viaja en el body; el JWT valida la sesión pero
- * no se cruza con el usuario que valora.
+ * El {@code usuarioId} sale del token JWT (Authentication): el comprador solo valora
+ * al vendedor de sus propias compras.
  */
 @RestController
 @RequestMapping("/api/valoraciones-vendedor")
@@ -35,10 +37,11 @@ public class ValoracionVendedorController {
     // CU-28 Valorar Vendedor (una valoración por compra COMPLETADA)
     @PostMapping
     public ResponseEntity<ValoracionVendedorResponse> valorar(
+            @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody ValorarVendedorRequest request) {
         ValoracionVendedor valoracion = valorarVendedorUseCase.ejecutar(
                 request.compraId(),
-                request.usuarioId(),
+                usuarioId,
                 request.estrellas(),
                 request.comentario()
         );
