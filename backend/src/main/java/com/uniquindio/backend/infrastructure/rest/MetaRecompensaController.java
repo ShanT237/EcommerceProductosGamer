@@ -8,6 +8,7 @@ import com.uniquindio.backend.domain.entity.MetaRecompensa;
 import com.uniquindio.backend.infrastructure.rest.mapper.MetaRecompensaMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
  * Limitación: es una operación de admin, pero no hay roles. Cualquier usuario con JWT
  * válido podría crear, cambiar o desactivar metas.
  */
+@PreAuthorize("hasRole('VENDEDOR')")
 @RestController
 @RequestMapping("/api/metas-recompensa")
 public class MetaRecompensaController {

@@ -21,8 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.UUID;
 
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.comprador;
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -119,11 +118,19 @@ class RegaloControllerTest {
         when(enviarRegaloUseCase.ejecutar(regaloId)).thenReturn(enviado);
 
         mockMvc.perform(put("/api/regalos/{id}/enviar", regaloId)
-                        .with(comprador(usuarioId)))
-                .andExpect(status().isOk())                       // 200
+                        .with(vendedor(UUID.randomUUID())))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("ENVIADO"));
     }
 
+    @Test
+    void unCompradorNoPuedeEnviarRegalosRetorna403() throws Exception {
+        mockMvc.perform(put("/api/regalos/{id}/enviar", regaloId)
+                        .with(comprador(usuarioId)))
+                .andExpect(status().isForbidden());
+
+        Mockito.verifyNoInteractions(enviarRegaloUseCase);
+    }
     // ===================== entrega =====================
 
     @Test

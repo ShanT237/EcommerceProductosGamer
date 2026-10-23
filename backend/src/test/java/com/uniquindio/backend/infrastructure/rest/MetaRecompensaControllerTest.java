@@ -8,6 +8,7 @@ import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.MetaRecompensaMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -19,8 +20,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -159,5 +159,15 @@ class MetaRecompensaControllerTest {
         mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    void unCompradorNoPuedeGestionarMetasRetorna403() throws Exception {
+        mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", UUID.randomUUID())
+                        .with(comprador(sesionId)))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(gestionarMetasUseCase);
     }
 }

@@ -19,8 +19,6 @@ import java.util.UUID;
 /**
  * El {@code usuarioId} sale del token JWT (Authentication): el regalo se asigna al usuario
  * autenticado y solo él puede confirmar su entrega.
- * Limitación: enviar un regalo (CU-24) es una operación de admin/sistema y aún no tiene
- * restricción por rol.
  */
 @PreAuthorize("hasRole('COMPRADOR')")
 @RestController
@@ -51,8 +49,8 @@ public class RegaloController {
         return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
     }
 
-    // CU-24 Enviar Regalo (solo si ya fue elegido)
-    @PreAuthorize("isAuthenticated()")
+    // CU-24 Enviar Regalo (solo vendedor; no existe rol ADMIN)
+    @PreAuthorize("hasRole('VENDEDOR')")
     @PutMapping("/{id}/enviar")
     public ResponseEntity<RegaloResponse> enviar(@PathVariable UUID id) {
         Regalo regalo = enviarRegaloUseCase.ejecutar(id);
