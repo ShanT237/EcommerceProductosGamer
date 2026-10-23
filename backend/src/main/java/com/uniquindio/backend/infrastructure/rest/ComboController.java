@@ -1,30 +1,29 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.dto.request.ComprarComboRequest;
 import com.uniquindio.backend.application.dto.request.CrearComboRequest;
 import com.uniquindio.backend.application.dto.response.ComboResponse;
+import com.uniquindio.backend.application.dto.response.ComprarComboResponse;
+import com.uniquindio.backend.application.usecase.ComprarComboUseCase;
 import com.uniquindio.backend.application.usecase.CrearComboUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductosComboUseCase;
 import com.uniquindio.backend.domain.entity.Combo;
-import com.uniquindio.backend.infrastructure.rest.mapper.ComboMapper;
-import com.uniquindio.backend.application.dto.request.ComprarComboRequest;
-import com.uniquindio.backend.application.dto.response.ComprarComboResponse;
-import com.uniquindio.backend.application.usecase.ComprarComboUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
-import org.springframework.http.HttpStatus;
-
-
+import com.uniquindio.backend.infrastructure.rest.mapper.ComboMapper;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.List;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 /**
- * Limitación: no hay autenticación ni autorización. El {@code vendedorId} viaja
- * en el body; cualquiera podría crear o modificar combos de otro vendedor (CU-27 pendiente).
+ * El vendedor y el comprador salen del token JWT (Authentication): un vendedor solo
+ * crea y modifica sus propios combos, y el comprador solo compra a su nombre.
  */
 @RestController
 @RequestMapping("/api/combos")
@@ -45,13 +44,14 @@ public class ComboController {
         this.mapper = mapper;
     }
 
-    // CU-07 Crear Combo Gamer
+    // CU-07 Crear Combo Gamer (del vendedor autenticado)
     @PostMapping
-    public ResponseEntity<ComboResponse> crear(@Valid @RequestBody CrearComboRequest request) {
-        UUID comboId = UUID.randomUUID();
+    public ResponseEntity<ComboResponse> crear(
+            @AuthenticationPrincipal UUID vendedorId,
+            @Valid @RequestBody CrearComboRequest request) {
         Combo combo = crearComboUseCase.ejecutar(
-                comboId,
-                request.vendedorId(),
+                UUID.randomUUID(),
+                vendedorId,
                 request.nombre(),
                 request.descripcion(),
                 request.descuento(),
@@ -67,30 +67,33 @@ public class ComboController {
         return ResponseEntity.created(location).body(mapper.toResponse(combo));
     }
 
-    // CU-23 Modificar Productos de Combo: Añadir
+    // CU-23 Modificar Productos de Combo: Añadir (solo el vendedor dueño)
     @PutMapping("/{id}/productos/{productoId}")
     public ResponseEntity<ComboResponse> agregarProducto(
             @PathVariable UUID id,
-            @PathVariable UUID productoId) {
-        Combo combo = modificarProductosComboUseCase.agregar(id, productoId);
+            @PathVariable UUID productoId,
+            @AuthenticationPrincipal UUID vendedorId) {
+        Combo combo = modificarProductosComboUseCase.agregar(id, vendedorId, productoId);
         return ResponseEntity.ok(mapper.toResponse(combo));
     }
 
-    // CU-23 Modificar Productos de Combo: Quitar
+    // CU-23 Modificar Productos de Combo: Quitar (solo el vendedor dueño)
     @DeleteMapping("/{id}/productos/{productoId}")
     public ResponseEntity<ComboResponse> quitarProducto(
             @PathVariable UUID id,
-            @PathVariable UUID productoId) {
-        Combo combo = modificarProductosComboUseCase.quitar(id, productoId);
+            @PathVariable UUID productoId,
+            @AuthenticationPrincipal UUID vendedorId) {
+        Combo combo = modificarProductosComboUseCase.quitar(id, vendedorId, productoId);
         return ResponseEntity.ok(mapper.toResponse(combo));
     }
 
-    // CU-16 Comprar Combo
+    // CU-16 Comprar Combo (a nombre del usuario autenticado)
     @PostMapping("/{id}/comprar")
     public ResponseEntity<ComprarComboResponse> comprar(
             @PathVariable UUID id,
+            @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody ComprarComboRequest request) {
-        List<Compra> compras = comprarComboUseCase.ejecutar(request.usuarioId(), id, request.cantidad());
+        List<Compra> compras = comprarComboUseCase.ejecutar(usuarioId, id, request.cantidad());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(mapper.toComprarResponse(id, compras)); // 201 Created
     }

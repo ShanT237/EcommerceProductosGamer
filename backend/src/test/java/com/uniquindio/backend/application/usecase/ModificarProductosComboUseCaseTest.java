@@ -50,7 +50,7 @@ class ModificarProductosComboUseCaseTest {
 
     @Test
     void agregaProductoDelMismoVendedor() {
-        Combo combo = useCase.agregar(comboId, p3.getId());
+        Combo combo = useCase.agregar(comboId, vendedorId, p3.getId());
 
         assertEquals(3, combo.getProductos().size());
         assertEquals(3, comboRepository.obtenerPorId(comboId).get().getProductos().size());
@@ -60,35 +60,47 @@ class ModificarProductosComboUseCaseTest {
     void agregarProductoDeOtroVendedorLanzaReglaDominio() {
         Producto ajeno = guardarProducto(UUID.randomUUID(), "Ajeno");
 
-        assertThrows(ReglaDominioException.class, () -> useCase.agregar(comboId, ajeno.getId()));
+        assertThrows(ReglaDominioException.class, () -> useCase.agregar(comboId, vendedorId, ajeno.getId()));
 
         assertEquals(2, comboRepository.obtenerPorId(comboId).get().getProductos().size());
     }
 
     @Test
     void agregarProductoInexistenteLanzaReglaDominio() {
-        assertThrows(ReglaDominioException.class, () -> useCase.agregar(comboId, UUID.randomUUID()));
+        assertThrows(ReglaDominioException.class, () -> useCase.agregar(comboId, vendedorId, UUID.randomUUID()));
     }
 
     @Test
     void quitaProductoSiQuedanAlMenosDos() {
-        useCase.agregar(comboId, p3.getId());
+        useCase.agregar(comboId, vendedorId, p3.getId());
 
-        Combo combo = useCase.quitar(comboId, p3.getId());
+        Combo combo = useCase.quitar(comboId, vendedorId, p3.getId());
 
         assertEquals(2, combo.getProductos().size());
     }
 
     @Test
     void quitarDejandoMenosDeDosLanzaReglaDominio() {
-        assertThrows(ReglaDominioException.class, () -> useCase.quitar(comboId, p1.getId()));
+        assertThrows(ReglaDominioException.class, () -> useCase.quitar(comboId, vendedorId, p1.getId()));
+
+        assertEquals(2, comboRepository.obtenerPorId(comboId).get().getProductos().size());
+    }
+
+    @Test
+    void soloElDuenoDelComboModificaSusProductos() {
+        UUID ajeno = UUID.randomUUID();
+
+        assertThrows(ReglaDominioException.class, () -> useCase.agregar(comboId, ajeno, p3.getId()));
+        assertThrows(ReglaDominioException.class, () -> useCase.quitar(comboId, ajeno, p1.getId()));
 
         assertEquals(2, comboRepository.obtenerPorId(comboId).get().getProductos().size());
     }
 
     @Test
     void comboInexistenteLanzaNoSuchElement() {
-        assertThrows(NoSuchElementException.class, () -> useCase.agregar(UUID.randomUUID(), p3.getId()));
-        assertThrows(NoSuchElementException.class, () -> useCase.quitar(UUID.randomUUID(), p1.getId()));
+        assertThrows(NoSuchElementException.class,
+                () -> useCase.agregar(UUID.randomUUID(), vendedorId, p3.getId()));
+        assertThrows(NoSuchElementException.class,
+                () -> useCase.quitar(UUID.randomUUID(), vendedorId, p1.getId()));
     }
 }

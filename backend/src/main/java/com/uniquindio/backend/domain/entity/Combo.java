@@ -118,4 +118,10 @@ public class Combo {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    public void asegurarPerteneceA(UUID vendedorId) {
+        if (!this.vendedorId.equals(vendedorId)) {
+            throw new ReglaDominioException("El combo no pertenece al vendedor");
+        }
+    }
 }
