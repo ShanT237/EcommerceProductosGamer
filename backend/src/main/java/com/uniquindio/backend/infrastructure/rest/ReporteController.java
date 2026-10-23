@@ -12,6 +12,7 @@ import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,8 +22,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Limitación: los reportes de vendedor reciben {@code vendedorId} como parámetro y el
- * reporte global es de admin, pero no hay roles. El JWT valida la sesión y nada más.
+ * Los reportes de vendedor (ventas, stock bajo y métricas de reseñas) usan el {@code vendedorId}
+ * del token JWT (Authentication): cada vendedor solo consulta sus propios reportes.
+ * Limitación: {@code mas-vendidos} (con {@code vendedorId} opcional) y {@code global} son
+ * operaciones de admin y aún no tienen restricción por rol.
  */
 @RestController
 @RequestMapping("/api/reportes")
@@ -49,9 +52,9 @@ public class ReporteController {
         this.productoMapper = productoMapper;
     }
 
-    // CU-29 Reporte de Ventas por Vendedor
+    // CU-29 Reporte de Ventas del vendedor autenticado
     @GetMapping("/ventas")
-    public ResponseEntity<ReporteVentasResponse> ventasPorVendedor(@RequestParam UUID vendedorId) {
+    public ResponseEntity<ReporteVentasResponse> ventasPorVendedor(@AuthenticationPrincipal UUID vendedorId) {
         return ResponseEntity.ok(reporteVentasVendedorUseCase.ejecutar(vendedorId)); // 200 OK
     }
 
@@ -63,10 +66,10 @@ public class ReporteController {
         return ResponseEntity.ok(reporteMasVendidosUseCase.ejecutar(vendedorId, top)); // 200 OK
     }
 
-    // CU-34 Alertas de Stock Bajo (agotados primero)
+    // CU-34 Alertas de Stock Bajo del vendedor autenticado (agotados primero)
     @GetMapping("/stock-bajo")
     public ResponseEntity<List<ProductoStockBajoResponse>> stockBajo(
-            @RequestParam UUID vendedorId,
+            @AuthenticationPrincipal UUID vendedorId,
             @RequestParam(defaultValue = "5") int umbral) {
         List<ProductoStockBajoResponse> respuesta = alertasStockBajoUseCase.ejecutar(vendedorId, umbral).stream()
                 .map(productoMapper::toStockBajoResponse)
@@ -74,9 +77,9 @@ public class ReporteController {
         return ResponseEntity.ok(respuesta); // 200 OK
     }
 
-    // CU-35 Métricas de Reseñas (promedio, distribución por estrellas, positivas y negativas)
+    // CU-35 Métricas de Reseñas del vendedor autenticado (promedio, distribución, positivas y negativas)
     @GetMapping("/metricas-resenas")
-    public ResponseEntity<MetricasResenasResponse> metricasResenas(@RequestParam UUID vendedorId) {
+    public ResponseEntity<MetricasResenasResponse> metricasResenas(@AuthenticationPrincipal UUID vendedorId) {
         return ResponseEntity.ok(metricasResenasUseCase.ejecutar(vendedorId)); // 200 OK
     }
 
