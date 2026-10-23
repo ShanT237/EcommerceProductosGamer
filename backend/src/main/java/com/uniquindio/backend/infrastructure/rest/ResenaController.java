@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.UUID;
 
 import java.net.URI;
 
@@ -24,12 +26,14 @@ public class ResenaController {
         this.mapper = mapper;
     }
 
-    // CU-02 Subir Reseña y Asignar Puntos
+    // CU-02 Subir Reseña y Asignar Puntos al usuario autenticado
     @PostMapping
-    public ResponseEntity<SubirResenaResponse> crear(@Valid @RequestBody SubirResenaRequest request) {
+    public ResponseEntity<SubirResenaResponse> crear(
+            @AuthenticationPrincipal UUID usuarioId,
+            @Valid @RequestBody SubirResenaRequest request) {
         Resena resena = subirResenaUseCase.ejecutar(
                 request.idCompra(),
-                request.idUsuario(),
+                usuarioId,
                 request.valorCalificacion(),
                 request.comentario()
         );
