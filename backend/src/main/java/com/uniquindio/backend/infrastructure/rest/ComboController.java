@@ -13,6 +13,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.ComboMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,6 +26,7 @@ import java.util.UUID;
  * El vendedor y el comprador salen del token JWT (Authentication): un vendedor solo
  * crea y modifica sus propios combos, y el comprador solo compra a su nombre.
  */
+@PreAuthorize("hasRole('VENDEDOR')")
 @RestController
 @RequestMapping("/api/combos")
 public class ComboController {
@@ -88,6 +90,7 @@ public class ComboController {
     }
 
     // CU-16 Comprar Combo (a nombre del usuario autenticado)
+    @PreAuthorize("hasRole('COMPRADOR')")
     @PostMapping("/{id}/comprar")
     public ResponseEntity<ComprarComboResponse> comprar(
             @PathVariable UUID id,

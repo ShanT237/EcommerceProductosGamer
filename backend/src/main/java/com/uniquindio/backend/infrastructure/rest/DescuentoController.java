@@ -6,6 +6,7 @@ import com.uniquindio.backend.application.usecase.AplicarDescuentoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
  * El {@code vendedorId} sale del token JWT (Authentication): el caso de uso verifica
  * que el producto pertenezca a ese vendedor antes de aplicar el descuento.
  */
+@PreAuthorize("hasRole('VENDEDOR')")
 @RestController
 @RequestMapping("/api/descuentos")
 public class DescuentoController {

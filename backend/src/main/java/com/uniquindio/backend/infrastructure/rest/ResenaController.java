@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.entity.Resena;
 import com.uniquindio.backend.infrastructure.rest.mapper.ResenaMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 import java.net.URI;
 
+@PreAuthorize("hasRole('COMPRADOR')")
 @RestController
 @RequestMapping("/api/resenas")
 public class ResenaController {

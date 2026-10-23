@@ -21,8 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.UUID;
 
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -139,6 +138,16 @@ class VendedorControllerTest {
     void darDeBajaSinTokenRetorna401EnJson() throws Exception {
         mockMvc.perform(put("/api/vendedores/me/baja"))
                 .andExpect(status().isUnauthorized())             // 401
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(darDeBajaVendedorUseCase);
+    }
+
+    @Test
+    void unCompradorNoPuedeDarDeBajaRetorna403() throws Exception {
+        mockMvc.perform(put("/api/vendedores/me/baja")
+                        .with(comprador(UUID.randomUUID())))
+                .andExpect(status().isForbidden())                // 403
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         Mockito.verifyNoInteractions(darDeBajaVendedorUseCase);

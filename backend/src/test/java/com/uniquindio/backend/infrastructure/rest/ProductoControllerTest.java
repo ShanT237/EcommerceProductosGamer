@@ -22,17 +22,19 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import java.util.UUID;
 
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -233,5 +235,24 @@ class ProductoControllerTest {
                         .content(cuerpoPublicar("")))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    void unCompradorNoPuedePublicarRetorna403EnJson() throws Exception {
+        mockMvc.perform(post("/api/productos")
+                        .with(comprador(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoPublicar("")))
+                .andExpect(status().isForbidden())                // 403
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(publicarProductoUseCase);
+    }
+
+    @Test
+    void cualquierSesionPuedeBuscarProductos() throws Exception {
+        mockMvc.perform(get("/api/productos").with(comprador(UUID.randomUUID())))
+                .andDo(print())
+                .andExpect(status().isOk());                      // 200
     }
 }

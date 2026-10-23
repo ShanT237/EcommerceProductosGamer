@@ -9,6 +9,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.VendedorMapper;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -60,6 +61,7 @@ public class VendedorController {
     }
 
     // CU-25 Dar de Baja al vendedor autenticado (baja lógica)
+    @PreAuthorize("hasRole('VENDEDOR')")
     @PutMapping("/me/baja")
     public ResponseEntity<RegistrarVendedorResponse> darDeBaja(@AuthenticationPrincipal UUID vendedorId) {
         Vendedor vendedor = darDeBajaVendedorUseCase.ejecutar(vendedorId);

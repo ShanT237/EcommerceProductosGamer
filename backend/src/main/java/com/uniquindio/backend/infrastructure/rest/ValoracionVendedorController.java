@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.entity.ValoracionVendedor;
 import com.uniquindio.backend.infrastructure.rest.mapper.ValoracionVendedorMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ import java.net.URI;
  * El {@code usuarioId} sale del token JWT (Authentication): el comprador solo valora
  * al vendedor de sus propias compras.
  */
+@PreAuthorize("hasRole('COMPRADOR')")
 @RestController
 @RequestMapping("/api/valoraciones-vendedor")
 public class ValoracionVendedorController {

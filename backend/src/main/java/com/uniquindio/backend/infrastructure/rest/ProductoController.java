@@ -21,6 +21,7 @@ import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,7 +30,8 @@ import java.util.List;
 import java.net.URI;
 import java.util.UUID;
 
-@RestController    // Maneja peticiones HTTP -> JSON
+@PreAuthorize("hasRole('VENDEDOR')")
+@RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
 
@@ -114,6 +116,7 @@ public class ProductoController {
     }
 
     // CU-20 Filtrar y Buscar Productos (solo visibles: no eliminados ni pausados)
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public List<BuscarProductoResponse> buscar(BuscarProductosRequest request) {
         return buscarProductosUseCase.ejecutar(request.aFiltro()).stream()

@@ -12,6 +12,7 @@ import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,7 @@ import java.util.UUID;
  * Limitación: {@code mas-vendidos} (con {@code vendedorId} opcional) y {@code global} son
  * operaciones de admin y aún no tienen restricción por rol.
  */
+@PreAuthorize("hasRole('VENDEDOR')")
 @RestController
 @RequestMapping("/api/reportes")
 public class ReporteController {
@@ -59,6 +61,7 @@ public class ReporteController {
     }
 
     // CU-30 Reporte de Productos Más Vendidos (sin vendedorId = todo el marketplace)
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/mas-vendidos")
     public ResponseEntity<List<ProductoVendidoResponse>> masVendidos(
             @RequestParam(required = false) UUID vendedorId,
@@ -84,6 +87,7 @@ public class ReporteController {
     }
 
     // CU-36 Reporte Global del Marketplace (compras completadas, ingresos, productos y vendedores activos)
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/global")
     public ResponseEntity<ReporteGlobalResponse> global() {
         return ResponseEntity.ok(reporteGlobalUseCase.ejecutar()); // 200 OK

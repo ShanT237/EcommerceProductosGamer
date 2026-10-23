@@ -9,6 +9,7 @@ import com.uniquindio.backend.application.dto.request.EditarPerfilRequest;
 import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
 import com.uniquindio.backend.application.dto.request.CambiarContrasenaRequest;
 import com.uniquindio.backend.application.usecase.CambiarContrasenaUseCase;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import jakarta.validation.Valid;
@@ -60,6 +61,7 @@ public class UsuarioController {
     }
 
     // CU-26 Editar Perfil (nombre y correo) del usuario autenticado
+    @PreAuthorize("hasRole('COMPRADOR')")
     @PutMapping("/me/perfil")
     public ResponseEntity<RegistrarUsuarioResponse> editarPerfil(
             @AuthenticationPrincipal UUID usuarioId,
@@ -69,6 +71,7 @@ public class UsuarioController {
     }
 
     // CU-26 Cambiar Contraseña del usuario autenticado (exige la actual; la nueva debe ser segura y distinta)
+    @PreAuthorize("hasRole('COMPRADOR')")
     @PutMapping("/me/contrasena")
     public ResponseEntity<Void> cambiarContrasena(
             @AuthenticationPrincipal UUID usuarioId,

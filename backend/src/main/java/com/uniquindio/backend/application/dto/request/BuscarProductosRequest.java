@@ -12,9 +12,13 @@ public record BuscarProductosRequest(
         Gama gama,
         Double precioMin,
         Double precioMax,
-        boolean soloPreventa
+        Boolean soloPreventa
 ) {
     public FiltroProducto aFiltro() {
-        return new FiltroProducto(texto, categoria, gama, precioMin, precioMax, soloPreventa);
+        return new FiltroProducto(texto, categoria, gama, precioMin, precioMax, soloPreventaOrDefault());
+    }
+
+    public boolean soloPreventaOrDefault() {
+        return Boolean.TRUE.equals(soloPreventa);
     }
 }

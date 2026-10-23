@@ -32,8 +32,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
-import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
@@ -293,5 +292,27 @@ class ReporteControllerTest {
         mockMvc.perform(get("/api/reportes/ventas"))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+    @Test
+    void unCompradorNoPuedeVerReportesDeVendedorRetorna403() throws Exception {
+        UUID compradorId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/reportes/ventas").with(comprador(compradorId)))
+                .andExpect(status().isForbidden())                // 403
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+        mockMvc.perform(get("/api/reportes/stock-bajo").with(comprador(compradorId)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/reportes/metricas-resenas").with(comprador(compradorId)))
+                .andExpect(status().isForbidden());
+
+        Mockito.verifyNoInteractions(reporteVentasVendedorUseCase, alertasStockBajoUseCase, metricasResenasUseCase);
+    }
+
+    @Test
+    void elReporteGlobalSigueAbiertoACualquierSesion() throws Exception {
+        when(reporteGlobalUseCase.ejecutar()).thenReturn(new ReporteGlobalResponse(0, 0.0, 0, 0));
+
+        mockMvc.perform(get("/api/reportes/global").with(comprador(UUID.randomUUID())))
+                .andExpect(status().isOk());
     }
 }

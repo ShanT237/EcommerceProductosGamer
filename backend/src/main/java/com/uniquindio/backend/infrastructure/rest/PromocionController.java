@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.infrastructure.rest.mapper.PromocionMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import java.util.UUID;
  * El {@code vendedorId} sale del token JWT (Authentication): el caso de uso verifica
  * que el producto pertenezca a ese vendedor.
  */
+@PreAuthorize("hasRole('VENDEDOR')")
 @RestController
 @RequestMapping("/api/promociones")
 public class PromocionController {

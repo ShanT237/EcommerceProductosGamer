@@ -187,4 +187,26 @@ class ComboControllerTest {
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
+
+    @Test
+    void unCompradorNoPuedeCrearCombosRetorna403() throws Exception {
+        mockMvc.perform(post("/api/combos")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoCrear("")))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(crearComboUseCase);
+    }
+
+    @Test
+    void unVendedorNoPuedeComprarCombosRetorna403() throws Exception {
+        mockMvc.perform(post("/api/combos/{id}/comprar", comboId)
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"cantidad\": 1 }"))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(comprarComboUseCase);
+    }
 }

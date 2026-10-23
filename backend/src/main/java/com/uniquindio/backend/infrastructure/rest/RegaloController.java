@@ -7,6 +7,7 @@ import com.uniquindio.backend.application.usecase.EnviarRegaloUseCase;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.infrastructure.rest.mapper.RegaloMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,6 +22,7 @@ import java.util.UUID;
  * Limitación: enviar un regalo (CU-24) es una operación de admin/sistema y aún no tiene
  * restricción por rol.
  */
+@PreAuthorize("hasRole('COMPRADOR')")
 @RestController
 @RequestMapping("/api/regalos")
 public class RegaloController {
@@ -50,6 +52,7 @@ public class RegaloController {
     }
 
     // CU-24 Enviar Regalo (solo si ya fue elegido)
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{id}/enviar")
     public ResponseEntity<RegaloResponse> enviar(@PathVariable UUID id) {
         Regalo regalo = enviarRegaloUseCase.ejecutar(id);
