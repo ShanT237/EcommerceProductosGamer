@@ -94,13 +94,14 @@ public class ProductoController {
         return ResponseEntity.ok(mapper.toModificarResponse(producto)); // 200 OK
     }
 
-    // CU-06 Eliminar Producto (eliminación lógica, Regla 3)
+    // CU-06 Eliminar Producto (eliminación lógica, Regla 3) del vendedor autenticado
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
-        eliminarProductoUseCase.ejecutar(id);
+    public ResponseEntity<Void> eliminar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId) {
+        eliminarProductoUseCase.ejecutar(id, vendedorId);
         return ResponseEntity.noContent().build(); // -> 204 No Content
     }
-
     // CU-19 Editar Información General (nombre y descripción)
     @PutMapping("/{id}/informacion")
     public ResponseEntity<EditarInformacionProductoResponse> editarInformacion(

@@ -12,8 +12,9 @@ import java.util.UUID;
 
 /**
  * Caso de uso: EliminarProducto (CU-06).
- * Orquesta la desactivación de un producto: consulta si tiene compras activas
- * y delega en Producto.eliminar(...) la decisión de negocio (Regla 3).
+ * Orquesta la desactivación de un producto: solo su vendedor dueño puede eliminarlo;
+ * consulta si tiene compras activas y delega en Producto.eliminar(...) la decisión
+ * de negocio (Regla 3).
  */
 @Service
 @RequiredArgsConstructor
@@ -23,9 +24,10 @@ public class EliminarProductoUseCase {
     private final CompraRepository compraRepository;
 
     @Transactional
-    public void ejecutar(UUID productoId) {
+    public void ejecutar(UUID productoId, UUID vendedorId) {
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new NoSuchElementException("El producto no existe"));
+        producto.asegurarPerteneceA(vendedorId);
 
         boolean tieneComprasActivas = compraRepository.existeCompraActivaDeProducto(productoId);
 

@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import java.util.UUID;
 
@@ -202,6 +203,25 @@ class ProductoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ }"))
                 .andExpect(status().isBadRequest());              // 400
+    }
+
+    // ===================== eliminar =====================
+
+    @Test
+    void eliminarUsaElVendedorDelToken() throws Exception {
+        mockMvc.perform(delete("/api/productos/{id}", productoId)
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isNoContent());               // 204
+
+        Mockito.verify(eliminarProductoUseCase).ejecutar(productoId, vendedorId);
+    }
+
+    @Test
+    void eliminarSinTokenRetorna401() throws Exception {
+        mockMvc.perform(delete("/api/productos/{id}", productoId))
+                .andExpect(status().isUnauthorized());            // 401
+
+        Mockito.verifyNoInteractions(eliminarProductoUseCase);
     }
 
     // ===================== sin token =====================
