@@ -2,6 +2,7 @@ package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -102,5 +103,12 @@ class ModificarProductosComboUseCaseTest {
                 () -> useCase.agregar(UUID.randomUUID(), vendedorId, p3.getId()));
         assertThrows(NoSuchElementException.class,
                 () -> useCase.quitar(UUID.randomUUID(), vendedorId, p1.getId()));
+    }
+
+    @Test
+    void agregarProductoYaPresenteLanzaConflicto() {
+        assertThrows(ConflictoException.class, () -> useCase.agregar(comboId, vendedorId, p1.getId()));
+
+        assertEquals(2, comboRepository.obtenerPorId(comboId).get().getProductos().size());
     }
 }

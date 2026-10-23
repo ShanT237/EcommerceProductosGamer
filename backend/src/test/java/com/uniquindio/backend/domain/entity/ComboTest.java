@@ -1,5 +1,6 @@
 package com.uniquindio.backend.domain.entity;
 
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -104,7 +105,7 @@ class ComboTest {
         assertEquals(3, combo.getProductos().size());
         assertTrue(combo.getProductos().contains(p3));
 
-        assertThrows(ReglaDominioException.class, () -> combo.agregarProducto(p1));
+        assertThrows(ConflictoException.class, () -> combo.agregarProducto(p1));
     }
 
     @Test

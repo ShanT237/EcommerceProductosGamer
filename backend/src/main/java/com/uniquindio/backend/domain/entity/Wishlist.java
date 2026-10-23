@@ -1,5 +1,6 @@
 package com.uniquindio.backend.domain.entity;
 
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import lombok.Getter;
 
@@ -54,7 +55,7 @@ public class Wishlist {
     public void agregarProducto(UUID productoId) {
         Objects.requireNonNull(productoId, "El id del producto es obligatorio");
         if (productos.contains(productoId)) {
-            throw new ReglaDominioException("El producto ya se encuentra en la wishlist");
+            throw new ConflictoException("El producto ya se encuentra en la wishlist");
         }
         productos.add(productoId);
     }

@@ -3,6 +3,7 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.usecase.AnadirAWishlistUseCase;
 import com.uniquindio.backend.application.usecase.QuitarDeWishlistUseCase;
 import com.uniquindio.backend.domain.entity.Wishlist;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.WishlistMapper;
@@ -122,5 +123,18 @@ class WishlistControllerTest {
         mockMvc.perform(delete("/api/wishlists/{productoId}", productoId))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    void anadirProductoRepetidoRetorna409() throws Exception {
+        when(anadirAWishlistUseCase.ejecutar(usuarioId, productoId))
+                .thenThrow(new ConflictoException("El producto ya se encuentra en la wishlist"));
+
+        mockMvc.perform(post("/api/wishlists")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoAnadir()))
+                .andExpect(status().isConflict())                 // 409
+                .andExpect(jsonPath("$.status").value(409));
     }
 }

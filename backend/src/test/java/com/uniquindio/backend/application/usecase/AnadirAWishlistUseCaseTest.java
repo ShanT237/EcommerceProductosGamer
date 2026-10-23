@@ -3,6 +3,7 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.entity.Wishlist;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
@@ -66,7 +67,7 @@ class AnadirAWishlistUseCaseTest {
         Producto p = guardarProducto();
         useCase.ejecutar(usuarioId, p.getId());
 
-        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(usuarioId, p.getId()));
+        assertThrows(ConflictoException.class, () -> useCase.ejecutar(usuarioId, p.getId()));
     }
 
     @Test
@@ -77,4 +78,5 @@ class AnadirAWishlistUseCaseTest {
 
         assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(usuarioId, p.getId()));
     }
+
 }
