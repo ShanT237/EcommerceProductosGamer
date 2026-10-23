@@ -9,6 +9,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.VendedorMapper;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -16,8 +17,8 @@ import java.net.URI;
 import java.util.UUID;
 
 /**
- * Limitación: no hay autenticación ni autorización. Cualquiera podría dar de baja
- * a un vendedor por id (CU-27 pendiente).
+ * El registro es público. La baja usa el {@code vendedorId} del token JWT (Authentication):
+ * cada vendedor solo puede darse de baja a sí mismo.
  */
 @RestController
 @RequestMapping("/api/vendedores")
@@ -58,10 +59,10 @@ public class VendedorController {
         return ResponseEntity.created(location).body(response);
     }
 
-    // CU-25 Dar de Baja Vendedor
-    @PutMapping("/{id}/baja")
-    public ResponseEntity<RegistrarVendedorResponse> darDeBaja(@PathVariable UUID id) {
-        Vendedor vendedor = darDeBajaVendedorUseCase.ejecutar(id);
+    // CU-25 Dar de Baja al vendedor autenticado (baja lógica)
+    @PutMapping("/me/baja")
+    public ResponseEntity<RegistrarVendedorResponse> darDeBaja(@AuthenticationPrincipal UUID vendedorId) {
+        Vendedor vendedor = darDeBajaVendedorUseCase.ejecutar(vendedorId);
         return ResponseEntity.ok(mapper.toRegistrarResponse(vendedor));
     }
 }
