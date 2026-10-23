@@ -17,7 +17,7 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
 5. [Casos de Uso del Sistema (37 Casos de Uso)](#5-casos-de-uso-del-sistema-37-casos-de-uso)
 6. [Arquitectura del Software (Clean Architecture)](#6-arquitectura-del-software-clean-architecture)
-7. [Limitaciones conocidas](#7-limitaciones-conocidas)
+7. [Seguridad y limitaciones conocidas](#7-seguridad-y-limitaciones-conocidas)
 8. [Cómo ejecutar las pruebas](#8-cómo-ejecutar-las-pruebas)
 9. [Gestión del Proyecto (Trello)](#9-gestión-del-proyecto-trello)
 
@@ -91,7 +91,9 @@ Categorías habilitadas en el catálogo:
 - Comprar un combo valida todos sus productos antes de descontar stock: si uno falla, no se modifica ninguno.
 - Una `MetaRecompensa` exige un umbral de compras positivo y se desactiva una sola vez (nunca se borra).
 - El vendedor se valora una vez por compra completada. La comisión del marketplace es 5% de los ingresos completados.
-- Las contraseñas exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (PBKDF2). La sesión usa JWT HS256 y `/api/**` exige token salvo `/api/auth/**`.
+- Las contraseñas (de compradores y vendedores) exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (BCrypt). La sesión usa JWT HS256 con el rol en el token (`COMPRADOR` o `VENDEDOR`) y `/api/**` exige token salvo `/api/auth/**` y los `POST` de registro.
+- El id del comprador o vendedor sale siempre del token, nunca del body ni de la URL; cada ruta valida el rol con `@PreAuthorize`.
+- Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
 
 ---
 
@@ -161,7 +163,7 @@ Categorías habilitadas en el catálogo:
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-11` | **Registrar Usuario / Vendedor** | ✅ Implementado | Público | Registro de compradores (correo único) y de vendedores (documento único, cédula o NIT) (`RegistrarUsuarioUseCase`, `RegistrarVendedorUseCase`). |
 | `CU-25` | **Dar de Baja Vendedor** | ✅ Implementado | Admin / Vendedor | Baja lógica del vendedor conservando la historia comercial (`DarDeBajaVendedorUseCase`). |
-| `CU-26` | **Editar Perfil y Seguridad** | ✅ Implementado | Usuario | Modificación de datos personales, dirección y contraseña. (`EditarPerfilUseCase`, `CambiarContrasenaUseCase`). |
+| `CU-26` | **Editar Perfil y Seguridad** | ✅ Implementado | Usuario | Modificación de nombre, correo y contraseña. (`EditarPerfilUseCase`, `CambiarContrasenaUseCase`). |
 | `CU-27` | **Iniciar Sesión (JWT)** | ✅ Implementado | Todos | Autenticación con token JWT seguro para el acceso a las APIs. (`IniciarSesionUseCase`, `AuthController`). |
 | `CU-28` | **Valorar Vendedor** | ✅ Implementado | Comprador | Calificación directa del servicio y atención brindada por el vendedor. (`ValorarVendedorUseCase`). |
 
@@ -187,9 +189,10 @@ El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructura
 backend/src/main/java/com/uniquindio/backend/
 ├── domain/                  # Capa de Dominio (Sin dependencias de frameworks)
 │   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion, Promocion, Cupon, MetaRecompensa, MovimientoPuntos, ValoracionVendedor)
-│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Contrasena, TipoMovimientoPuntos)
+│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Contrasena, TipoMovimientoPuntos, Rol)
 │   ├── repository/          # Interfaces de Repositorio de Dominio
-│   └── exception/           # Excepciones de Negocio (ReglaDominioException)
+│   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken)
+│   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
 │   ├── usecase/             # Lógica de Orquestación (40 casos de uso)
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, ConsultarHistorialCompras
@@ -205,17 +208,26 @@ backend/src/main/java/com/uniquindio/backend/
 └── infrastructure/          # Capa de Infraestructura (Spring Boot / Controller / Persistence)
     ├── rest/                # Controladores REST (uno por recurso), mappers y GlobalExceptionHandler
     ├── persistence/         # Repositorios JPA (H2) y en memoria, con sus mappers de persistencia
-    ├── security/            # JwtEmisorToken y Pbkdf2HashContrasena
-    └── config/              # ClockConfig y WebAuthConfig
+    ├── security/            # JwtEmisorToken, JwtAuthenticationFilter, BCryptHashContrasena y RespuestaErrorSeguridad
+    └── config/              # ClockConfig, SecurityConfig y OpenApiConfig
 ```
 
 ---
 
-## 7. Limitaciones conocidas
+## 7. Seguridad y limitaciones conocidas
 
-El login con JWT (CU-27) ya está implementado y `/api/**` exige token, salvo `/api/auth/**` y los `POST` de registro. Aun así **no hay roles ni cruce de identidad**: el token solo valida la sesión. Los endpoints aceptan `usuarioId` / `vendedorId` en el body o en la URL, así que un usuario con token válido podría redimir puntos de otro, aplicar descuentos a productos ajenos, dar de baja a un vendedor o consultar los reportes de admin.
+La API usa Spring Security con JWT (jjwt, HS256). El login (CU-27) autentica compradores y vendedores y emite un token con el rol (`COMPRADOR` o `VENDEDOR`). `/api/**` exige token, salvo `/api/auth/**` y los `POST` de registro.
 
-Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`).
+Los controllers leen el id del `Authentication` (token), nunca del body ni de la URL, por lo que un usuario no puede actuar sobre recursos de otro. Cada ruta restringe el rol con `@PreAuthorize`: un rol equivocado recibe 403.
+
+En desarrollo el secreto JWT tiene un valor por defecto; en producción debe definirse la variable de entorno `JWT_SECRET` (mínimo 32 caracteres).
+
+Limitaciones:
+
+* **No existe un rol ADMIN.** Las metas de recompensa y el envío de regalos (CU-24) quedan restringidos a `VENDEDOR`, aunque conceptualmente son de administración; cualquier vendedor puede enviar cualquier regalo.
+* `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
+
+Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`, botón **Authorize** para pegar el token del login).
 ---
 
 ## 8. Cómo ejecutar las pruebas
