@@ -64,8 +64,8 @@ class WishlistControllerTest {
 
     private String cuerpoAnadir() {
         return """
-            { "wishlistId": "%s", "productoId": "%s" }
-            """.formatted(UUID.randomUUID(), productoId);
+        { "productoId": "%s" }
+        """.formatted(productoId);
     }
 
     @Test
@@ -82,13 +82,12 @@ class WishlistControllerTest {
 
         Mockito.verify(anadirAWishlistUseCase).ejecutar(usuarioId, productoId);
     }
-
     @Test
     void anadirSinProductoRetorna400() throws Exception {
         mockMvc.perform(post("/api/wishlists")
                         .with(comprador(usuarioId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"wishlistId\": \"%s\" }".formatted(UUID.randomUUID())))
+                        .content("{ }"))
                 .andExpect(status().isBadRequest());              // 400
     }
 

@@ -92,6 +92,7 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `PUT /api/productos/{id}/visibilidad` | `activo` (`true` activa, `false` pausa) |
 | `GET /api/productos` | Filtros opcionales por query: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa` |
 | `POST /api/compras` | `productoId`, `cantidad` |
+| `POST /api/wishlists` | `productoId` |
 | `PUT /api/compras/{id}/cupon` | `codigo` |
 | `POST /api/combos/{id}/comprar` | `cantidad` |
 | `PUT /api/regalos/{id}/asignar` | Sin cuerpo |
