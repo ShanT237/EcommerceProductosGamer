@@ -9,6 +9,7 @@ import com.uniquindio.backend.application.dto.request.EditarPerfilRequest;
 import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
 import com.uniquindio.backend.application.dto.request.CambiarContrasenaRequest;
 import com.uniquindio.backend.application.usecase.CambiarContrasenaUseCase;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -58,21 +59,21 @@ public class UsuarioController {
         return ResponseEntity.created(location).body(response); // 201 = created
     }
 
-    // CU-26 Editar Perfil (nombre y correo)
-    @PutMapping("/{id}/perfil")
+    // CU-26 Editar Perfil (nombre y correo) del usuario autenticado
+    @PutMapping("/me/perfil")
     public ResponseEntity<RegistrarUsuarioResponse> editarPerfil(
-            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody EditarPerfilRequest request) {
-        Usuario usuario = editarPerfilUseCase.ejecutar(id, request.nombre(), request.correo());
+        Usuario usuario = editarPerfilUseCase.ejecutar(usuarioId, request.nombre(), request.correo());
         return ResponseEntity.ok(mapper.toRegistrarResponse(usuario)); // 200 OK
     }
 
-    // CU-26 Cambiar Contraseña (exige la actual; la nueva debe ser segura y distinta)
-    @PutMapping("/{id}/contrasena")
+    // CU-26 Cambiar Contraseña del usuario autenticado (exige la actual; la nueva debe ser segura y distinta)
+    @PutMapping("/me/contrasena")
     public ResponseEntity<Void> cambiarContrasena(
-            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody CambiarContrasenaRequest request) {
-        cambiarContrasenaUseCase.ejecutar(id, request.contrasenaActual(), request.contrasenaNueva());
+        cambiarContrasenaUseCase.ejecutar(usuarioId, request.contrasenaActual(), request.contrasenaNueva());
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

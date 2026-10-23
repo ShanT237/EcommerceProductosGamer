@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 // Mapea a: CambiarContrasenaUseCase.ejecutar(usuarioId, contrasenaActual, contrasenaNueva)
-// El usuarioId viaja en la URL: PUT /api/usuarios/{id}/contrasena
+// El usuarioId sale del token: PUT /api/usuarios/me/contrasena
 // La fortaleza (mayúscula y número) la valida el dominio (Contrasena.validarFortaleza) -> 400.
 public record CambiarContrasenaRequest(
         @NotBlank(message = "La contraseña actual es obligatoria")
