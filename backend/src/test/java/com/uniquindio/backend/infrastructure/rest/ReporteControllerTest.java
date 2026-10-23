@@ -147,14 +147,14 @@ class ReporteControllerTest {
     }
 
     @Test
-    void masVendidosConTopNoPositivoRetorna400() throws Exception {
+    void masVendidosConTopNoPositivoRetorna422() throws Exception {
         when(reporteMasVendidosUseCase.ejecutar(isNull(), eq(0)))
                 .thenThrow(new ReglaDominioException("El tamaño del escalafón debe ser positivo"));
 
         mockMvc.perform(get("/api/reportes/mas-vendidos")
                         .param("top", "0")
                         .with(vendedor(vendedorId)))
-                .andExpect(status().isBadRequest());              // 400
+                .andExpect(status().isUnprocessableContent());              // 422
     }
 
     // ===================== CU-34 =====================
@@ -200,14 +200,14 @@ class ReporteControllerTest {
     }
 
     @Test
-    void stockBajoConUmbralNoPositivoRetorna400() throws Exception {
+    void stockBajoConUmbralNoPositivoRetorna422() throws Exception {
         when(alertasStockBajoUseCase.ejecutar(vendedorId, 0))
                 .thenThrow(new ReglaDominioException("El umbral de stock debe ser positivo"));
 
         mockMvc.perform(get("/api/reportes/stock-bajo")
                         .param("umbral", "0")
                         .with(vendedor(vendedorId)))
-                .andExpect(status().isBadRequest());              // 400
+                .andExpect(status().isUnprocessableContent());              // 422
     }
 
     @Test

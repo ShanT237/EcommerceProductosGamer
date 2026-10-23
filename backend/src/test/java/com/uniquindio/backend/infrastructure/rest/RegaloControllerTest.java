@@ -100,13 +100,13 @@ class RegaloControllerTest {
     }
 
     @Test
-    void asignarSinAlcanzarLaMetaRetorna400() throws Exception {
+    void asignarSinAlcanzarLaMetaRetorna422() throws Exception {
         when(asignarRegaloPorMetaUseCase.ejecutar(usuarioId, regaloId))
                 .thenThrow(new ReglaDominioException("El usuario aún no alcanza la meta"));
 
         mockMvc.perform(put("/api/regalos/{id}/asignar", regaloId)
                         .with(comprador(usuarioId)))
-                .andExpect(status().isBadRequest());              // 400
+                .andExpect(status().isUnprocessableContent());              // 422
     }
 
     // ===================== enviar =====================
@@ -155,7 +155,7 @@ class RegaloControllerTest {
                         .with(comprador(usuarioId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"usuarioId\": \"%s\" }".formatted(destinatario)))
-                .andExpect(status().isBadRequest());              // 400
+                .andExpect(status().isUnprocessableContent());              // 422
 
         Mockito.verify(confirmarEntregaRegaloUseCase, Mockito.never()).ejecutar(regaloId, destinatario);
     }

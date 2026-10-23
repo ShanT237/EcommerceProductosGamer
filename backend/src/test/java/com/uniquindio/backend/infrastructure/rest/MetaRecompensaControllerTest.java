@@ -131,14 +131,14 @@ class MetaRecompensaControllerTest {
     }
 
     @Test
-    void desactivarUnaMetaYaDesactivadaRetorna400() throws Exception {
+    void desactivarUnaMetaYaDesactivadaRetorna422() throws Exception {
         UUID id = UUID.randomUUID();
         when(gestionarMetasUseCase.desactivar(id))
                 .thenThrow(new ReglaDominioException("La meta ya está desactivada"));
 
         mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", id)
                         .with(vendedor(sesionId)))
-                .andExpect(status().isBadRequest());              // 400
+                .andExpect(status().isUnprocessableContent());              // 422
     }
 
     @Test

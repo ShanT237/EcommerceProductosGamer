@@ -1,6 +1,7 @@
 package com.uniquindio.backend.infrastructure.rest.exception;
 
 import com.uniquindio.backend.domain.exception.AutenticacionException;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,9 +20,16 @@ import java.util.stream.Collectors;
 @RestControllerAdvice // Intercepta excepciones lanzadas por CUALQUIER controller de la app
 public class GlobalExceptionHandler {
 
+    // Duplicidad (ya existe): 409. Es más específico que ReglaDominioException, Spring lo elige primero.
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity<Map<String, Object>> manejarConflicto(ConflictoException ex) {
+        return construirRespuesta(HttpStatus.CONFLICT, ex.getMessage()); // -> 409
+    }
+
+    // Regla de negocio violada: 422 (el 400 queda solo para validaciones de datos)
     @ExceptionHandler(ReglaDominioException.class)
     public ResponseEntity<Map<String, Object>> manejarReglaDominio(ReglaDominioException ex) {
-        return construirRespuesta(HttpStatus.BAD_REQUEST, ex.getMessage()); // -> 400
+        return construirRespuesta(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage()); // -> 422
     }
 
     @ExceptionHandler(AutenticacionException.class)

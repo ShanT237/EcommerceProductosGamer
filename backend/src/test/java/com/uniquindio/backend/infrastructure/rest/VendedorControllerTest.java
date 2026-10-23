@@ -125,13 +125,13 @@ class VendedorControllerTest {
     }
 
     @Test
-    void darDeBajaDosVecesRetorna400() throws Exception {
+    void darDeBajaDosVecesRetorna422() throws Exception {
         when(darDeBajaVendedorUseCase.ejecutar(vendedorId))
                 .thenThrow(new ReglaDominioException("El vendedor ya está dado de baja"));
 
         mockMvc.perform(put("/api/vendedores/me/baja")
                         .with(vendedor(vendedorId)))
-                .andExpect(status().isBadRequest());              // 400
+                .andExpect(status().isUnprocessableContent());     // 422
     }
 
     @Test
