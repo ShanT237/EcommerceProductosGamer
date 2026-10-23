@@ -3,9 +3,9 @@ package com.uniquindio.backend.application.dto.request;
 import com.uniquindio.backend.domain.valueobject.FiltroProducto;
 import com.uniquindio.backend.domain.valueobject.Gama;
 
-// Mapea a: BuscarProductosUseCase.ejecutar(FiltroProducto)
-// Se llena con query params: ?texto=mouse&categoria=Perifericos&gama=ALTA&precioMin=10&precioMax=500&soloPreventa=true
-// Todos son opcionales. Los rangos de precio inválidos los rechaza FiltroProducto (400).
+// Se llena con query params de filtros; page y size se reciben por separado en el controller.
+// Ejemplo: ?texto=mouse&categoria=Perifericos&gama=ALTA&precioMin=10&precioMax=500&soloPreventa=true&page=0&size=20
+// Todos los filtros son opcionales. Los rangos inválidos los rechaza FiltroProducto (400).
 public record BuscarProductosRequest(
         String texto,
         String categoria,

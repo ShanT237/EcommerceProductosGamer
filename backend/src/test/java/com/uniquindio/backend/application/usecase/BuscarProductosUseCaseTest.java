@@ -1,96 +1,61 @@
 package com.uniquindio.backend.application.usecase;
 
-import com.uniquindio.backend.domain.entity.Preventa;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.repository.CatalogoRepository;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.FiltroProducto;
 import com.uniquindio.backend.domain.valueobject.Gama;
-import com.uniquindio.backend.infrastructure.persistence.PreventaRepositoryEnMemoria;
-import com.uniquindio.backend.infrastructure.persistence.ProductoRepositoryEnMemoria;
-import org.junit.jupiter.api.BeforeEach;
+import com.uniquindio.backend.domain.valueobject.Pagina;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BuscarProductosUseCaseTest {
 
     private static final LocalDate HOY = LocalDate.of(2026, 10, 1);
 
-    private ProductoRepositoryEnMemoria productoRepository;
-    private PreventaRepositoryEnMemoria preventaRepository;
-    private BuscarProductosUseCase useCase;
+    @Test
+    void delegaFiltrosPaginacionYFechaAlRepositorioDeCatalogo() {
+        Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Gamer",
+                50, 5, Gama.MEDIA, Exclusividad.NORMAL, "Perifericos");
+        FiltroProducto filtro = new FiltroProducto("mouse", "Perifericos", Gama.MEDIA,
+                20.0, 100.0, true);
+        AtomicReference<FiltroProducto> filtroRecibido = new AtomicReference<>();
+        AtomicReference<String> parametrosRecibidos = new AtomicReference<>();
+        CatalogoRepository catalogo = (criterio, pagina, tamano, hoy) -> {
+            filtroRecibido.set(criterio);
+            parametrosRecibidos.set(pagina + ":" + tamano + ":" + hoy);
+            return new Pagina<>(List.of(producto), pagina, tamano, 1, 1);
+        };
+        Clock reloj = Clock.fixed(Instant.parse("2026-10-01T10:00:00Z"), ZoneOffset.UTC);
+        BuscarProductosUseCase useCase = new BuscarProductosUseCase(catalogo, reloj);
 
-    @BeforeEach
-    void setUp() {
-        productoRepository = new ProductoRepositoryEnMemoria();
-        preventaRepository = new PreventaRepositoryEnMemoria();
-        ZoneId zona = ZoneId.systemDefault();
-        Clock reloj = Clock.fixed(HOY.atTime(10, 0).atZone(zona).toInstant(), zona);
-        useCase = new BuscarProductosUseCase(productoRepository, preventaRepository, reloj);
-    }
+        Pagina<Producto> resultado = useCase.ejecutar(filtro, 2, 10);
 
-    private Producto guardar(String nombre, String categoria, Gama gama, double precio) {
-        Producto p = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), nombre, "Desc",
-                precio, 5, gama, Exclusividad.NORMAL, categoria);
-        productoRepository.guardar(p);
-        return p;
+        assertEquals(filtro, filtroRecibido.get());
+        assertEquals("2:10:" + HOY, parametrosRecibidos.get());
+        assertEquals(List.of(producto), resultado.contenido());
     }
 
     @Test
-    void filtroVacioDevuelveTodosLosVisibles() {
-        guardar("Mouse", "Perifericos", Gama.MEDIA, 50);
-        guardar("Silla", "Mobiliario", Gama.ALTA, 300);
+    void rechazaPaginacionFueraDeRango() {
+        BuscarProductosUseCase useCase = new BuscarProductosUseCase(
+                (filtro, pagina, tamano, hoy) -> new Pagina<>(List.of(), pagina, tamano, 0, 0),
+                Clock.systemUTC());
 
-        assertEquals(2, useCase.ejecutar(FiltroProducto.sinFiltros()).size());
-    }
-
-    @Test
-    void excluyeEliminadosYPausados() {
-        Producto visible = guardar("Mouse", "Perifericos", Gama.MEDIA, 50);
-        guardar("Eliminado", "Perifericos", Gama.MEDIA, 50).eliminar(false);
-        guardar("Pausado", "Perifericos", Gama.MEDIA, 50).pausar();
-
-        assertEquals(List.of(visible), useCase.ejecutar(FiltroProducto.sinFiltros()));
-    }
-
-    @Test
-    void filtraPorCategoriaYPrecio() {
-        Producto barato = guardar("Mouse", "Perifericos", Gama.BAJA, 30);
-        guardar("Teclado", "Perifericos", Gama.ALTA, 200);
-        guardar("Silla", "Mobiliario", Gama.ALTA, 25);
-
-        List<Producto> r = useCase.ejecutar(new FiltroProducto(null, "Perifericos", null, null, 100.0, false));
-
-        assertEquals(List.of(barato), r);
-    }
-
-    @Test
-    void soloPreventaDevuelveProductosCuyaFechaDeLanzamientoNoLlego() {
-        Producto enPreventa = guardar("Consola", "Juegos", Gama.ALTA, 500);
-        Producto yaLanzado = guardar("Juego", "Juegos", Gama.MEDIA, 60);
-        guardar("Normal", "Juegos", Gama.BAJA, 10);
-        preventaRepository.guardar(Preventa.programar(UUID.randomUUID(), enPreventa.getId(),
-                HOY.plusDays(10), "Lanzamiento"));
-        preventaRepository.guardar(Preventa.programar(UUID.randomUUID(), yaLanzado.getId(),
-                HOY, "Ya salió"));
-
-        List<Producto> r = useCase.ejecutar(new FiltroProducto(null, null, null, null, null, true));
-
-        assertEquals(List.of(enPreventa), r);
-    }
-
-    @Test
-    void sinSoloPreventaTambienListaLosProductosEnPreventa() {
-        Producto enPreventa = guardar("Consola", "Juegos", Gama.ALTA, 500);
-        preventaRepository.guardar(Preventa.programar(UUID.randomUUID(), enPreventa.getId(),
-                HOY.plusDays(10), "Lanzamiento"));
-
-        assertEquals(List.of(enPreventa), useCase.ejecutar(FiltroProducto.sinFiltros()));
+        assertThrows(ReglaDominioException.class,
+                () -> useCase.ejecutar(FiltroProducto.sinFiltros(), -1, 10));
+        assertThrows(ReglaDominioException.class,
+                () -> useCase.ejecutar(FiltroProducto.sinFiltros(), 0, 101));
     }
 }

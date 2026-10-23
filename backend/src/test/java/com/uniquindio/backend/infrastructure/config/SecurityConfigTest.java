@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -89,5 +91,23 @@ class SecurityConfigTest {
                 .andExpect(result -> assertNotEquals(401, result.getResponse().getStatus()));
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(result -> assertNotEquals(401, result.getResponse().getStatus()));
+    }
+
+    @Test
+    void elPreflightDeCorsDelFrontendNoPideToken() throws Exception {
+        mockMvc.perform(options("/api/reportes/global")
+                        .header("Origin", "http://localhost:4200")
+                        .header("Access-Control-Request-Method", "GET")
+                        .header("Access-Control-Request-Headers", "authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"));
+    }
+
+    @Test
+    void unOrigenNoPermitidoNoRecibeCors() throws Exception {
+        mockMvc.perform(options("/api/reportes/global")
+                        .header("Origin", "http://sitio-malicioso.com")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isForbidden());
     }
 }
