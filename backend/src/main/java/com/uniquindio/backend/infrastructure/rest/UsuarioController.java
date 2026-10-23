@@ -9,6 +9,7 @@ import com.uniquindio.backend.application.dto.request.EditarPerfilRequest;
 import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
 import com.uniquindio.backend.application.dto.request.CambiarContrasenaRequest;
 import com.uniquindio.backend.application.usecase.CambiarContrasenaUseCase;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
@@ -40,6 +41,7 @@ public class UsuarioController {
     }
 
     // CU-11 Registrar Usuario
+    @SecurityRequirements // público
     @PostMapping
     public ResponseEntity<RegistrarUsuarioResponse> registrar(
             @Valid @RequestBody RegistrarUsuarioRequest request) {

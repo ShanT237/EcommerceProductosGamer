@@ -26,4 +26,13 @@ class OpenApiConfigTest {
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.bearerFormat").value("JWT"))
                 .andExpect(jsonPath("$.security[0].bearerAuth").exists());
     }
+
+    @Test
+    void loginYRegistrosNoExigenSeguridadEnLaDocumentacion() throws Exception {
+        mockMvc.perform(get("/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/auth/login'].post.security").isEmpty())
+                .andExpect(jsonPath("$.paths['/api/usuarios'].post.security").isEmpty())
+                .andExpect(jsonPath("$.paths['/api/vendedores'].post.security").isEmpty());
+    }
 }

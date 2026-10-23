@@ -7,6 +7,7 @@ import com.uniquindio.backend.application.usecase.RegistrarVendedorUseCase;
 import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.infrastructure.rest.mapper.VendedorMapper;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +39,7 @@ public class VendedorController {
     }
 
     // CU-11 Registrar Vendedor
+    @SecurityRequirements // público
     @PostMapping
     public ResponseEntity<RegistrarVendedorResponse> registrar(
             @Valid @RequestBody RegistrarVendedorRequest request) {
