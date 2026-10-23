@@ -17,6 +17,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -36,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReporteController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(ProductoMapper.class)
 class ReporteControllerTest {
 
@@ -56,15 +58,6 @@ class ReporteControllerTest {
 
     @MockitoBean
     private ReporteGlobalUseCase reporteGlobalUseCase;
-
-    // /api/** exige JWT; aquí el interceptor se simula como "token válido".
-    @MockitoBean
-    private JwtAuthInterceptor jwtAuthInterceptor;
-
-    @BeforeEach
-    void permitirPeticiones() throws Exception {
-        when(jwtAuthInterceptor.preHandle(any(), any(), any())).thenReturn(true);
-    }
 
     private final UUID vendedorId = UUID.randomUUID();
 

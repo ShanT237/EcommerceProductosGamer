@@ -7,6 +7,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.MetaRecompensaMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(MetaRecompensaController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(MetaRecompensaMapper.class)
 class MetaRecompensaControllerTest {
 
@@ -34,15 +36,6 @@ class MetaRecompensaControllerTest {
 
     @MockitoBean
     private GestionarMetasRecompensaUseCase gestionarMetasUseCase;
-
-    // /api/** exige JWT; aquí el interceptor se simula como "token válido".
-    @MockitoBean
-    private JwtAuthInterceptor jwtAuthInterceptor;
-
-    @BeforeEach
-    void permitirPeticiones() throws Exception {
-        when(jwtAuthInterceptor.preHandle(any(), any(), any())).thenReturn(true);
-    }
 
     private final UUID productoId = UUID.randomUUID();
 

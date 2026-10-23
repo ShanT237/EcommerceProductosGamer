@@ -16,6 +16,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,7 +29,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(CompraController.class) // levanta solo lo necesario para probar este controller
+@WebMvcTest(CompraController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CompraControllerTest {
 
     @Autowired // "Postman interno"
@@ -51,15 +53,6 @@ class CompraControllerTest {
 
     @MockitoBean
     private CompraMapper mapper;
-
-    // CU-27: /api/** exige JWT; en este test el interceptor se simula como "token valido".
-    @MockitoBean
-    private JwtAuthInterceptor jwtAuthInterceptor;
-
-    @BeforeEach
-    void permitirPeticiones() throws Exception {
-        when(jwtAuthInterceptor.preHandle(any(), any(), any())).thenReturn(true);
-    }
 
     private final UUID usuarioId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();
