@@ -1,6 +1,7 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Vendedor;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import com.uniquindio.backend.infrastructure.persistence.VendedorRepositoryEnMemoria;
@@ -47,11 +48,11 @@ class RegistrarVendedorUseCaseTest {
     }
 
     @Test
-    void documentoDuplicadoLanzaReglaDominioYNoGuarda() {
+    void documentoDuplicadoLanzaConflictoYNoGuarda() {
         useCase.ejecutar(UUID.randomUUID(), "GamerZone", "a@b.com", TipoVendedor.EMPRESA, "900123", "Vendedor2026");
         UUID otroId = UUID.randomUUID();
 
-        ReglaDominioException ex = assertThrows(ReglaDominioException.class,
+        ConflictoException ex = assertThrows(ConflictoException.class,
                 () -> useCase.ejecutar(otroId, "Otro", "c@d.com", TipoVendedor.EMPRESA, "900123", "Vendedor2026"));
 
         assertEquals("Ya existe un vendedor con ese documento", ex.getMessage());

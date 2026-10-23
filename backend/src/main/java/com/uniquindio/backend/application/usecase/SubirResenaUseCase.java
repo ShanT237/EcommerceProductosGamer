@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.MovimientoPuntos;
 import com.uniquindio.backend.domain.entity.Resena;
 import com.uniquindio.backend.domain.entity.Usuario;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.MovimientoPuntosRepository;
@@ -43,7 +44,7 @@ public class SubirResenaUseCase {
                 .orElseThrow(() -> new ReglaDominioException("El usuario no existe"));
 
         if (resenaRepository.existeResenaDeUsuarioYProducto(idUsuario.toString(), compra.getProductoId().toString())) {
-            throw new ReglaDominioException("El usuario ya publicó una reseña para este producto");
+            throw new ConflictoException("El usuario ya publicó una reseña para este producto");
         }
 
         Calificacion calificacion = new Calificacion(valorCalificacion);

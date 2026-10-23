@@ -3,6 +3,7 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.usecase.DarDeBajaVendedorUseCase;
 import com.uniquindio.backend.application.usecase.RegistrarVendedorUseCase;
 import com.uniquindio.backend.domain.entity.Vendedor;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
@@ -151,5 +152,22 @@ class VendedorControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         Mockito.verifyNoInteractions(darDeBajaVendedorUseCase);
+    }
+
+    @Test
+    void registrarConDocumentoDuplicadoRetorna409() throws Exception {
+        when(registrarVendedorUseCase.ejecutar(any(), any(), any(), any(), any(), any()))
+                .thenThrow(new ConflictoException("Ya existe un vendedor con ese documento"));
+
+        String json = """
+        { "nombre": "GamerZone", "correo": "ventas@gamerzone.com", "tipo": "EMPRESA",
+          "documento": "900123", "contrasena": "Vendedor2026" }
+        """;
+
+        mockMvc.perform(post("/api/vendedores")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isConflict())                 // 409
+                .andExpect(jsonPath("$.status").value(409));
     }
 }

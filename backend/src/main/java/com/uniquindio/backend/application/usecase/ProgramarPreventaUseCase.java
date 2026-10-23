@@ -3,7 +3,7 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Preventa;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Vendedor;
-import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.repository.PreventaRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.VendedorRepository;
@@ -42,7 +42,7 @@ public class ProgramarPreventaUseCase {
         producto.asegurarPerteneceA(vendedorId);
 
         if (preventaRepository.obtenerPorProductoId(productoId).isPresent()) {
-            throw new ReglaDominioException("El producto ya tiene una preventa programada");
+            throw new ConflictoException("El producto ya tiene una preventa programada");
         }
 
         Preventa preventa = Preventa.programar(
