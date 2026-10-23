@@ -10,6 +10,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.Pagina;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -251,8 +253,15 @@ class ProductoControllerTest {
 
     @Test
     void cualquierSesionPuedeBuscarProductos() throws Exception {
+        when(buscarProductosUseCase.ejecutar(any(), eq(0), eq(20)))
+                .thenReturn(new Pagina<>(List.of(producto()), 0, 20, 1, 1));
+
         mockMvc.perform(get("/api/productos").with(comprador(UUID.randomUUID())))
                 .andDo(print())
-                .andExpect(status().isOk());                      // 200
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].nombre").value("Mouse"))
+                .andExpect(jsonPath("$.totalElementos").value(1));
+
+        Mockito.verify(buscarProductosUseCase).ejecutar(any(), eq(0), eq(20));
     }
 }

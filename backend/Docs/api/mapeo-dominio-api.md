@@ -25,7 +25,7 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `Producto.editarInformacion(...)` | PUT | `/api/productos/{id}/informacion` | VENDEDOR | 200 OK |
 | `Producto.pausar()` / `activar()` | PUT | `/api/productos/{id}/visibilidad` | VENDEDOR | 200 OK |
 | `Producto.eliminar(...)` | DELETE | `/api/productos/{id}` | VENDEDOR | 204 No Content |
-| Filtrar y buscar productos | GET | `/api/productos` | Cualquiera | 200 OK |
+| Buscar productos (paginado) | GET | `/api/productos?texto=&categoria=&gama=&precioMin=&precioMax=&soloPreventa=&page=0&size=20` | Cualquiera | 200 OK |
 | `Producto.aplicarDescuento(...)` | POST | `/api/descuentos` | VENDEDOR | 200 OK |
 | `Promocion.programar(...)` | POST | `/api/promociones` | VENDEDOR | 201 Created |
 | `Preventa.programar(...)` | POST | `/api/preventas` | VENDEDOR | 201 Created |
@@ -70,7 +70,7 @@ Cada operación del dominio y el endpoint REST que la expone.
 
 | Caso de uso | Método HTTP | Endpoint | Rol | Respuesta exitosa |
 |---|---|---|---|---|
-| CU-29 Ventas del vendedor | GET | `/api/reportes/ventas` | VENDEDOR | 200 OK |
+| CU-29 Ventas por vendedor | GET | `/api/reportes/ventas` | VENDEDOR | 200 OK |
 | CU-30 Productos más vendidos | GET | `/api/reportes/mas-vendidos?vendedorId=&top=` | Cualquiera | 200 OK |
 | CU-34 Alertas de stock bajo | GET | `/api/reportes/stock-bajo?umbral=` | VENDEDOR | 200 OK |
 | CU-35 Métricas de reseñas | GET | `/api/reportes/metricas-resenas` | VENDEDOR | 200 OK |
@@ -90,7 +90,7 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `PUT /api/productos/{id}/precio` | `nuevoPrecio` |
 | `PUT /api/productos/{id}/informacion` | `nombre`, `descripcion` |
 | `PUT /api/productos/{id}/visibilidad` | `activo` (`true` activa, `false` pausa) |
-| `GET /api/productos` | Filtros opcionales por query: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa` |
+| `GET /api/productos` | Filtros opcionales por query: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa`. Paginación: `page` (desde 0, por defecto 0) y `size` (1–100, por defecto 20) |
 | `POST /api/compras` | `productoId`, `cantidad` |
 | `POST /api/wishlists` | `productoId` |
 | `PUT /api/compras/{id}/cupon` | `codigo` |
@@ -106,20 +106,22 @@ Cada operación del dominio y el endpoint REST que la expone.
 - **Autenticación:** `POST /api/auth/login` devuelve un JWT (HS256, 2 horas por defecto) con el id, el correo y el rol. Todas las rutas `/api/**` exigen `Authorization: Bearer {JWT}`, salvo `/api/auth/**`, `POST /api/usuarios` y `POST /api/vendedores`.
 - **Roles:** `COMPRADOR` y `VENDEDOR`. Un rol que no corresponde a la ruta recibe 403. Los controllers toman el id del `Authentication`; un `usuarioId` o `vendedorId` enviado en el body o en la URL se ignora.
 - **Contraseñas:** mínimo 8 caracteres, una mayúscula y un número; se guardan con BCrypt.
+- **CORS:** `/api/**` acepta peticiones desde `localhost:4200` y `localhost:3000` (y sus equivalentes en `127.0.0.1`); el preflight `OPTIONS` se responde sin exigir token.
 - **Usuarios de demo** para `POST /api/auth/login`:
-    - Compradores: `jose.demo@correo.com` / `JoseGamer2026` y `ana.demo@correo.com` / `AnaGamer2026`.
-    - Vendedor: `demo@gamerzone.com` / `GamerZone2026`.
+  - Compradores: `jose.demo@correo.com` / `JoseGamer2026` y `ana.demo@correo.com` / `AnaGamer2026`.
+  - Vendedor: `demo@gamerzone.com` / `GamerZone2026`.
 - **Swagger:** en `http://localhost:8080/swagger-ui.html`, ejecuta el login, copia el token y pégalo en el botón **Authorize** (sin el prefijo `Bearer`).
+- **Búsqueda paginada:** `GET /api/productos` solo devuelve productos visibles (no eliminados ni pausados). `texto` busca en nombre y descripción sin distinguir mayúsculas; `soloPreventa=true` devuelve los productos cuya preventa aún no ha llegado a su fecha de lanzamiento. La respuesta trae `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. Los filtros y la paginación se ejecutan en la base de datos (JPQL). Una página o un tamaño fuera de rango responde 422.
+- **Ranking de más vendidos:** agrupa en la base de datos las unidades vendidas de compras `COMPLETADA` (`JOIN`, `GROUP BY` y `SUM`), ordena por unidades (desempate por nombre) e incluye la calificación promedio de cada producto. Sin `vendedorId` lista todo el marketplace; los productos sin ventas no aparecen.
 - **Errores** (cuerpo JSON `{timestamp, status, mensaje}`):
-
-| Código | Cuándo |
-|---|---|
-| 400 | Validación de datos del request (`@Valid`) o JSON inválido |
-| 401 | Token ausente, inválido o expirado; credenciales incorrectas en el login |
-| 403 | El rol del token no puede usar la ruta |
-| 404 | El recurso no existe |
-| 409 | Duplicidad (correo, documento, preventa, promoción solapada, reseña o valoración repetida, producto repetido en wishlist o combo), violación de integridad o conflicto de concurrencia |
-| 422 | Una regla de negocio del dominio se violó (stock insuficiente, reembolso fuera de plazo, transición de estado no permitida, etc.) |
+  | Código | Cuándo |
+  |---|---|
+  | 400 | Validación de datos del request (`@Valid`) o JSON inválido |
+  | 401 | Token ausente, inválido o expirado; credenciales incorrectas en el login |
+  | 403 | El rol del token no puede usar la ruta |
+  | 404 | El recurso no existe |
+  | 409 | Duplicidad (correo, documento, preventa, promoción solapada, reseña o valoración repetida, producto repetido en wishlist o combo), violación de integridad o conflicto de concurrencia |
+  | 422 | Una regla de negocio del dominio se violó (stock insuficiente, reembolso fuera de plazo, transición de estado no permitida, paginación fuera de rango, etc.) |
 
 - **No existe un rol ADMIN.** Las operaciones de administración se resolvieron así: metas de recompensa y envío de regalos son de `VENDEDOR`; `mas-vendidos` y el reporte global están abiertos a cualquier sesión autenticada.
 - Los parámetros de los endpoints que no están en la tabla de cuerpos están en Swagger.

@@ -7,7 +7,7 @@
 ![Architecture](https://img.shields.io/badge/Architecture-DDD%20%2B%20Clean%20Arch-purple?style=for-the-badge)
 
 Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo **Gaming**, desarrollado para la asignatura de Programación Avanzada / Ingeniería de Software en la **Universidad del Quindío**. El proyecto está guiado bajo los principios de **Domain-Driven Design (DDD)** y **Clean Architecture**.
-
+ 
 ---
 
 ## 📋 Tabla de Contenidos
@@ -17,20 +17,18 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
 5. [Casos de Uso del Sistema (37 Casos de Uso)](#5-casos-de-uso-del-sistema-37-casos-de-uso)
 6. [Arquitectura del Software (Clean Architecture)](#6-arquitectura-del-software-clean-architecture)
-7. [Seguridad y limitaciones conocidas](#7-seguridad-y-limitaciones-conocidas)
+7. [Seguridad, Base de Datos y Limitaciones](#7-seguridad-base-de-datos-y-limitaciones)
 8. [Cómo ejecutar las pruebas](#8-cómo-ejecutar-las-pruebas)
 9. [Gestión del Proyecto (Trello)](#9-gestión-del-proyecto-trello)
-
 ---
 
 ## 1. ¿Quién compra y por qué?
 
 El marketplace está diseñado conceptualmente para atender las necesidades específicas de la comunidad gamer:
 
-* 🎮 **Gamers:** buscan productos de alto rendimiento que mejoren su experiencia competitiva (periféricos de alta precisión, componentes de hardware, sillas ergonómicas y accesorios dedicados).
-* 🎥 **Streamers / Creadores de Contenido:** buscan productos funcionales y estéticamente atractivos (iluminación RGB, placas de captura, micrófonos condensadores, mobiliario) para personalizar sus setups de transmisión.
-* 🕹️ **Jugadores Casuales:** buscan productos accesibles que garanticen confort, entretenimiento y una experiencia de juego amigable en su tiempo libre.
-
+- 🎮 **Gamers:** buscan productos de alto rendimiento que mejoren su experiencia competitiva (periféricos de alta precisión, componentes de hardware, sillas ergonómicas y accesorios dedicados).
+- 🎥 **Streamers / Creadores de Contenido:** buscan productos funcionales y estéticamente atractivos (iluminación RGB, placas de captura, micrófonos condensadores, mobiliario) para personalizar sus setups de transmisión.
+- 🕹️ **Jugadores Casuales:** buscan productos accesibles que garanticen confort, entretenimiento y una experiencia de juego amigable en su tiempo libre.
 ---
 
 ## 2. ¿Qué hace único a sus vendedores?
@@ -39,29 +37,29 @@ El sistema opera como un **marketplace multi-vendedor**, donde diversos comercio
 
 Categorías habilitadas en el catálogo:
 
-* 🖱️ **Periféricos:** mouses, teclados mecánicos, audífonos Surround 7.1, mandos y mousepads XL.
-* 🪑 **Mobiliario & Setup:** sillas ergonómicas, escritorios regulables, soportes de monitor e iluminación inteligente.
-* 🎮 **Juegos Físicos & Coleccionables:** títulos en formato físico, figuras de acción y preventas exclusivas.
-* 💻 **Licencias & Códigos Digitales:** claves para videojuegos, pases de batalla, gift cards y suscripciones.
-* 🎁 **Combos Gamer:** paquetes promocionales de 2 o más productos ofrecidos a precio preferencial.
-
+- 🖱️ **Periféricos:** mouses, teclados mecánicos, audífonos Surround 7.1, mandos y mousepads XL.
+- 🪑 **Mobiliario & Setup:** sillas ergonómicas, escritorios regulables, soportes de monitor e iluminación inteligente.
+- 🎮 **Juegos Físicos & Coleccionables:** títulos en formato físico, figuras de acción y preventas exclusivas.
+- 💻 **Licencias & Códigos Digitales:** claves para videojuegos, pases de batalla, gift cards y suscripciones.
+- 🎁 **Combos Gamer:** paquetes promocionales de 2 o más productos ofrecidos a precio preferencial.
 ---
 
 ## 3. Lenguaje Ubicuo (DDD)
 
-| Término                    | Definición en el Dominio |
-|:---------------------------| :--- |
-| **Gama**                   | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
-| **Preventa**               | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
-| **Wishlist**               | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
-| **Notificación**           | Alerta que recibe el usuario cuando un producto de su Wishlist baja de precio (descuento). |
-| **Combo**                  | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
-| **Usuario**                | Persona registrada que compra, reseña, acumula y redime puntos. Se llama *Usuario* en todo el código. |
-| **Vendedor**               | Entidad comercial (Persona Natural o Empresa) registrada para publicar y vender productos. |
+| Término | Definición en el Dominio |
+| :--- | :--- |
+| **Gama** | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
+| **Preventa** | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
+| **Wishlist** | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. |
+| **Notificación** | Alerta que recibe el usuario cuando un producto de su Wishlist baja de precio (descuento). |
+| **Combo** | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
+| **Usuario** | Persona registrada que compra, reseña, acumula y redime puntos. Se llama *Usuario* en todo el código. |
+| **Vendedor** | Entidad comercial (Persona Natural o Empresa) registrada para publicar y vender productos. |
 | **Puntos de Fidelización** | Unidades de beneficio otorgadas a compradores tras publicar reseñas de compras completadas. |
-| **Regalo**                 | Beneficio otorgado por el sistema al usuario tras alcanzar metas de compra acumuladas. |
-| **Exclusividad**           | Condición de un producto especial: cada usuario puede comprarlo una sola vez y de a una unidad. |
-| **Unidades**               | Cantidad disponible de un producto para su venta (nunca negativa; cero significa agotado). |
+| **Regalo** | Beneficio otorgado por el sistema al usuario tras alcanzar metas de compra acumuladas. |
+| **Exclusividad** | Condición de un producto especial: cada usuario puede comprarlo una sola vez y de a una unidad. |
+| **Unidades** | Cantidad disponible de un producto para su venta (nunca negativa; cero significa agotado). |
+ 
 ---
 
 ## 4. Reglas de Negocio e Invariantes del Dominio
@@ -77,7 +75,7 @@ Categorías habilitadas en el catálogo:
 | 7 | Un producto no se repite en la Wishlist ni se agregan productos eliminados. | `Wishlist.agregarProducto`, `AnadirAWishlistUseCase` | ✅ |
 | 8 | Solo se notifica a quienes tienen el producto en su Wishlist, y solo cuando hay descuento. | `Producto.aplicarDescuento`, `AplicarDescuentoUseCase`, `NotificarDescuentoWishlistUseCase` | ✅ |
 | 9 | Un producto exclusivo se compra una sola vez por usuario y de a una unidad. | `Producto.validarCompraExclusiva` | ✅ |
-| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo`, `EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase` |✅|
+| 10 | Un regalo solo se elige para quien no posee el producto, y sigue DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO. | `Regalo`, `EnviarRegaloUseCase`, `ConfirmarEntregaRegaloUseCase` | ✅ |
 
 ### Reglas adicionales que el código garantiza
 
@@ -93,8 +91,8 @@ Categorías habilitadas en el catálogo:
 - El vendedor se valora una vez por compra completada. La comisión del marketplace es 5% de los ingresos completados.
 - Las contraseñas (de compradores y vendedores) exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (BCrypt). La sesión usa JWT HS256 con el rol en el token (`COMPRADOR` o `VENDEDOR`) y `/api/**` exige token salvo `/api/auth/**` y los `POST` de registro.
 - El id del comprador o vendedor sale siempre del token, nunca del body ni de la URL; cada ruta valida el rol con `@PreAuthorize`.
+- La búsqueda de catálogo es paginada (`size` entre 1 y 100) y solo lista productos visibles (no eliminados ni pausados).
 - Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
-
 ---
 
 ## 5. Casos de Uso del Sistema (37 Casos de Uso)
@@ -132,7 +130,7 @@ Categorías habilitadas en el catálogo:
 | `CU-06` | **Eliminar Producto** | ✅ Implementado | Vendedor | Desactiva el producto preservando trazabilidad; rechaza la baja si hay compras activas (`EliminarProductoUseCase`). |
 | `CU-18` | **Gestionar / Aumentar Stock** | ✅ Implementado (Dominio) | Vendedor | Incrementa las unidades disponibles en inventario (`Producto.aumentarStock`, usado al cancelar y reembolsar). |
 | `CU-19` | **Editar Información General** | ✅ Implementado | Vendedor | Actualiza detalles secundarios e imágenes del producto. (`EditarInformacionProductoUseCase`). |
-| `CU-20` | **Filtrar y Buscar Productos** | ✅ Implementado | Comprador | Búsqueda avanzada por gama, categoría, precio y preventas. (`BuscarProductosUseCase`). |
+| `CU-20` | **Filtrar y Buscar Productos** | ✅ Implementado | Comprador | Búsqueda avanzada y paginada por texto, gama, categoría, precio y preventas; filtros y paginación se resuelven en la base de datos. (`BuscarProductosUseCase`). |
 | `CU-21` | **Activar / Pausar Publicación** | ✅ Implementado | Vendedor | Alterna la visibilidad del producto en el catálogo sin borrarlo. (`CambiarVisibilidadProductoUseCase`). |
 | `CU-22` | **Configurar Descuento Promocional** | ✅ Implementado | Vendedor | Aplica un porcentaje de descuento a un producto y notifica a quienes lo tienen en su Wishlist (`AplicarDescuentoUseCase`). La vigencia temporal la maneja `Promocion` (el precio base no cambia). (`ConfigurarDescuentoPromocionalUseCase`). |
 | `CU-37` | **Programar Preventa** | ✅ Implementado | Vendedor | Programa una preventa con fecha de lanzamiento futura, un producto del vendedor y sin preventa duplicada (`ProgramarPreventaUseCase`). `RealizarCompraUseCase` respeta esa fecha (Regla 4). |
@@ -171,26 +169,32 @@ Categorías habilitadas en el catálogo:
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-29` | **Reporte de Ventas por Vendedor** | ✅ Implementado | Vendedor | Balance de ingresos, unidades vendidas y comisiones. (`ReporteVentasVendedorUseCase`). |
-| `CU-30` | **Reporte de Productos Más Vendidos** | ✅ Implementado | Admin / Vendedor | Escalafón de productos con mayor volumen de venta y calificación. (`ReporteMasVendidosUseCase`). |
+| `CU-30` | **Reporte de Productos Más Vendidos** | ✅ Implementado | Admin / Vendedor | Escalafón de productos con mayor volumen de venta y calificación, agrupado y ordenado en la base de datos. (`ReporteMasVendidosUseCase`). |
 | `CU-31` | **Consultar Historial de Compras** | ✅ Implementado | Comprador | Muestra las compras del usuario, la más reciente primero (`ConsultarHistorialComprasUseCase`). |
 | `CU-32` | **Consultar Historial de Puntos** | ✅ Implementado | Comprador | Detalle de saldo de puntos ganados y redimidos. (`ConsultarHistorialPuntosUseCase`). |
 | `CU-33` | **Gestionar Metas de Recompensas** | ✅ Implementado | Admin | Configura umbrales de compras para desbloquear regalos. (`GestionarMetasRecompensaUseCase`). |
 | `CU-34` | **Alertas de Stock Bajo** | ✅ Implementado | Vendedor | Reporte de inventario crítico o agotado para reabastecimiento. (`AlertasStockBajoUseCase`). |
 | `CU-35` | **Métricas de Reseñas** | ✅ Implementado | Admin / Vendedor | Dashboard de satisfacción del cliente y calificaciones. (`MetricasResenasUseCase`). |
 | `CU-36` | **Reporte Global del Marketplace** | ✅ Implementado | Admin | Consolidado ejecutivo del volumen total de operaciones. (`ReporteGlobalUseCase`). |
-
+ 
 ---
 
 ## 6. Arquitectura del Software (Clean Architecture)
 
-El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructurado en capas desacopladas:
+El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructurado en capas desacopladas.
+
+### Raíces de agregado para la sustentación
+
+- **Producto**: raíz del agregado de catálogo e inventario. Protege invariantes como stock no negativo, baja lógica y visibilidad. El vendedor se referencia por `vendedorId`; no se carga como parte de este agregado.
+- **Compra**: raíz del agregado de compra. Controla cantidad, precio unitario congelado y transiciones de estado, además de las reglas de reseña, puntos y reembolso. Referencia `usuarioId` y `productoId` sin contener esos agregados.
+  Los casos de uso coordinan cambios que afectan a más de un agregado; cada entidad protege sus propias reglas. Las entidades JPA son adaptadores de persistencia separados de estas raíces de dominio.
 
 ```
 backend/src/main/java/com/uniquindio/backend/
 ├── domain/                  # Capa de Dominio (Sin dependencias de frameworks)
 │   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion, Promocion, Cupon, MetaRecompensa, MovimientoPuntos, ValoracionVendedor)
-│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Contrasena, TipoMovimientoPuntos, Rol)
-│   ├── repository/          # Interfaces de Repositorio de Dominio
+│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Pagina, Contrasena, TipoMovimientoPuntos, Rol)
+│   ├── repository/          # Interfaces de Repositorio de Dominio (incluye CatalogoRepository)
 │   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken)
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
@@ -204,30 +208,60 @@ backend/src/main/java/com/uniquindio/backend/
 │   │   ├── Catálogo:  ModificarProducto, EditarInformacionProducto, CambiarVisibilidadProducto, BuscarProductos, ConfigurarDescuentoPromocional
 │   │   ├── Promos:    AplicarCupon, ComprarCombo, GestionarMetasRecompensa, ConsultarHistorialPuntos
 │   │   └── Reportes:  ReporteVentasVendedor, ReporteMasVendidos, AlertasStockBajo, MetricasResenas, ReporteGlobal
+│   ├── port/out/            # Puertos de salida de consulta (ReporteMasVendidosPort)
 │   └── dto/                 # Data Transfer Objects (request y response)
 └── infrastructure/          # Capa de Infraestructura (Spring Boot / Controller / Persistence)
     ├── rest/                # Controladores REST (uno por recurso), mappers y GlobalExceptionHandler
-    ├── persistence/         # Repositorios JPA (H2) y en memoria, con sus mappers de persistencia
+    ├── persistence/         # Repositorios JPA (H2 / MariaDB) y en memoria, con sus mappers de persistencia
     ├── security/            # JwtEmisorToken, JwtAuthenticationFilter, BCryptHashContrasena y RespuestaErrorSeguridad
-    └── config/              # ClockConfig, SecurityConfig y OpenApiConfig
+    └── config/              # ClockConfig, SecurityConfig (JWT y CORS) y OpenApiConfig
 ```
-
+ 
 ---
 
-## 7. Seguridad y limitaciones conocidas
+## 7. Seguridad, Base de Datos y Limitaciones
+
+### Seguridad
 
 La API usa Spring Security con JWT (jjwt, HS256). El login (CU-27) autentica compradores y vendedores y emite un token con el rol (`COMPRADOR` o `VENDEDOR`). `/api/**` exige token, salvo `/api/auth/**` y los `POST` de registro.
 
 Los controllers leen el id del `Authentication` (token), nunca del body ni de la URL, por lo que un usuario no puede actuar sobre recursos de otro. Cada ruta restringe el rol con `@PreAuthorize`: un rol equivocado recibe 403.
 
+CORS está habilitado para el frontend en desarrollo (`localhost:4200` y `localhost:3000`) dentro de la cadena de seguridad, de modo que el preflight `OPTIONS` se responde sin exigir token.
+
 En desarrollo el secreto JWT tiene un valor por defecto; en producción debe definirse la variable de entorno `JWT_SECRET` (mínimo 32 caracteres).
 
-Limitaciones:
+### Base de datos y consultas
 
-* **No existe un rol ADMIN.** Las metas de recompensa y el envío de regalos (CU-24) quedan restringidos a `VENDEDOR`, aunque conceptualmente son de administración; cualquier vendedor puede enviar cualquier regalo.
-* `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
+El perfil predeterminado usa H2 en memoria para desarrollo y pruebas, con datos de demo cargados desde `data.sql`. Para MariaDB, crear la base `ecommerce_productos_gamer` y arrancar desde `backend` con el perfil `mariadb`.
 
-Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`, botón **Authorize** para pegar el token del login).
+PowerShell:
+
+```powershell
+$env:DB_URL = "jdbc:mariadb://localhost:3306/ecommerce_productos_gamer"
+$env:DB_USERNAME = "usuario"
+$env:DB_PASSWORD = "contraseña"
+.\gradlew.bat bootRun --args="--spring.profiles.active=mariadb"
+```
+
+Bash:
+
+```bash
+DB_URL=jdbc:mariadb://localhost:3306/ecommerce_productos_gamer \
+DB_USERNAME=usuario DB_PASSWORD=contraseña \
+./gradlew bootRun --args='--spring.profiles.active=mariadb'
+```
+
+El perfil `mariadb` no carga los datos de demo (`spring.sql.init.mode=never`): los usuarios y vendedores se crean con los endpoints de registro.
+
+El catálogo se busca con `GET /api/productos?texto=mouse&categoria=Perifericos&page=0&size=20`; la respuesta contiene `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. `GET /api/reportes/mas-vendidos` agrupa ventas completadas en la base de datos.
+
+### Limitaciones
+
+- **No existe un rol ADMIN.** Las metas de recompensa y el envío de regalos (CU-24) quedan restringidos a `VENDEDOR`, aunque conceptualmente son de administración; cualquier vendedor puede enviar cualquier regalo.
+- `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
+  Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`, botón **Authorize** para pegar el token del login).
+
 ---
 
 ## 8. Cómo ejecutar las pruebas
@@ -236,7 +270,7 @@ Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.
 cd backend
 .\gradlew.bat test
 ```
-
+ 
 ---
 
 ## 9. Gestión del Proyecto (Trello)
