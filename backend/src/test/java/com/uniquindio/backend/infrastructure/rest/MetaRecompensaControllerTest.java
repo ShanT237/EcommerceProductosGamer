@@ -3,40 +3,55 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.usecase.GestionarMetasRecompensaUseCase;
 import com.uniquindio.backend.domain.entity.MetaRecompensa;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.MetaRecompensaMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(MetaRecompensaController.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import(MetaRecompensaMapper.class)
+@Import({SecurityConfig.class, MetaRecompensaMapper.class})
 class MetaRecompensaControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebApplicationContext contexto;
+
+    private MockMvc mockMvc; // con Spring Security aplicado
 
     @MockitoBean
     private GestionarMetasRecompensaUseCase gestionarMetasUseCase;
 
+    @MockitoBean
+    private EmisorToken emisorToken;
+
+    @BeforeEach
+    void configurarMockMvc() {
+        mockMvc = mockMvcConSeguridad(contexto);
+    }
+
+    private final UUID sesionId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();
 
     @Test
@@ -49,6 +64,7 @@ class MetaRecompensaControllerTest {
             """.formatted(productoId);
 
         mockMvc.perform(post("/api/metas-recompensa")
+                        .with(vendedor(sesionId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())                  // 201
@@ -64,6 +80,7 @@ class MetaRecompensaControllerTest {
             """.formatted(productoId);
 
         mockMvc.perform(post("/api/metas-recompensa")
+                        .with(vendedor(sesionId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest());              // 400
@@ -79,6 +96,7 @@ class MetaRecompensaControllerTest {
             """.formatted(productoId);
 
         mockMvc.perform(post("/api/metas-recompensa")
+                        .with(vendedor(sesionId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isNotFound());                // 404
@@ -92,6 +110,7 @@ class MetaRecompensaControllerTest {
         when(gestionarMetasUseCase.actualizarUmbral(id, 8)).thenReturn(meta);
 
         mockMvc.perform(put("/api/metas-recompensa/{id}/umbral", id)
+                        .with(vendedor(sesionId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"nuevoUmbral\": 8 }"))
                 .andExpect(status().isOk())                       // 200
@@ -105,7 +124,8 @@ class MetaRecompensaControllerTest {
         meta.desactivar();
         when(gestionarMetasUseCase.desactivar(id)).thenReturn(meta);
 
-        mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", id))
+        mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", id)
+                        .with(vendedor(sesionId)))
                 .andExpect(status().isOk())                       // 200
                 .andExpect(jsonPath("$.activa").value(false));
     }
@@ -116,7 +136,8 @@ class MetaRecompensaControllerTest {
         when(gestionarMetasUseCase.desactivar(id))
                 .thenThrow(new ReglaDominioException("La meta ya está desactivada"));
 
-        mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", id))
+        mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", id)
+                        .with(vendedor(sesionId)))
                 .andExpect(status().isBadRequest());              // 400
     }
 
@@ -127,8 +148,16 @@ class MetaRecompensaControllerTest {
                 .thenThrow(new NoSuchElementException("La meta no existe"));
 
         mockMvc.perform(put("/api/metas-recompensa/{id}/umbral", id)
+                        .with(vendedor(sesionId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"nuevoUmbral\": 3 }"))
                 .andExpect(status().isNotFound());                // 404
+    }
+
+    @Test
+    void sinTokenRetorna401EnJson() throws Exception {
+        mockMvc.perform(put("/api/metas-recompensa/{id}/desactivar", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized())             // 401
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 }
