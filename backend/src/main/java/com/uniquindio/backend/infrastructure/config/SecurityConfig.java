@@ -14,12 +14,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 /**
  * Seguridad stateless con JWT: login y registros son públicos, el resto de /api/** exige token.
  * Los 401 (sin token o token inválido) y 403 (sin permiso) responden JSON.
  */
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean

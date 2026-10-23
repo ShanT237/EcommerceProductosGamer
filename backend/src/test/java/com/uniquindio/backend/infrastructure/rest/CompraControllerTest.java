@@ -8,7 +8,13 @@ import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import com.uniquindio.backend.infrastructure.rest.mapper.CompraMapper;
 import com.uniquindio.backend.application.usecase.AplicarCuponUseCase;
+import org.springframework.web.context.WebApplicationContext;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
 
+import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.infrastructure.config.SecurityConfig;
+import org.springframework.context.annotation.Import;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +34,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.mockito.Mockito;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.comprador;
 
 @WebMvcTest(CompraController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfig.class)
 class CompraControllerTest {
 
-    @Autowired // "Postman interno"
-    private MockMvc mockMvc;
+    @Autowired
+    private WebApplicationContext contexto;
+
+    private MockMvc mockMvc; // "Postman interno", con Spring Security aplicado
+
+    @BeforeEach
+    void configurarMockMvc() {
+        mockMvc = mockMvcConSeguridad(contexto);
+    }
 
     @MockitoBean
     private RealizarCompraUseCase realizarCompraUseCase;
@@ -54,6 +70,10 @@ class CompraControllerTest {
     @MockitoBean
     private CompraMapper mapper;
 
+    // SecurityConfig necesita el EmisorToken para armar el filtro JWT; las sesiones se simulan con SesionPrueba.
+    @MockitoBean
+    private EmisorToken emisorToken;
+
     private final UUID usuarioId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();
 
@@ -63,30 +83,7 @@ class CompraControllerTest {
     }
 
     @Test
-    void deberiaCrearCompraCuandoDatosValidos() throws Exception {
-        // Arrange
-        String requestJson = """
-            {
-                "usuarioId": "%s",
-                "productoId": "%s",
-                "cantidad": 2
-            }
-            """.formatted(usuarioId, productoId);
-
-        when(realizarCompraUseCase.ejecutar(any(), any(), anyInt()))
-                .thenReturn(compraSimulada());
-
-        // Act & Assert
-        mockMvc.perform(post("/api/compras")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isCreated())            // 201
-                .andExpect(header().exists("Location"));
-    }
-
-    @Test
-    void deberiaRetornar400CuandoFaltaUsuarioId() throws Exception {
-        // Arrange: falta usuarioId
+    void deberiaCrearCompraUsandoElUsuarioDelToken() throws Exception {
         String requestJson = """
             {
                 "productoId": "%s",
@@ -94,22 +91,52 @@ class CompraControllerTest {
             }
             """.formatted(productoId);
 
-        // Act & Assert
+        when(realizarCompraUseCase.ejecutar(any(), any(), anyInt()))
+                .thenReturn(compraSimulada());
+
         mockMvc.perform(post("/api/compras")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isCreated())            // 201
+                .andExpect(header().exists("Location"));
+
+        Mockito.verify(realizarCompraUseCase).ejecutar(usuarioId, productoId, 2);
+    }
+
+    @Test
+    void deberiaRetornar400CuandoFaltaProductoId() throws Exception {
+        String requestJson = """
+            {
+                "cantidad": 2
+            }
+            """;
+
+        mockMvc.perform(post("/api/compras")
+                        .with(comprador(usuarioId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest());        // 400
     }
 
     @Test
-    void deberiaConfirmarCompraCuandoDatosValidos() throws Exception {
-        // Arrange
+    void deberiaConfirmarCompraUsandoElUsuarioDelToken() throws Exception {
         Compra compra = compraSimulada();
         when(confirmarCompraUseCase.ejecutar(any(), any())).thenReturn(compra);
 
-        // Act & Assert
         mockMvc.perform(put("/api/compras/{id}/confirmar", compra.getId())
-                        .param("usuarioId", usuarioId.toString()))
+                        .with(comprador(usuarioId)))
                 .andExpect(status().isOk());                // 200
+
+        Mockito.verify(confirmarCompraUseCase).ejecutar(compra.getId(), usuarioId);
+    }
+
+    @Test
+    void sinTokenRetorna401() throws Exception {
+        mockMvc.perform(post("/api/compras")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\": \"%s\", \"cantidad\": 1}".formatted(productoId)))
+                .andExpect(status().isUnauthorized())               // 401
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 }

@@ -12,6 +12,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.CompraMapper;
 import com.uniquindio.backend.application.dto.request.AplicarCuponRequest;
 import com.uniquindio.backend.application.dto.response.AplicarCuponResponse;
 import com.uniquindio.backend.application.usecase.AplicarCuponUseCase;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -49,9 +50,10 @@ public class CompraController {
     // CU-01 Realizar Compra
     @PostMapping
     public ResponseEntity<RealizarCompraResponse> realizar(
+            @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody RealizarCompraRequest request) {
         Compra compra = realizarCompraUseCase.ejecutar(
-                request.usuarioId(),
+                usuarioId,
                 request.productoId(),
                 request.cantidad()
         );
@@ -70,7 +72,7 @@ public class CompraController {
     @PutMapping("/{id}/confirmar")
     public ResponseEntity<ConfirmarCompraResponse> confirmar(
             @PathVariable UUID id,
-            @RequestParam UUID usuarioId) {
+            @AuthenticationPrincipal UUID usuarioId) {
         Compra compra = confirmarCompraUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(mapper.toConfirmarResponse(compra)); // 200 OK
     }
@@ -79,7 +81,7 @@ public class CompraController {
     @PutMapping("/{id}/cancelar")
     public ResponseEntity<RealizarCompraResponse> cancelar(
             @PathVariable UUID id,
-            @RequestParam UUID usuarioId) {
+            @AuthenticationPrincipal UUID usuarioId) {
         Compra compra = cancelarCompraUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(mapper.toRealizarResponse(compra)); // 200 OK
     }
@@ -88,7 +90,7 @@ public class CompraController {
     @PutMapping("/{id}/reembolso")
     public ResponseEntity<RealizarCompraResponse> reembolsar(
             @PathVariable UUID id,
-            @RequestParam UUID usuarioId) {
+            @AuthenticationPrincipal UUID usuarioId) {
         Compra compra = solicitarReembolsoUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(mapper.toRealizarResponse(compra)); // 200 OK
     }
@@ -97,8 +99,9 @@ public class CompraController {
     @PutMapping("/{id}/cupon")
     public ResponseEntity<AplicarCuponResponse> aplicarCupon(
             @PathVariable UUID id,
+            @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody AplicarCuponRequest request) {
-        Compra compra = aplicarCuponUseCase.ejecutar(id, request.usuarioId(), request.codigo());
+        Compra compra = aplicarCuponUseCase.ejecutar(id, usuarioId, request.codigo());
         return ResponseEntity.ok(mapper.toAplicarCuponResponse(compra)); // 200 OK
     }
 }
