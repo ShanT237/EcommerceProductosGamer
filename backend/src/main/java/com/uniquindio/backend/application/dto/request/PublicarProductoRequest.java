@@ -4,13 +4,9 @@ import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import jakarta.validation.constraints.*;
 
-import java.util.UUID;
-
-// Mapea a: new Producto(...)
+// Mapea a: PublicarProductoUseCase.ejecutar(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad)
+// El vendedorId sale del token (Authentication), no del body.
 public record PublicarProductoRequest(
-        @NotNull(message = "El vendedor es obligatorio")
-        UUID vendedorId,
-
         @NotBlank(message = "El nombre es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
         String nombre,

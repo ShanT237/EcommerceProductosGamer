@@ -23,6 +23,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 import java.net.URI;
@@ -58,10 +59,12 @@ public class ProductoController {
 
     // CU-04 Publicar Producto
     @PostMapping
-    public ResponseEntity<PublicarProductoResponse> publicar(@Valid @RequestBody PublicarProductoRequest request) {
+    public ResponseEntity<PublicarProductoResponse> publicar(
+            @AuthenticationPrincipal UUID vendedorId,
+            @Valid @RequestBody PublicarProductoRequest request) {
         Producto producto = publicarProductoUseCase.ejecutar(
                 UUID.randomUUID(),
-                request.vendedorId(),
+                vendedorId,
                 request.nombre(),
                 request.descripcion(),
                 request.precio(),
@@ -85,8 +88,9 @@ public class ProductoController {
     @PutMapping("/{id}/precio")
     public ResponseEntity<ModificarProductoResponse> modificarPrecio(
             @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId,
             @Valid @RequestBody ModificarProductoRequest request) {
-        Producto producto = modificarProductoUseCase.ejecutar(id, request.vendedorId(), request.nuevoPrecio());
+        Producto producto = modificarProductoUseCase.ejecutar(id, vendedorId, request.nuevoPrecio());
         return ResponseEntity.ok(mapper.toModificarResponse(producto)); // 200 OK
     }
 
@@ -101,9 +105,10 @@ public class ProductoController {
     @PutMapping("/{id}/informacion")
     public ResponseEntity<EditarInformacionProductoResponse> editarInformacion(
             @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId,
             @Valid @RequestBody EditarInformacionProductoRequest request) {
         Producto producto = editarInformacionProductoUseCase.ejecutar(
-                id, request.vendedorId(), request.nombre(), request.descripcion());
+                id, vendedorId, request.nombre(), request.descripcion());
         return ResponseEntity.ok(mapper.toEditarInformacionResponse(producto)); // 200 OK
     }
 
@@ -119,9 +124,10 @@ public class ProductoController {
     @PutMapping("/{id}/visibilidad")
     public ResponseEntity<CambiarVisibilidadProductoResponse> cambiarVisibilidad(
             @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId,
             @Valid @RequestBody CambiarVisibilidadProductoRequest request) {
         Producto producto = cambiarVisibilidadProductoUseCase.ejecutar(
-                id, request.vendedorId(), request.activo());
+                id, vendedorId, request.activo());
         return ResponseEntity.ok(mapper.toVisibilidadResponse(producto)); // 200 OK
     }
 }
