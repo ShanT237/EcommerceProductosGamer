@@ -3,10 +3,12 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.dto.request.IniciarSesionRequest;
 import com.uniquindio.backend.application.dto.response.IniciarSesionResponse;
 import com.uniquindio.backend.application.usecase.IniciarSesionUseCase;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@SecurityRequirements // público: sin candado en Swagger
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

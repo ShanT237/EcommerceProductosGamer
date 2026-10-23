@@ -1,6 +1,7 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Usuario;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,7 @@ class EditarPerfilUseCaseTest {
 
     @Test
     void correoDeOtroUsuarioSeRechazaYNoCambiaNada() {
-        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(id, "Nuevo", "otro@test.com"));
+        assertThrows(ConflictoException.class, () -> useCase.ejecutar(id, "Nuevo", "otro@test.com"));
 
         assertEquals("Gamer", usuarioRepository.obtenerPorId(id).get().getNombre());
         assertEquals("gamer@test.com", usuarioRepository.obtenerPorId(id).get().getCorreo());

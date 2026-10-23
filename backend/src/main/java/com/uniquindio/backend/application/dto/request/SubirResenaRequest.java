@@ -4,13 +4,11 @@ import jakarta.validation.constraints.*;
 
 import java.util.UUID;
 
-// Mapea a: Resena.crear()
+// Mapea a: SubirResenaUseCase.ejecutar(idCompra, idUsuario, valorCalificacion, comentario)
+// El idUsuario sale del token (Authentication), no del body.
 public record SubirResenaRequest(
         @NotNull(message = "La compra es obligatoria")
         UUID idCompra,
-
-        @NotNull(message = "El usuario es obligatorio")
-        UUID idUsuario,
 
         @Min(value = 1, message = "La calificación mínima es 1 estrella")
         @Max(value = 5, message = "La calificación máxima es 5 estrellas")

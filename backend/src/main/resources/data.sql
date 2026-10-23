@@ -1,8 +1,7 @@
 -- Vendedores
-INSERT INTO vendedores (id, nombre, correo, tipo, documento, activo) VALUES
-                                                                         ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'GamerZone',    'demo@gamerzone.com', 'EMPRESA',          '900111222',  true),
-                                                                         ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'Carlos Pérez', 'carlos@correo.com',  'PERSONA_NATURAL',  '1094567890', true);
-
+INSERT INTO vendedores (id, nombre, correo, tipo, documento, activo, contrasena_hash) VALUES
+                                                                                          ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'GamerZone',    'demo@gamerzone.com', 'EMPRESA',         '900111222',  true, '$2a$10$eEIvnequaJVH5p9uqCs9AuhR/EEKZuxe5CJpIi2wpQI07EOJGKhbW'),
+                                                                                          ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'Carlos Pérez', 'carlos@correo.com',  'PERSONA_NATURAL', '1094567890', true, '$2a$10$N3Z2CdHyNh8JlzEAOkbIIOGfkhVTar1PwcDOxZMTEGYJ9i36C4z6.');
 -- Productos
 INSERT INTO productos (id, vendedor_id, nombre, descripcion, precio, stock, gama, exclusividad, eliminado) VALUES
                                                                                                                ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'Teclado mecánico RGB',        'Switches rojos, layout español',   250000,  8, 'ALTA',  'NORMAL',    false),
@@ -11,8 +10,8 @@ INSERT INTO productos (id, vendedor_id, nombre, descripcion, precio, stock, gama
 
 -- Usuarios (contraseñas de demo: JoseGamer2026 y AnaGamer2026)
 INSERT INTO usuarios (id, nombre, correo, puntos, activo, contrasena_hash, version) VALUES
-                                                              ('cccccccc-cccc-cccc-cccc-ccccccccccc1', 'Jose', 'jose.demo@correo.com', 0, true, 'am9zZS1kZW1vLXNhbHQwMQ==:GQoLXkDz7/wJTTYNgUMM/pL1Jr4n/dEYWLxBMadrm1E=', 0),
-                                                              ('cccccccc-cccc-cccc-cccc-ccccccccccc2', 'Ana',  'ana.demo@correo.com',  0, true, 'YW5hLWRlbW8tc2FsdDAwMA==:kWFfaer3aTQ3sfzIEk1d8QBDmEqMju4Q4OmM2sFyjoY=', 0);
+                                                                                        ('cccccccc-cccc-cccc-cccc-ccccccccccc1', 'Jose', 'jose.demo@correo.com', 0, true, '$2a$10$oWE3AEs5dU82AsQuWyCifONIzdzi5dKJYtxXnAu/ZV7qxz9sDENYq', 0),
+                                                                                        ('cccccccc-cccc-cccc-cccc-ccccccccccc2', 'Ana',  'ana.demo@correo.com',  0, true, '$2a$10$j54uFfi0v/T9xxQqBG6HOuF8JFcBgYzozL29yVK2YaU6ayXvjwJCm', 0);
 
 -- Compras (el stock de los productos ya descuenta estas cantidades)
 INSERT INTO compras (id, usuario_id, producto_id, cantidad, fecha, precio_unitario, estado, resenada, puntos_asignados, descargado) VALUES

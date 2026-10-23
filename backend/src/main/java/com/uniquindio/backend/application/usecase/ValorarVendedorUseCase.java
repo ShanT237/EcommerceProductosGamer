@@ -3,6 +3,7 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.ValoracionVendedor;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
@@ -37,7 +38,7 @@ public class ValorarVendedorUseCase {
         compra.asegurarPerteneceA(usuarioId);
 
         if (valoracionRepository.existePorCompra(compraId)) {
-            throw new ReglaDominioException("La compra ya tiene una valoración del vendedor");
+            throw new ConflictoException("La compra ya tiene una valoración del vendedor");
         }
 
         Producto producto = productoRepository.obtenerPorId(compra.getProductoId())

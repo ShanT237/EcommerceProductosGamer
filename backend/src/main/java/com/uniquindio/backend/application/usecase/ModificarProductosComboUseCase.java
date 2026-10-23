@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * Caso de uso: ModificarProductosCombo (CU-23).
- * Agrega o quita productos de un combo; el mínimo de 2 lo garantiza la entidad.
+ * El vendedor dueño del combo agrega o quita productos; el mínimo de 2 lo garantiza la entidad.
  */
 @Service
 @RequiredArgsConstructor
@@ -22,8 +22,9 @@ public class ModificarProductosComboUseCase {
     private final ComboRepository comboRepository;
     private final ProductoRepository productoRepository;
 
-    public Combo agregar(UUID comboId, UUID productoId) {
+    public Combo agregar(UUID comboId, UUID vendedorId, UUID productoId) {
         Combo combo = obtenerCombo(comboId);
+        combo.asegurarPerteneceA(vendedorId);
 
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
@@ -39,8 +40,9 @@ public class ModificarProductosComboUseCase {
         return combo;
     }
 
-    public Combo quitar(UUID comboId, UUID productoId) {
+    public Combo quitar(UUID comboId, UUID vendedorId, UUID productoId) {
         Combo combo = obtenerCombo(comboId);
+        combo.asegurarPerteneceA(vendedorId);
 
         combo.quitarProducto(productoId);
 

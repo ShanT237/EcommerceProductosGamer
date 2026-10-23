@@ -25,7 +25,7 @@ public class VendedorEntity {
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, unique = true, length = 150)
     private String correo;
 
     @Enumerated(EnumType.STRING)
@@ -37,4 +37,8 @@ public class VendedorEntity {
 
     @Column(nullable = false)
     private boolean activo;
+
+    // Nullable: los vendedores creados sin credenciales no tienen contraseña.
+    @Column(name = "contrasena_hash", length = 255)
+    private String contrasenaHash;
 }

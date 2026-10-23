@@ -1,11 +1,16 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Usuario;
+import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.exception.AutenticacionException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.service.SesionToken;
+import com.uniquindio.backend.domain.valueobject.Rol;
+import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
+import com.uniquindio.backend.infrastructure.persistence.VendedorRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.security.JwtEmisorToken;
-import com.uniquindio.backend.infrastructure.security.Pbkdf2HashContrasena;
+import com.uniquindio.backend.infrastructure.security.BCryptHashContrasena;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,26 +22,38 @@ import static org.junit.jupiter.api.Assertions.*;
 class IniciarSesionUseCaseTest {
 
     private UsuarioRepositoryEnMemoria usuarioRepository;
-    private Pbkdf2HashContrasena hasher;
+    private BCryptHashContrasena hasher;
     private JwtEmisorToken emisor;
     private IniciarSesionUseCase useCase;
     private UUID id;
+    private VendedorRepositoryEnMemoria vendedorRepository;
+    private UUID vendedorId;
 
     @BeforeEach
     void setUp() {
         usuarioRepository = new UsuarioRepositoryEnMemoria();
-        hasher = new Pbkdf2HashContrasena();
+        vendedorRepository = new VendedorRepositoryEnMemoria();   // <- sin "VendedorRepositoryEnMemoria" delante
+        hasher = new BCryptHashContrasena();
         emisor = new JwtEmisorToken("secreto-de-prueba-con-mas-de-32-caracteres", 2, Clock.systemUTC());
-        useCase = new IniciarSesionUseCase(usuarioRepository, hasher, emisor);
+        useCase = new IniciarSesionUseCase(usuarioRepository, vendedorRepository, hasher, emisor);
+
         id = UUID.randomUUID();
         new RegistrarUsuarioUseCase(usuarioRepository, hasher).ejecutar(id, "Gamer", "gamer@test.com", "Gamer2026");
+
+        vendedorId = UUID.randomUUID();
+        Vendedor vendedor = Vendedor.registrar(vendedorId, "GamerZone", "ventas@gamerzone.com",
+                TipoVendedor.EMPRESA, "900123");
+        vendedor.definirContrasena(hasher.hashear("Vendedor2026"));
+        vendedorRepository.guardar(vendedor);
     }
 
     @Test
     void credencialesValidasDevuelvenUnTokenDelUsuario() {
         String token = useCase.ejecutar("gamer@test.com", "Gamer2026");
 
-        assertEquals(id, emisor.validar(token).orElseThrow());
+        SesionToken sesion = emisor.validar(token).orElseThrow();
+        assertEquals(id, sesion.usuarioId());
+        assertEquals(Rol.COMPRADOR, sesion.rol());
     }
 
     @Test
@@ -73,5 +90,34 @@ class IniciarSesionUseCaseTest {
         assertThrows(ReglaDominioException.class, () -> new RegistrarUsuarioUseCase(usuarioRepository, hasher)
                 .ejecutar(otro, "Otro", "otro@test.com", "debil"));
         assertTrue(usuarioRepository.obtenerPorId(otro).isEmpty());
+    }
+
+    @Test
+    void vendedorConCredencialesValidasRecibeTokenConRolVendedor() {
+        String token = useCase.ejecutar("ventas@gamerzone.com", "Vendedor2026");
+
+        SesionToken sesion = emisor.validar(token).orElseThrow();
+        assertEquals(vendedorId, sesion.usuarioId());
+        assertEquals(Rol.VENDEDOR, sesion.rol());
+    }
+
+    @Test
+    void contrasenaIncorrectaDeVendedorLanzaAutenticacion() {
+        assertThrows(AutenticacionException.class, () -> useCase.ejecutar("ventas@gamerzone.com", "Otra2026x"));
+    }
+
+    @Test
+    void vendedorSinContrasenaNoPuedeIniciarSesion() {
+        vendedorRepository.guardar(Vendedor.registrar(UUID.randomUUID(), "Sin clave", "sin@vendedor.com",
+                TipoVendedor.PERSONA_NATURAL, "555"));
+
+        assertThrows(AutenticacionException.class, () -> useCase.ejecutar("sin@vendedor.com", "Vendedor2026"));
+    }
+
+    @Test
+    void vendedorDadoDeBajaNoPuedeIniciarSesion() {
+        vendedorRepository.obtenerPorId(vendedorId).get().darDeBaja();
+
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar("ventas@gamerzone.com", "Vendedor2026"));
     }
 }

@@ -19,5 +19,9 @@ public record RegistrarVendedorRequest(
 
         @NotBlank(message = "El documento es obligatorio")
         @Size(max = 30, message = "El documento no puede superar los 30 caracteres")
-        String documento
+        String documento,
+
+        @NotBlank(message = "La contraseña es obligatoria")
+        @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
+        String contrasena
 ) {}

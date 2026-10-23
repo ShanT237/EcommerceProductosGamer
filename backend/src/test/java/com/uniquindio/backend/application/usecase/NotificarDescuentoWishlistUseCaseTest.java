@@ -80,7 +80,7 @@ class NotificarDescuentoWishlistUseCaseTest {
         UUID user = usuarioConWishlist(true);
         AplicarDescuentoUseCase aplicar = new AplicarDescuentoUseCase(productoRepository, useCase);
 
-        aplicar.ejecutar(producto.getId(), 25);
+        aplicar.ejecutar(producto.getId(), producto.getVendedorId(), 25);
 
         assertEquals(90.0, productoRepository.obtenerPorId(producto.getId()).get().getPrecio(), 0.001);
         assertEquals(1, notificacionRepository.obtenerPorUsuarioId(user).size());

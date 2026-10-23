@@ -8,11 +8,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 // Mapea a: ProgramarPreventaUseCase.ejecutar(vendedorId, productoId, fechaLanzamiento, descripcion)
+// El vendedorId sale del token (Authentication), no del body.
 // La fecha va en formato ISO ("2026-12-01") y debe ser futura (lo valida el dominio con la fecha del servidor).
 public record ProgramarPreventaRequest(
-        @NotNull(message = "El vendedor es obligatorio")
-        UUID vendedorId,
-
         @NotNull(message = "El producto es obligatorio")
         UUID productoId,
 

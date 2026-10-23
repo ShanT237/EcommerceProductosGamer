@@ -7,6 +7,8 @@ import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.infrastructure.rest.mapper.PromocionMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,11 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 /**
- * Limitación: el {@code vendedorId} viaja en el body; el JWT valida la sesión pero
- * no se cruza con el vendedor dueño del producto.
+ * El {@code vendedorId} sale del token JWT (Authentication): el caso de uso verifica
+ * que el producto pertenezca a ese vendedor.
  */
+@PreAuthorize("hasRole('VENDEDOR')")
 @RestController
 @RequestMapping("/api/promociones")
 public class PromocionController {
@@ -35,10 +39,11 @@ public class PromocionController {
     // CU-22 Configurar Descuento Promocional (con vigencia; no cambia el precio base)
     @PostMapping
     public ResponseEntity<PromocionResponse> configurar(
+            @AuthenticationPrincipal UUID vendedorId,
             @Valid @RequestBody ConfigurarDescuentoPromocionalRequest request) {
         Promocion promocion = configurarDescuentoPromocionalUseCase.ejecutar(
                 request.productoId(),
-                request.vendedorId(),
+                vendedorId,
                 request.porcentaje(),
                 request.desde(),
                 request.hasta()

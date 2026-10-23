@@ -8,12 +8,15 @@ import com.uniquindio.backend.domain.entity.Wishlist;
 import com.uniquindio.backend.infrastructure.rest.mapper.WishlistMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.net.URI;
 import java.util.UUID;
 
+@PreAuthorize("hasRole('COMPRADOR')")
 @RestController
 @RequestMapping("/api/wishlists")
 public class WishlistController {
@@ -29,11 +32,12 @@ public class WishlistController {
         this.quitarDeWishlistUseCase = quitarDeWishlistUseCase;
         this.mapper = mapper;
     }
-
-    // CU-03 Añadir a Wishlist
+    // CU-03 Añadir a Wishlist del usuario autenticado
     @PostMapping
-    public ResponseEntity<AnadirWishlistResponse> anadir(@Valid @RequestBody AnadirWishlistRequest request) {
-        Wishlist wishlist = anadirAWishlistUseCase.ejecutar(request.usuarioId(), request.productoId());
+    public ResponseEntity<AnadirWishlistResponse> anadir(
+            @AuthenticationPrincipal UUID usuarioId,
+            @Valid @RequestBody AnadirWishlistRequest request) {
+        Wishlist wishlist = anadirAWishlistUseCase.ejecutar(usuarioId, request.productoId());
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -44,11 +48,11 @@ public class WishlistController {
         return ResponseEntity.created(location).body(mapper.toResponse(wishlist));
     }
 
-    // CU-15 Quitar de Wishlist
+    // CU-15 Quitar de Wishlist del usuario autenticado
     @DeleteMapping("/{productoId}")
     public ResponseEntity<AnadirWishlistResponse> quitar(
             @PathVariable UUID productoId,
-            @RequestParam UUID usuarioId) {
+            @AuthenticationPrincipal UUID usuarioId) {
         Wishlist wishlist = quitarDeWishlistUseCase.ejecutar(usuarioId, productoId);
         return ResponseEntity.ok(mapper.toResponse(wishlist));
     }

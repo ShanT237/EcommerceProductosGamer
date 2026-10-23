@@ -1,15 +1,13 @@
 package com.uniquindio.backend.application.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
-// Mapea a: new Compra(...) / Producto.reducirStock()
+// Mapea a: RealizarCompraUseCase.ejecutar(usuarioId, productoId, cantidad)
+// El usuarioId sale del token (Authentication), no del body.
 public record RealizarCompraRequest(
-        @NotNull(message = "El usuario es obligatorio")
-        UUID usuarioId,
-
         @NotNull(message = "El producto es obligatorio")
         UUID productoId,
 

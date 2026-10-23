@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class Pbkdf2HashContrasenaTest {
+class BCryptHashContrasenaTest {
 
-    private final Pbkdf2HashContrasena hasher = new Pbkdf2HashContrasena();
+    private final BCryptHashContrasena hasher = new BCryptHashContrasena();
 
     @Test
     void elHashNuncaEsLaContrasenaEnClaro() {
@@ -14,6 +14,7 @@ class Pbkdf2HashContrasenaTest {
 
         assertNotEquals("Gamer2026", hash);
         assertFalse(hash.contains("Gamer2026"));
+        assertTrue(hash.startsWith("$2"));
     }
 
     @Test
@@ -23,6 +24,7 @@ class Pbkdf2HashContrasenaTest {
         assertTrue(hasher.coincide("Gamer2026", hash));
         assertFalse(hasher.coincide("gamer2026", hash));
         assertFalse(hasher.coincide(null, hash));
+        assertFalse(hasher.coincide("Gamer2026", null));
         assertFalse(hasher.coincide("Gamer2026", "basura-sin-formato"));
     }
 

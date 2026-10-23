@@ -3,6 +3,8 @@ package com.uniquindio.backend.domain.entity;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import lombok.Getter;
+import com.uniquindio.backend.domain.service.HashContrasena;
+import lombok.AccessLevel;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -24,6 +26,9 @@ public class Vendedor {
     private final TipoVendedor tipo;
     private final String documento;
     private boolean activo;
+
+    @Getter(AccessLevel.NONE)
+    private String contrasenaHash;
 
     // Vendedor
     private Vendedor(UUID id, String nombre, String correo, TipoVendedor tipo, String documento) {
@@ -56,13 +61,41 @@ public class Vendedor {
      */
     public static Vendedor reconstruir(UUID id, String nombre, String correo,
                                        TipoVendedor tipo, String documento, boolean activo) {
+        return reconstruir(id, nombre, correo, tipo, documento, activo, null);
+    }
+
+    public static Vendedor reconstruir(UUID id, String nombre, String correo,
+                                       TipoVendedor tipo, String documento, boolean activo,
+                                       String contrasenaHash) {
         Vendedor vendedor = new Vendedor(id, nombre, correo, tipo, documento);
         vendedor.activo = activo;
+        vendedor.contrasenaHash = contrasenaHash;
         return vendedor;
     }
 
     public boolean esEmpresa() {
         return tipo.esEmpresa();
+    }
+
+    /**
+     * Guarda el hash de la contraseña (nunca la contraseña en claro).
+     */
+    public void definirContrasena(String hash) {
+        if (hash == null || hash.isBlank()) {
+            throw new ReglaDominioException("El hash de la contraseña no puede estar vacío");
+        }
+        this.contrasenaHash = hash;
+    }
+
+    /**
+     * Solo para el adaptador de persistencia: devuelve el hash guardado.
+     */
+    public String obtenerHashContrasena() {
+        return contrasenaHash;
+    }
+
+    public boolean verificarContrasena(String plana, HashContrasena hasher) {
+        return contrasenaHash != null && hasher.coincide(plana, contrasenaHash);
     }
 
     public void actualizarCorreo(String nuevoCorreo) {

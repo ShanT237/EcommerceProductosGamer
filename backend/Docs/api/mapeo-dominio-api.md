@@ -2,99 +2,126 @@
 
 Cada operación del dominio y el endpoint REST que la expone.
 
+**Rol** indica quién puede llamar al endpoint: `Público` (sin token), `COMPRADOR`, `VENDEDOR` o `Cualquiera` (cualquier sesión con token válido). El id del comprador o del vendedor **siempre sale del token JWT**; nunca se envía en el body, en la URL ni como parámetro.
+
 ## Cuentas y autenticación
 
-| Operación del dominio | Método HTTP | Endpoint | Respuesta exitosa |
-|---|---|---|---|
-| `Usuario.registrar(...)` | POST | `/api/usuarios` | 201 Created |
-| `Usuario.actualizarPerfil(...)` | PUT | `/api/usuarios/{id}/perfil` | 200 OK |
-| `Usuario.definirContrasena(...)` | PUT | `/api/usuarios/{id}/contrasena` | 200 OK |
-| `IniciarSesionUseCase` | POST | `/api/auth/login` | 200 OK |
-| `Vendedor.registrar(...)` | POST | `/api/vendedores` | 201 Created |
-| `Vendedor.darDeBaja()` | PUT | `/api/vendedores/{id}/baja` | 200 OK |
-| `ValoracionVendedor.crear(...)` | POST | `/api/valoraciones-vendedor` | 201 Created |
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `Usuario.registrar(...)` | POST | `/api/usuarios` | Público | 201 Created |
+| `Usuario.actualizarPerfil(...)` | PUT | `/api/usuarios/me/perfil` | COMPRADOR | 200 OK |
+| `Usuario.definirContrasena(...)` | PUT | `/api/usuarios/me/contrasena` | COMPRADOR | 204 No Content |
+| `IniciarSesionUseCase` | POST | `/api/auth/login` | Público | 200 OK |
+| `Vendedor.registrar(...)` | POST | `/api/vendedores` | Público | 201 Created |
+| `Vendedor.darDeBaja()` | PUT | `/api/vendedores/me/baja` | VENDEDOR | 200 OK |
+| `ValoracionVendedor.crear(...)` | POST | `/api/valoraciones-vendedor` | COMPRADOR | 201 Created |
 
 ## Productos y catálogo
 
-| Operación del dominio | Método HTTP | Endpoint | Respuesta exitosa |
-|---|---|---|---|
-| `Producto.publicar(...)` | POST | `/api/productos` | 201 Created |
-| `Producto.cambiarPrecio(...)` | PUT | `/api/productos/{id}/precio` | 200 OK |
-| `Producto.editarInformacion(...)` | PUT | `/api/productos/{id}/informacion` | 200 OK |
-| `Producto.pausar()` / `activar()` | PUT | `/api/productos/{id}/visibilidad` | 200 OK |
-| `Producto.eliminar(...)` | DELETE | `/api/productos/{id}` | 204 No Content |
-| Buscar productos paginados | GET | `/api/productos?texto=&categoria=&gama=&precioMin=&precioMax=&soloPreventa=&page=0&size=20` | 200 OK |
-| `Producto.aplicarDescuento(...)` | POST | `/api/descuentos` | 200 OK |
-| `Promocion.programar(...)` | POST | `/api/promociones` | 201 Created |
-| `Preventa.programar(...)` | POST | `/api/preventas` | 201 Created |
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `Producto.publicar(...)` | POST | `/api/productos` | VENDEDOR | 201 Created |
+| `Producto.cambiarPrecio(...)` | PUT | `/api/productos/{id}/precio` | VENDEDOR | 200 OK |
+| `Producto.editarInformacion(...)` | PUT | `/api/productos/{id}/informacion` | VENDEDOR | 200 OK |
+| `Producto.pausar()` / `activar()` | PUT | `/api/productos/{id}/visibilidad` | VENDEDOR | 200 OK |
+| `Producto.eliminar(...)` | DELETE | `/api/productos/{id}` | VENDEDOR | 204 No Content |
+| Buscar productos (paginado) | GET | `/api/productos?texto=&categoria=&gama=&precioMin=&precioMax=&soloPreventa=&page=0&size=20` | Cualquiera | 200 OK |
+| `Producto.aplicarDescuento(...)` | POST | `/api/descuentos` | VENDEDOR | 200 OK |
+| `Promocion.programar(...)` | POST | `/api/promociones` | VENDEDOR | 201 Created |
+| `Preventa.programar(...)` | POST | `/api/preventas` | VENDEDOR | 201 Created |
 
 ## Compras
 
-| Operación del dominio | Método HTTP | Endpoint | Respuesta exitosa |
-|---|---|---|---|
-| `Compra.realizar(...)` | POST | `/api/compras` | 201 Created |
-| `Compra.confirmar()` | PUT | `/api/compras/{id}/confirmar?usuarioId=` | 200 OK |
-| `Compra.cancelar()` | PUT | `/api/compras/{id}/cancelar?usuarioId=` | 200 OK |
-| `Compra.solicitarReembolso(...)` | PUT | `/api/compras/{id}/reembolso?usuarioId=` | 200 OK |
-| `Compra.aplicarCupon(...)` | PUT | `/api/compras/{id}/cupon` | 200 OK |
-| Consultar historial de compras | GET | `/api/compras?usuarioId=` | 200 OK |
-| Comprar combo | POST | `/api/combos/{id}/comprar` | 201 Created |
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `Compra.realizar(...)` | POST | `/api/compras` | COMPRADOR | 201 Created |
+| `Compra.confirmar()` | PUT | `/api/compras/{id}/confirmar` | COMPRADOR | 200 OK |
+| `Compra.cancelar()` | PUT | `/api/compras/{id}/cancelar` | COMPRADOR | 200 OK |
+| `Compra.solicitarReembolso(...)` | PUT | `/api/compras/{id}/reembolso` | COMPRADOR | 200 OK |
+| `Compra.aplicarCupon(...)` | PUT | `/api/compras/{id}/cupon` | COMPRADOR | 200 OK |
+| Consultar historial de compras | GET | `/api/compras` | COMPRADOR | 200 OK |
+| Comprar combo | POST | `/api/combos/{id}/comprar` | COMPRADOR | 201 Created |
 
 ## Combos, wishlist, reseñas y puntos
 
-| Operación del dominio | Método HTTP | Endpoint | Respuesta exitosa |
-|---|---|---|---|
-| `Combo.crear(...)` | POST | `/api/combos` | 201 Created |
-| `Combo.agregarProducto(...)` | PUT | `/api/combos/{id}/productos/{productoId}` | 200 OK |
-| `Combo.quitarProducto(...)` | DELETE | `/api/combos/{id}/productos/{productoId}` | 200 OK |
-| `Wishlist.agregarProducto(...)` | POST | `/api/wishlists` | 201 Created |
-| `Wishlist.quitarProducto(...)` | DELETE | `/api/wishlists/{productoId}?usuarioId=` | 200 OK |
-| `Resena.crear(...)` | POST | `/api/resenas` | 201 Created |
-| `Usuario.redimirPuntos(...)` | POST | `/api/puntos/redimir` | 200 OK |
-| Consultar historial de puntos | GET | `/api/puntos/historial?usuarioId=` | 200 OK |
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `Combo.crear(...)` | POST | `/api/combos` | VENDEDOR | 201 Created |
+| `Combo.agregarProducto(...)` | PUT | `/api/combos/{id}/productos/{productoId}` | VENDEDOR | 200 OK |
+| `Combo.quitarProducto(...)` | DELETE | `/api/combos/{id}/productos/{productoId}` | VENDEDOR | 200 OK |
+| `Wishlist.agregarProducto(...)` | POST | `/api/wishlists` | COMPRADOR | 201 Created |
+| `Wishlist.quitarProducto(...)` | DELETE | `/api/wishlists/{productoId}` | COMPRADOR | 200 OK |
+| `Resena.crear(...)` | POST | `/api/resenas` | COMPRADOR | 201 Created |
+| `Usuario.redimirPuntos(...)` | POST | `/api/puntos/redimir` | COMPRADOR | 200 OK |
+| Consultar historial de puntos | GET | `/api/puntos/historial` | COMPRADOR | 200 OK |
 
 ## Regalos y metas de recompensa
 
-| Operación del dominio | Método HTTP | Endpoint | Respuesta exitosa |
-|---|---|---|---|
-| `Regalo.elegir(...)` (asignar por meta) | PUT | `/api/regalos/{id}/asignar` | 200 OK |
-| `Regalo.enviar()` | PUT | `/api/regalos/{id}/enviar` | 200 OK |
-| `Regalo.confirmarEntrega(...)` | PUT | `/api/regalos/{id}/entrega` | 200 OK |
-| `MetaRecompensa.crear(...)` | POST | `/api/metas-recompensa` | 201 Created |
-| `MetaRecompensa.actualizarUmbral(...)` | PUT | `/api/metas-recompensa/{id}/umbral` | 200 OK |
-| `MetaRecompensa.desactivar()` | PUT | `/api/metas-recompensa/{id}/desactivar` | 200 OK |
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `Regalo.elegir(...)` (asignar por meta) | PUT | `/api/regalos/{id}/asignar` | COMPRADOR | 200 OK |
+| `Regalo.enviar()` | PUT | `/api/regalos/{id}/enviar` | VENDEDOR | 200 OK |
+| `Regalo.confirmarEntrega(...)` | PUT | `/api/regalos/{id}/entrega` | COMPRADOR | 200 OK |
+| `MetaRecompensa.crear(...)` | POST | `/api/metas-recompensa` | VENDEDOR | 201 Created |
+| `MetaRecompensa.actualizarUmbral(...)` | PUT | `/api/metas-recompensa/{id}/umbral` | VENDEDOR | 200 OK |
+| `MetaRecompensa.desactivar()` | PUT | `/api/metas-recompensa/{id}/desactivar` | VENDEDOR | 200 OK |
 
 ## Reportes
 
-| Caso de uso | Método HTTP | Endpoint | Respuesta exitosa |
-|---|---|---|---|
-| CU-29 Ventas por vendedor | GET | `/api/reportes/ventas?vendedorId=` | 200 OK |
-| CU-30 Productos más vendidos | GET | `/api/reportes/mas-vendidos?vendedorId=&top=` | 200 OK |
-| CU-34 Alertas de stock bajo | GET | `/api/reportes/stock-bajo?vendedorId=&umbral=` | 200 OK |
-| CU-35 Métricas de reseñas | GET | `/api/reportes/metricas-resenas?vendedorId=` | 200 OK |
-| CU-36 Reporte global | GET | `/api/reportes/global` | 200 OK |
+| Caso de uso | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| CU-29 Ventas por vendedor | GET | `/api/reportes/ventas` | VENDEDOR | 200 OK |
+| CU-30 Productos más vendidos | GET | `/api/reportes/mas-vendidos?vendedorId=&top=` | Cualquiera | 200 OK |
+| CU-34 Alertas de stock bajo | GET | `/api/reportes/stock-bajo?umbral=` | VENDEDOR | 200 OK |
+| CU-35 Métricas de reseñas | GET | `/api/reportes/metricas-resenas` | VENDEDOR | 200 OK |
+| CU-36 Reporte global | GET | `/api/reportes/global` | Cualquiera | 200 OK |
 
 ## Cuerpos y parámetros
 
 | Endpoint | Cuerpo (JSON) o parámetros |
 |---|---|
-| `PUT /api/productos/{id}/precio` | `vendedorId`, `nuevoPrecio` |
-| `PUT /api/productos/{id}/informacion` | `vendedorId`, `nombre`, `descripcion` |
-| `PUT /api/productos/{id}/visibilidad` | `vendedorId`, `activo` (`true` activa, `false` pausa) |
-| `GET /api/productos` | Filtros opcionales: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa`; paginación: `page` (desde 0), `size` (1–100) |
-| `PUT /api/compras/{id}/cupon` | `usuarioId`, `codigo` |
-| `PUT /api/regalos/{id}/asignar` | `usuarioId` |
+| `POST /api/usuarios` | `nombre`, `correo`, `contrasena` |
+| `PUT /api/usuarios/me/perfil` | `nombre`, `correo` |
+| `PUT /api/usuarios/me/contrasena` | `contrasenaActual`, `contrasenaNueva` |
+| `POST /api/auth/login` | `correo`, `contrasena` (devuelve `token`) |
+| `POST /api/vendedores` | `nombre`, `correo`, `tipo`, `documento`, `contrasena` |
+| `PUT /api/vendedores/me/baja` | Sin cuerpo |
+| `POST /api/productos` | `nombre`, `descripcion`, `precio`, `stock`, `gama`, `exclusividad` |
+| `PUT /api/productos/{id}/precio` | `nuevoPrecio` |
+| `PUT /api/productos/{id}/informacion` | `nombre`, `descripcion` |
+| `PUT /api/productos/{id}/visibilidad` | `activo` (`true` activa, `false` pausa) |
+| `GET /api/productos` | Filtros opcionales por query: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa`. Paginación: `page` (desde 0, por defecto 0) y `size` (1–100, por defecto 20) |
+| `POST /api/compras` | `productoId`, `cantidad` |
+| `POST /api/wishlists` | `productoId` |
+| `PUT /api/compras/{id}/cupon` | `codigo` |
+| `POST /api/combos/{id}/comprar` | `cantidad` |
+| `PUT /api/regalos/{id}/asignar` | Sin cuerpo |
 | `PUT /api/regalos/{id}/enviar` | Sin cuerpo |
-| `PUT /api/regalos/{id}/entrega` | `usuarioId` (solo el destinatario confirma) |
+| `PUT /api/regalos/{id}/entrega` | Sin cuerpo (solo el destinatario confirma) |
+| `GET /api/reportes/stock-bajo` | Query opcional `umbral` (5 por defecto) |
+| `GET /api/reportes/mas-vendidos` | Query opcionales `vendedorId` (filtro de consulta) y `top` (10 por defecto) |
 
 ## Notas
 
-- `POST /api/usuarios` requiere `nombre`, `correo` y `contrasena`; la contraseña debe tener al menos 8 caracteres, una mayúscula y un número. `POST /api/usuarios` y `POST /api/vendedores` son públicos para permitir el registro; las demás rutas `/api/**`, excepto `/api/auth/**`, requieren `Authorization: Bearer {JWT}`.
-- La búsqueda responde con `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`; `page` empieza en 0 y `size` admite valores de 1 a 100. Los filtros y la paginación se ejecutan en JPQL.
-- El ranking agrupa en base de datos las unidades vendidas de compras `COMPLETADA` mediante `JOIN`, `GROUP BY` y `SUM`.
-- Usuarios de demo para `POST /api/auth/login`: `jose.demo@correo.com` / `JoseGamer2026` y `ana.demo@correo.com` / `AnaGamer2026`.
-- `usuarioId` y `vendedorId` van en el body o como parámetro en la URL. Sirven para verificar pertenencia, pero no se cruzan con el JWT (no hay roles).
-- Errores: las reglas del dominio responden **400** con un mensaje; un recurso que no existe responde **404**; una violación de integridad o un conflicto de concurrencia responde **409**; sin token válido responde **401**.
-- `GET /api/reportes/mas-vendidos` sin `vendedorId` lista todo el marketplace. `top` es 10 por defecto y `umbral` de stock bajo es 5 por defecto.
-- Los reportes, las metas de recompensa y los regalos son operaciones de admin o sistema, pero hoy no hay roles: cualquier usuario con token válido puede usarlos.
-- Los parámetros de los endpoints que no están en la tabla de cuerpos están en Swagger: `http://localhost:8080/swagger-ui.html`.
+- **Autenticación:** `POST /api/auth/login` devuelve un JWT (HS256, 2 horas por defecto) con el id, el correo y el rol. Todas las rutas `/api/**` exigen `Authorization: Bearer {JWT}`, salvo `/api/auth/**`, `POST /api/usuarios` y `POST /api/vendedores`.
+- **Roles:** `COMPRADOR` y `VENDEDOR`. Un rol que no corresponde a la ruta recibe 403. Los controllers toman el id del `Authentication`; un `usuarioId` o `vendedorId` enviado en el body o en la URL se ignora.
+- **Contraseñas:** mínimo 8 caracteres, una mayúscula y un número; se guardan con BCrypt.
+- **CORS:** `/api/**` acepta peticiones desde `localhost:4200` y `localhost:3000` (y sus equivalentes en `127.0.0.1`); el preflight `OPTIONS` se responde sin exigir token.
+- **Usuarios de demo** para `POST /api/auth/login`:
+  - Compradores: `jose.demo@correo.com` / `JoseGamer2026` y `ana.demo@correo.com` / `AnaGamer2026`.
+  - Vendedor: `demo@gamerzone.com` / `GamerZone2026`.
+- **Swagger:** en `http://localhost:8080/swagger-ui.html`, ejecuta el login, copia el token y pégalo en el botón **Authorize** (sin el prefijo `Bearer`).
+- **Búsqueda paginada:** `GET /api/productos` solo devuelve productos visibles (no eliminados ni pausados). `texto` busca en nombre y descripción sin distinguir mayúsculas; `soloPreventa=true` devuelve los productos cuya preventa aún no ha llegado a su fecha de lanzamiento. La respuesta trae `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. Los filtros y la paginación se ejecutan en la base de datos (JPQL). Una página o un tamaño fuera de rango responde 422.
+- **Ranking de más vendidos:** agrupa en la base de datos las unidades vendidas de compras `COMPLETADA` (`JOIN`, `GROUP BY` y `SUM`), ordena por unidades (desempate por nombre) e incluye la calificación promedio de cada producto. Sin `vendedorId` lista todo el marketplace; los productos sin ventas no aparecen.
+- **Errores** (cuerpo JSON `{timestamp, status, mensaje}`):
+  | Código | Cuándo |
+  |---|---|
+  | 400 | Validación de datos del request (`@Valid`) o JSON inválido |
+  | 401 | Token ausente, inválido o expirado; credenciales incorrectas en el login |
+  | 403 | El rol del token no puede usar la ruta |
+  | 404 | El recurso no existe |
+  | 409 | Duplicidad (correo, documento, preventa, promoción solapada, reseña o valoración repetida, producto repetido en wishlist o combo), violación de integridad o conflicto de concurrencia |
+  | 422 | Una regla de negocio del dominio se violó (stock insuficiente, reembolso fuera de plazo, transición de estado no permitida, paginación fuera de rango, etc.) |
+
+- **No existe un rol ADMIN.** Las operaciones de administración se resolvieron así: metas de recompensa y envío de regalos son de `VENDEDOR`; `mas-vendidos` y el reporte global están abiertos a cualquier sesión autenticada.
+- Los parámetros de los endpoints que no están en la tabla de cuerpos están en Swagger.

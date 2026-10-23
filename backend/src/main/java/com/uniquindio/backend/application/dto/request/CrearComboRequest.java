@@ -4,10 +4,9 @@ import jakarta.validation.constraints.*;
 import java.util.List;
 import java.util.UUID;
 
+// Mapea a: CrearComboUseCase.ejecutar(id, vendedorId, nombre, descripcion, descuento, productoIds)
+// El vendedorId sale del token (Authentication), no del body.
 public record CrearComboRequest(
-        @NotNull(message = "El vendedor es obligatorio")
-        UUID vendedorId,
-
         @NotBlank(message = "El nombre del combo es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
         String nombre,

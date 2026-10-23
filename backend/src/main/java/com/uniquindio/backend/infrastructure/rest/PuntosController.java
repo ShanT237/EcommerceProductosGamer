@@ -9,6 +9,8 @@ import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.infrastructure.rest.mapper.MovimientoPuntosMapper;
 import com.uniquindio.backend.infrastructure.rest.mapper.UsuarioMapper;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +18,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Limitación: el {@code usuarioId} viaja en el body o como parámetro; el JWT valida la
- * sesión pero no se cruza con el usuario consultado (cualquiera podría redimir o ver
- * los puntos de otro usuario).
+ * El {@code usuarioId} sale del token JWT (Authentication): cada usuario solo redime
+ * y consulta sus propios puntos.
  */
+@PreAuthorize("hasRole('COMPRADOR')")
 @RestController
 @RequestMapping("/api/puntos")
 public class PuntosController {
@@ -41,14 +43,16 @@ public class PuntosController {
 
     // CU-08 Redimir Puntos por Beneficios
     @PostMapping("/redimir")
-    public ResponseEntity<PuntosResponse> redimir(@Valid @RequestBody RedimirPuntosRequest request) {
-        Usuario usuario = redimirPuntosUseCase.ejecutar(request.usuarioId(), request.cantidad());
+    public ResponseEntity<PuntosResponse> redimir(
+            @AuthenticationPrincipal UUID usuarioId,
+            @Valid @RequestBody RedimirPuntosRequest request) {
+        Usuario usuario = redimirPuntosUseCase.ejecutar(usuarioId, request.cantidad());
         return ResponseEntity.ok(usuarioMapper.toPuntosResponse(usuario));
     }
 
-    // CU-32 Consultar Historial de Puntos (más reciente primero)
+    // CU-32 Consultar Historial de Puntos del usuario autenticado (más reciente primero)
     @GetMapping("/historial")
-    public ResponseEntity<List<MovimientoPuntosResponse>> historial(@RequestParam UUID usuarioId) {
+    public ResponseEntity<List<MovimientoPuntosResponse>> historial(@AuthenticationPrincipal UUID usuarioId) {
         List<MovimientoPuntosResponse> respuesta = consultarHistorialPuntosUseCase.ejecutar(usuarioId).stream()
                 .map(movimientoMapper::toResponse)
                 .toList();

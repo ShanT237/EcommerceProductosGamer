@@ -1,27 +1,26 @@
 package com.uniquindio.backend.infrastructure.rest;
 
-import com.uniquindio.backend.application.dto.request.AsignarRegaloRequest;
 import com.uniquindio.backend.application.dto.response.RegaloResponse;
 import com.uniquindio.backend.application.usecase.AsignarRegaloPorMetaUseCase;
+import com.uniquindio.backend.application.usecase.ConfirmarEntregaRegaloUseCase;
+import com.uniquindio.backend.application.usecase.EnviarRegaloUseCase;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.infrastructure.rest.mapper.RegaloMapper;
-import com.uniquindio.backend.application.usecase.EnviarRegaloUseCase;
-import com.uniquindio.backend.application.dto.request.ConfirmarEntregaRegaloRequest;
-import com.uniquindio.backend.application.usecase.ConfirmarEntregaRegaloUseCase;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
 /**
- * Limitación: no hay control de roles. Cualquier usuario con JWT podría asignar
- * regalos (CU-10 es de Admin / Sistema).
+ * El {@code usuarioId} sale del token JWT (Authentication): el regalo se asigna al usuario
+ * autenticado y solo él puede confirmar su entrega.
  */
+@PreAuthorize("hasRole('COMPRADOR')")
 @RestController
 @RequestMapping("/api/regalos")
 public class RegaloController {
@@ -41,28 +40,29 @@ public class RegaloController {
         this.mapper = mapper;
     }
 
-    // CU-10 Asignar Regalo por Meta (5 compras COMPLETADAS por regalo)
+    // CU-10 Asignar Regalo por Meta al usuario autenticado (5 compras COMPLETADAS por regalo)
     @PutMapping("/{id}/asignar")
     public ResponseEntity<RegaloResponse> asignar(
             @PathVariable UUID id,
-            @Valid @RequestBody AsignarRegaloRequest request) {
-        Regalo regalo = asignarRegaloPorMetaUseCase.ejecutar(request.usuarioId(), id);
+            @AuthenticationPrincipal UUID usuarioId) {
+        Regalo regalo = asignarRegaloPorMetaUseCase.ejecutar(usuarioId, id);
         return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
     }
 
-    // CU-24 Enviar Regalo (solo si ya fue elegido)
+    // CU-24 Enviar Regalo (solo vendedor; no existe rol ADMIN)
+    @PreAuthorize("hasRole('VENDEDOR')")
     @PutMapping("/{id}/enviar")
     public ResponseEntity<RegaloResponse> enviar(@PathVariable UUID id) {
         Regalo regalo = enviarRegaloUseCase.ejecutar(id);
         return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
     }
 
-    // CU-24 Confirmar Entrega (solo el destinatario, y solo si fue enviado)
+    // CU-24 Confirmar Entrega (solo el destinatario autenticado, y solo si fue enviado)
     @PutMapping("/{id}/entrega")
     public ResponseEntity<RegaloResponse> confirmarEntrega(
             @PathVariable UUID id,
-            @Valid @RequestBody ConfirmarEntregaRegaloRequest request) {
-        Regalo regalo = confirmarEntregaRegaloUseCase.ejecutar(id, request.usuarioId());
+            @AuthenticationPrincipal UUID usuarioId) {
+        Regalo regalo = confirmarEntregaRegaloUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
     }
 }

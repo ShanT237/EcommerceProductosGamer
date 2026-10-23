@@ -1,7 +1,7 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Usuario;
-import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class EditarPerfilUseCase {
                 .filter(existente -> !existente.getId().equals(usuarioId))
                 .isPresent();
         if (correoDeOtro) {
-            throw new ReglaDominioException("Ya existe un usuario con ese correo");
+            throw new ConflictoException("Ya existe un usuario con ese correo");
         }
 
         usuario.actualizarPerfil(nombre, correo);

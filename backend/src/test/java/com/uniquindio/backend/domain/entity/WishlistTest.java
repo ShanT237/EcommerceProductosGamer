@@ -1,5 +1,6 @@
 package com.uniquindio.backend.domain.entity;
 
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,12 +55,12 @@ class WishlistTest {
     }
 
     @Test
-    void deberiaLanzarExcepcionAlAgregarProductoDuplicado() {
+    void deberiaLanzarConflictoAlAgregarProductoDuplicado() {
         UUID productoId = UUID.randomUUID();
         wishlist.agregarProducto(productoId);
 
-        ReglaDominioException excepcion = assertThrows(
-                ReglaDominioException.class,
+        ConflictoException excepcion = assertThrows(
+                ConflictoException.class,
                 () -> wishlist.agregarProducto(productoId)
         );
         assertEquals("El producto ya se encuentra en la wishlist", excepcion.getMessage());

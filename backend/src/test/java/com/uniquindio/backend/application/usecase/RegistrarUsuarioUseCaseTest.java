@@ -1,6 +1,7 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Usuario;
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,7 @@ class RegistrarUsuarioUseCaseTest {
     @BeforeEach
     void setUp() {
         usuarioRepository = new UsuarioRepositoryEnMemoria();
-        useCase = new RegistrarUsuarioUseCase(usuarioRepository, new com.uniquindio.backend.infrastructure.security.Pbkdf2HashContrasena());
+        useCase = new RegistrarUsuarioUseCase(usuarioRepository, new com.uniquindio.backend.infrastructure.security.BCryptHashContrasena());
     }
 
     @Test
@@ -32,11 +33,11 @@ class RegistrarUsuarioUseCaseTest {
     }
 
     @Test
-    void correoDuplicadoLanzaReglaDominioYNoGuarda() {
+    void correoDuplicadoLanzaConflictoYNoGuarda() {
         useCase.ejecutar(UUID.randomUUID(), "Gamer1", "gamer@test.com");
         UUID otroId = UUID.randomUUID();
 
-        ReglaDominioException ex = assertThrows(ReglaDominioException.class,
+        ConflictoException ex = assertThrows(ConflictoException.class,
                 () -> useCase.ejecutar(otroId, "Gamer2", "gamer@test.com"));
 
         assertEquals("Ya existe un usuario con ese correo", ex.getMessage());
