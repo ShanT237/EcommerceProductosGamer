@@ -1,0 +1,5 @@
+# Unify author identities so git log / git shortlog show one name per person.
+Juan David Tapiero <juand.tapierom@uqvirtual.edu.co> <150408193+Juanda2312@users.noreply.github.com>
+Santiago Torres <santiago.rodriguezt@uqvirtual.edu.co> ShanT237 <santiago.rodriguezt@uqvirtual.edu.co>
+Santiago Torres <santiago.rodriguezt@uqvirtual.edu.co> <159391937+ShanT237@users.noreply.github.com>
+José Bedoya <josem.bedoyam@uqvirtual.edu.co> thelegendsxv <josem.bedoyam@uqvirtual.edu.co>
