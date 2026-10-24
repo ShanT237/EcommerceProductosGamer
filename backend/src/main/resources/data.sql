@@ -1,7 +1,7 @@
--- Vendedores
+-- Vendedores (contraseñas de demo: GamerZone2026 y CarlosGamer2026)
 INSERT INTO vendedores (id, nombre, correo, tipo, documento, activo, contrasena_hash) VALUES
                                                                                           ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'GamerZone',    'demo@gamerzone.com', 'EMPRESA',         '900111222',  true, '$2a$10$eEIvnequaJVH5p9uqCs9AuhR/EEKZuxe5CJpIi2wpQI07EOJGKhbW'),
-                                                                                          ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'Carlos Pérez', 'carlos@correo.com',  'PERSONA_NATURAL', '1094567890', true, '$2a$10$N3Z2CdHyNh8JlzEAOkbIIOGfkhVTar1PwcDOxZMTEGYJ9i36C4z6.');
+                                                                                          ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'Carlos Pérez', 'carlos@correo.com',  'PERSONA_NATURAL', '1094567890', true, '$2a$10$qo1915f0so3z1tm.a3TsT.vMF3BEibal4tHcRK4DBo5CCdHMrB0i.');
 -- Productos
 INSERT INTO productos (id, vendedor_id, nombre, descripcion, precio, stock, gama, exclusividad, eliminado) VALUES
                                                                                                                ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'Teclado mecánico RGB',        'Switches rojos, layout español',   250000,  8, 'ALTA',  'NORMAL',    false),
