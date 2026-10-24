@@ -11,18 +11,126 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 ---
 
 ## 📋 Tabla de Contenidos
-1. [¿Quién compra y por qué?](#1-quién-compra-y-por-qué)
-2. [¿Qué hace único a sus vendedores?](#2-qué-hace-único-a-sus-vendedores)
-3. [Lenguaje Ubicuo (DDD)](#3-lenguaje-ubicuo-ddd)
-4. [Reglas de Negocio e Invariantes del Dominio](#4-reglas-de-negocio-e-invariantes-del-dominio)
-5. [Casos de Uso del Sistema (37 Casos de Uso)](#5-casos-de-uso-del-sistema-37-casos-de-uso)
-6. [Arquitectura del Software (Clean Architecture)](#6-arquitectura-del-software-clean-architecture)
-7. [Seguridad, Base de Datos y Limitaciones](#7-seguridad-base-de-datos-y-limitaciones)
-8. [Cómo ejecutar las pruebas](#8-cómo-ejecutar-las-pruebas)
-9. [Gestión del Proyecto (Trello)](#9-gestión-del-proyecto-trello)
+1. [Integrantes y nicho](#1-integrantes-y-nicho)
+2. [Cómo ejecutar el proyecto y usuarios de prueba](#2-cómo-ejecutar-el-proyecto-y-usuarios-de-prueba)
+3. [Endpoints principales](#3-endpoints-principales)
+4. [Correcciones de la Entrega 1](#4-correcciones-de-la-entrega-1)
+5. [¿Quién compra y por qué?](#5-quién-compra-y-por-qué)
+6. [¿Qué hace único a sus vendedores?](#6-qué-hace-único-a-sus-vendedores)
+7. [Lenguaje Ubicuo (DDD)](#7-lenguaje-ubicuo-ddd)
+8. [Reglas de Negocio e Invariantes del Dominio](#8-reglas-de-negocio-e-invariantes-del-dominio)
+9. [Casos de Uso del Sistema (37 Casos de Uso)](#9-casos-de-uso-del-sistema-37-casos-de-uso)
+10. [Arquitectura del Software (Clean Architecture)](#10-arquitectura-del-software-clean-architecture)
+11. [Seguridad, Base de Datos y Limitaciones](#11-seguridad-base-de-datos-y-limitaciones)
+12. [Cómo ejecutar las pruebas](#12-cómo-ejecutar-las-pruebas)
+13. [Gestión del Proyecto (Trello)](#13-gestión-del-proyecto-trello)
+
 ---
 
-## 1. ¿Quién compra y por qué?
+## 1. Integrantes y nicho
+
+**Nicho:** Marketplace Gamer: productos y accesorios gaming (periféricos, mobiliario de setup, juegos físicos, licencias digitales y combos), con múltiples vendedores independientes.
+
+**Integrantes:**
+
+| Integrante | GitHub |
+| :--- | :--- |
+| Juan David Tapiero | `Juanda2312` |
+| Santiago Torres | `ShanT237` |
+| José Bedoya | `thelegendsxv` |
+
+---
+
+## 2. Cómo ejecutar el proyecto y usuarios de prueba
+
+**Requisitos:** Java 21. No hace falta instalar Gradle (se usa el wrapper).
+
+```powershell
+cd backend
+.\gradlew.bat bootRun          # Linux/Mac: ./gradlew bootRun
+```
+
+Por defecto usa **H2 en memoria** y carga `data.sql` al arrancar. Cuando aparezca `Started BackendApplication`, abre:
+
+- Swagger: http://localhost:8080/swagger-ui.html
+- Consola H2: http://localhost:8080/h2-console (URL JDBC: `jdbc:h2:mem:marketplacedb`, usuario `SA`)
+
+Si el puerto 8080 está ocupado: `.\gradlew.bat bootRun --args="--server.port=8081"`.
+Para MariaDB, ver la sección [11](#11-seguridad-base-de-datos-y-limitaciones).
+
+### Usuarios de prueba (perfil H2 por defecto)
+
+| Rol | Nombre | Correo | Contraseña |
+| :--- | :--- | :--- | :--- |
+| `VENDEDOR` | GamerZone | demo@gamerzone.com | `GamerZone2026` |
+| `VENDEDOR` | Carlos Pérez | carlos@correo.com | `CarlosGamer2026` |
+| `COMPRADOR` | Jose | jose.demo@correo.com | `JoseGamer2026` |
+| `COMPRADOR` | Ana | ana.demo@correo.com | `AnaGamer2026` |
+
+Cupón de demo: `VERANO26` (15%).
+
+### Cómo autenticarse en Swagger
+
+1. `POST /api/auth/login` con `{"correo": "...", "contrasena": "..."}`.
+2. Copiar el valor de `token` (sin comillas).
+3. Botón **Authorize** (arriba a la derecha) → pegar el token → confirmar.
+
+Sin token la API responde `401`; con el token del rol equivocado, `403`.
+
+### Flujo de punta a punta sugerido
+
+1. Login como **vendedor** (`demo@gamerzone.com`) → `POST /api/productos` (publicar un producto).
+2. Login como **comprador** (`jose.demo@correo.com`) → `POST /api/compras` (comprar el producto).
+3. `PUT /api/compras/{id}/confirmar` → la compra queda `COMPLETADA`.
+4. `POST /api/resenas` (reseñar) y `POST /api/valoraciones-vendedor` (valorar al vendedor).
+5. **Error de negocio a propósito:** con `ana.demo@correo.com`, `PUT /api/compras/dddddddd-dddd-dddd-dddd-ddddddddddd2/reembolso`. Esa compra de demo supera las 48 horas del plazo, por lo que la regla del dominio rechaza el reembolso con `422`.
+
+---
+
+## 3. Endpoints principales
+
+| Método y ruta | Rol | Qué hace |
+| :--- | :--- | :--- |
+| `POST /api/auth/login` | Público | Inicia sesión y devuelve el JWT |
+| `POST /api/usuarios` | Público | Registra un comprador |
+| `POST /api/vendedores` | Público | Registra un vendedor |
+| `GET /api/productos` | Autenticado | Catálogo paginado con búsqueda por texto y filtros |
+| `POST /api/productos` | `VENDEDOR` | Publica un producto |
+| `PUT /api/productos/{id}/precio` | `VENDEDOR` | Modifica el precio |
+| `PUT /api/productos/{id}/informacion` | `VENDEDOR` | Edita la información del producto |
+| `PUT /api/productos/{id}/visibilidad` | `VENDEDOR` | Pausa o activa la publicación |
+| `DELETE /api/productos/{id}` | `VENDEDOR` | Eliminación lógica de su producto |
+| `POST /api/compras` | `COMPRADOR` | Realiza una compra |
+| `GET /api/compras` | `COMPRADOR` | Historial de compras |
+| `PUT /api/compras/{id}/confirmar` | `COMPRADOR` | Confirma la compra |
+| `PUT /api/compras/{id}/cancelar` | `COMPRADOR` | Cancela la compra |
+| `PUT /api/compras/{id}/reembolso` | `COMPRADOR` | Solicita reembolso (48 h, sin descarga) |
+| `PUT /api/compras/{id}/cupon` | `COMPRADOR` | Aplica un cupón |
+| `POST /api/resenas` | `COMPRADOR` | Reseña una compra completada |
+| `POST /api/valoraciones-vendedor` | `COMPRADOR` | Valora al vendedor |
+| `POST /api/wishlists` · `DELETE /api/wishlists/{productoId}` | `COMPRADOR` | Añade o quita de la wishlist |
+| `GET /api/reportes/ventas` | `VENDEDOR` | Reporte de ventas del vendedor |
+| `GET /api/reportes/mas-vendidos` | Autenticado | Ranking de más vendidos (JOIN + GROUP BY) |
+
+La lista completa está en Swagger y en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md).
+
+---
+
+## 4. Correcciones de la Entrega 1
+
+| Observación que nos dieron | Qué cambiamos | Dónde se ve |
+| :--- | :--- | :--- |
+| Las entidades del dominio tenían el **constructor público**: cualquiera podía crear un objeto sin pasar por las validaciones y dejarlo en estado inválido. | Los constructores pasaron a `private`. La creación se hace solo con métodos de fábrica estáticos que validan las invariantes (`Producto.publicar`, `Usuario.registrar`, `Compra.realizar`, `Wishlist.crear`, `Vendedor.registrar`, `Combo.crear`, `Preventa.programar`...). | Rama `fix/corrections` (PR #18). Commits del 11/10: `e61f066` (Producto), `04e75f5` (Usuario), `0b14a99` (Compra), `5376af7` (Wishlist), `e1b7def` (Vendedor), `40ba7ed` (Combo), `8c2f707` (Preventa). Código actual en `domain/entity/`. |
+
+**Por qué es mejor:** la regla de negocio queda en un solo punto, dentro del propio objeto del dominio, y es imposible saltársela desde un caso de uso o un controller.
+
+**Consecuencia para la persistencia:** como el constructor es privado, el mapper JPA no puede crear la entidad directamente. Por eso se agregó un método `reconstruir(...)` en cada entidad (commits del 19 al 21/10), que rehidrata el objeto desde la base de datos sin abrir el constructor al resto del código.
+
+**Value Objects:** los VO (`Precio`, `Puntos`, `Unidades`, `Calificacion`...) son `record` de Java. Su constructor canónico es público, pero es seguro porque el `record` es inmutable y valida sus invariantes en el constructor compacto: un VO inválido nunca llega a existir.
+
+---
+
+## 5. ¿Quién compra y por qué?
 
 El marketplace está diseñado conceptualmente para atender las necesidades específicas de la comunidad gamer:
 
@@ -31,7 +139,7 @@ El marketplace está diseñado conceptualmente para atender las necesidades espe
 - 🕹️ **Jugadores Casuales:** buscan productos accesibles que garanticen confort, entretenimiento y una experiencia de juego amigable en su tiempo libre.
 ---
 
-## 2. ¿Qué hace único a sus vendedores?
+## 6. ¿Qué hace único a sus vendedores?
 
 El sistema opera como un **marketplace multi-vendedor**, donde diversos comercios independientes pueden registrarse, gestionar su reputación y publicar su propia oferta comercial.
 
@@ -44,7 +152,7 @@ Categorías habilitadas en el catálogo:
 - 🎁 **Combos Gamer:** paquetes promocionales de 2 o más productos ofrecidos a precio preferencial.
 ---
 
-## 3. Lenguaje Ubicuo (DDD)
+## 7. Lenguaje Ubicuo (DDD)
 
 | Término | Definición en el Dominio |
 | :--- | :--- |
@@ -62,7 +170,7 @@ Categorías habilitadas en el catálogo:
  
 ---
 
-## 4. Reglas de Negocio e Invariantes del Dominio
+## 8. Reglas de Negocio e Invariantes del Dominio
 
 | # | Regla | Dónde se garantiza | Estado |
 |---|---|---|---|
@@ -95,7 +203,7 @@ Categorías habilitadas en el catálogo:
 - Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
 ---
 
-## 5. Casos de Uso del Sistema (37 Casos de Uso)
+## 9. Casos de Uso del Sistema (37 Casos de Uso)
 
 **Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
@@ -179,7 +287,7 @@ Categorías habilitadas en el catálogo:
  
 ---
 
-## 6. Arquitectura del Software (Clean Architecture)
+## 10. Arquitectura del Software (Clean Architecture)
 
 El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructurado en capas desacopladas.
 
@@ -219,7 +327,7 @@ backend/src/main/java/com/uniquindio/backend/
  
 ---
 
-## 7. Seguridad, Base de Datos y Limitaciones
+## 11. Seguridad, Base de Datos y Limitaciones
 
 ### Seguridad
 
@@ -264,16 +372,16 @@ El catálogo se busca con `GET /api/productos?texto=mouse&categoria=Perifericos&
 
 ---
 
-## 8. Cómo ejecutar las pruebas
+## 12. Cómo ejecutar las pruebas
 
 ```powershell
 cd backend
-.\gradlew.bat test
+.\gradlew.bat test      # Linux/Mac: ./gradlew test
 ```
  
 ---
 
-## 9. Gestión del Proyecto (Trello)
+## 13. Gestión del Proyecto (Trello)
 
 El avance del proyecto se gestiona en un tablero público de Trello:
 
@@ -290,4 +398,4 @@ El avance del proyecto se gestiona en un tablero público de Trello:
 
 **Etiquetas:** `Caso de Uso`, `Comprador`, `Vendedor` e `Infraestructura`.
 
-**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 5 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
+**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 9 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
