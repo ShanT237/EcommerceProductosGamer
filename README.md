@@ -306,7 +306,7 @@ backend/src/main/java/com/uniquindio/backend/
 │   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken)
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (40 casos de uso)
+│   ├── usecase/             # Lógica de Orquestación (37 casos de uso)
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, ConsultarHistorialCompras
 │   │   ├── Productos: PublicarProducto, EliminarProducto, AplicarDescuento, ProgramarPreventa
 │   │   ├── Combos:    CrearCombo, ModificarProductosCombo
