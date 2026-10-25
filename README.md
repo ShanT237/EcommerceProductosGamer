@@ -23,7 +23,8 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 10. [Arquitectura del Software (Clean Architecture)](#10-arquitectura-del-software-clean-architecture)
 11. [Seguridad, Base de Datos y Limitaciones](#11-seguridad-base-de-datos-y-limitaciones)
 12. [Cómo ejecutar las pruebas](#12-cómo-ejecutar-las-pruebas)
-13. [Gestión del Proyecto (Trello)](#13-gestión-del-proyecto-trello)
+13. [Pruebas avanzadas](#13-pruebas-avanzadas)
+14. [Gestión del Proyecto (Trello)](#14-gestión-del-proyecto-trello)
 
 ---
 
@@ -381,7 +382,41 @@ cd backend
  
 ---
 
-## 13. Gestión del Proyecto (Trello)
+## 13. Pruebas avanzadas
+
+Además de las pruebas de dominio, de casos de uso y de controller, el proyecto tiene pruebas de repositorio, de seguridad y de integración. Todas corren en verde con `./gradlew test` y siguen el patrón AAA (preparar, ejecutar, verificar).
+
+### Dónde está cada prueba
+
+| Punto del seguimiento | Clase de prueba |
+| :--- | :--- |
+| 0. Repositorio (guardar y recuperar, paginación y ranking) | `ConsultasCatalogoJpaTest`, `VendedorRepositoryJpaTest`, `PersistenciaSecundariaJpaTest` |
+| 1. Endpoint con seguridad (401, 403, 200) | `ProductoControllerTest`, `ReporteControllerTest` |
+| 2. `@DataJpaTest` contra `@SpringBootTest` | Las tres clases de repositorio del punto 0 |
+| 3. Integración sin simular nada | `integracion/FlujoCompletoIntegracionTest` |
+| 4. 404 y regla rota con `verify(..., never())` | `EliminarProductoControllerTest` |
+
+### 1. Probar un endpoint con seguridad
+
+<!-- Escribir aquí de 5 a 8 líneas con sus propias palabras. Responder: ¿qué ruta eligieron?, ¿cómo simulan el token y el rol en la prueba?, ¿por qué sin token da 401 y con el rol equivocado da 403? -->
+
+Para esta prueba se busca comprobar cómo responde la API cuando un usuario intenta acceder a una ruta que tiene restricciones de seguridad. Primero, se hace una petición sin enviar el token de autenticación y se espera un error 401, porque el sistema no puede identificar al usuario. Después, se intenta acceder con un token válido, pero de un usuario que no tiene el rol necesario, por lo que debería responder 403. Por último, se prueba con un usuario que sí tiene los permisos correspondientes para comprobar que puede realizar la operación. Aunque los códigos 401 y 403 pueden parecer lo mismo, hay una diferencia: el primero indica que falta una autenticación válida, mientras que el segundo significa que el usuario está autenticado, pero no tiene permiso para acceder a ese recurso.
+
+### 2. `@DataJpaTest` contra `@SpringBootTest`
+
+<!-- Escribir aquí de 5 a 8 líneas con sus propias palabras. Responder: ¿qué carga cada una?, ¿por qué una es más liviana y de qué parte del sistema se ocupa?, ¿qué cambió en Spring Boot 4 y qué dependencia agregaron en build.gradle para resolverlo? -->
+
+Al trabajar con las pruebas de Spring Boot, encontramos que no siempre es necesario cargar toda la aplicación para comprobar que algo funcione. Por ejemplo, `@DataJpaTest` se enfoca en la parte de persistencia, como los repositorios y las consultas a la base de datos, mientras que `@SpringBootTest` carga un contexto más completo y permite probar cómo interactúan los diferentes componentes. Por eso, la primera suele ejecutarse más rápido, ya que necesita cargar menos elementos. También hay que tener en cuenta que en Spring Boot 4 se reorganizaron las dependencias de pruebas, por lo que se agregó `spring-boot-starter-data-jpa-test` al archivo `build.gradle` para disponer de las herramientas necesarias para las pruebas de JPA. En resumen, cada anotación tiene su utilidad: una sirve para comprobar específicamente el acceso a los datos y la otra permite probar un conjunto más amplio de la aplicación.
+
+### 3. Prueba de integración
+
+<!-- Escribir aquí de 5 a 8 líneas con sus propias palabras. Responder: ¿en qué se diferencia de una prueba unitaria?, ¿qué recorre su prueba de punta a punta?, ¿cuándo conviene una y cuándo la otra? -->
+
+La diferencia entre una prueba unitaria y una prueba de integración está principalmente en qué tanto del sistema se está comprobando. En una prueba unitaria se evalúa una parte específica del código y, normalmente, se utilizan mocks para simular las dependencias y evitar ejecutar todo el proceso. En cambio, una prueba de integración busca comprobar que los diferentes componentes funcionen bien cuando se conectan entre sí. Para esto, en el proyecto se tiene la clase `FlujoCompletoIntegracionTest`, que permite verificar un flujo que incluye el inicio de sesión, la publicación de un producto, la compra, la confirmación y las operaciones relacionadas con la base de datos. Esto es importante porque un componente puede funcionar correctamente por separado, pero presentar problemas cuando se conecta con los demás. Por esa razón, lo recomendable es tener varias pruebas unitarias para revisar la lógica de cada parte y algunas pruebas de integración que permitan comprobar los procesos más importantes del sistema.
+
+---
+
+## 14. Gestión del Proyecto (Trello)
 
 El avance del proyecto se gestiona en un tablero público de Trello:
 
