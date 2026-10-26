@@ -384,37 +384,37 @@ cd backend
 
 ## 13. Pruebas avanzadas
 
-Además de las pruebas de dominio, de casos de uso y de controller, el proyecto tiene pruebas de repositorio, de seguridad y de integración. Todas corren en verde con `./gradlew test` y siguen el patrón AAA (preparar, ejecutar, verificar).
+En esta parte agregamos pruebas para revisar que el backend no solo funcione por encima, sino que también guarde bien la información y responda como debe cuando alguien intenta hacer algo que no puede. Para organizarlas usamos el patrón AAA: primero preparamos los datos, después ejecutamos la acción y al final revisamos si pasó lo que esperábamos. Las pruebas se ejecutan con `./gradlew test`.
 
 ### Dónde está cada prueba
 
 | Punto del seguimiento | Clase de prueba |
 | :--- | :--- |
-| 0. Repositorio (guardar y recuperar, paginación y ranking) | `ConsultasCatalogoJpaTest`, `VendedorRepositoryJpaTest`, `PersistenciaSecundariaJpaTest` |
-| 1. Endpoint con seguridad (401, 403, 200) | `ProductoControllerTest`, `ReporteControllerTest` |
-| 2. `@DataJpaTest` contra `@SpringBootTest` | Las tres clases de repositorio del punto 0 |
-| 3. Integración sin simular nada | `integracion/FlujoCompletoIntegracionTest` |
-| 4. 404 y regla rota con `verify(..., never())` | `EliminarProductoControllerTest` |
+| 0. Guardar, consultar y revisar consultas del repositorio | `ConsultasCatalogoJpaTest`, `VendedorRepositoryJpaTest`, `PersistenciaSecundariaJpaTest` |
+| 1. Endpoint con seguridad | `ProductoControllerTest`, `ReporteControllerTest` |
+| 2. Pruebas con `@DataJpaTest` | `ConsultasCatalogoJpaTest`, `VendedorRepositoryJpaTest`, `PersistenciaSecundariaJpaTest` |
+| 3. Prueba de integración | `integracion/FlujoCompletoIntegracionTest` |
+| 4. Error 404 y regla de negocio | `EliminarProductoControllerTest` |
+
+### 0. Pruebas del repositorio
+
+Con estas pruebas revisamos que la información sí se guarde y después se pueda consultar sin que se pierdan los datos. También comprobamos consultas del catálogo y de vendedores usando datos que conocemos, para saber cuántos resultados deberían salir y en qué orden. Esto sirve porque no basta con que el programa diga que guardó algo: también toca mirar que al recuperarlo los datos sigan bien, incluyendo los objetos de valor que usa el dominio. Para esta parte usamos pruebas de persistencia con `@DataJpaTest`, que nos deja probar esa zona sin tener que levantar toda la aplicación.
 
 ### 1. Probar un endpoint con seguridad
 
-<!-- Escribir aquí de 5 a 8 líneas con sus propias palabras. Responder: ¿qué ruta eligieron?, ¿cómo simulan el token y el rol en la prueba?, ¿por qué sin token da 401 y con el rol equivocado da 403? -->
-
-Para esta prueba se busca comprobar cómo responde la API cuando un usuario intenta acceder a una ruta que tiene restricciones de seguridad. Primero, se hace una petición sin enviar el token de autenticación y se espera un error 401, porque el sistema no puede identificar al usuario. Después, se intenta acceder con un token válido, pero de un usuario que no tiene el rol necesario, por lo que debería responder 403. Por último, se prueba con un usuario que sí tiene los permisos correspondientes para comprobar que puede realizar la operación. Aunque los códigos 401 y 403 pueden parecer lo mismo, hay una diferencia: el primero indica que falta una autenticación válida, mientras que el segundo significa que el usuario está autenticado, pero no tiene permiso para acceder a ese recurso.
+Probamos `POST /api/productos`, que es una ruta para publicar productos y que debe usar un vendedor. La idea es revisar tres situaciones: si no se manda token, la API responde `401`; si se entra como comprador, que no tiene permiso para publicar, responde `403`; y si se entra como vendedor, la petición se acepta. En este último caso devuelve `201`, porque se está creando un producto nuevo. Para estas pruebas usamos `SesionTest`, que nos ayuda a preparar una sesión con el rol que necesitamos. Así revisamos que la seguridad no dependa solo de que alguien esté conectado, sino también de que tenga el permiso correcto.
 
 ### 2. `@DataJpaTest` contra `@SpringBootTest`
 
-<!-- Escribir aquí de 5 a 8 líneas con sus propias palabras. Responder: ¿qué carga cada una?, ¿por qué una es más liviana y de qué parte del sistema se ocupa?, ¿qué cambió en Spring Boot 4 y qué dependencia agregaron en build.gradle para resolverlo? -->
-
-Al trabajar con las pruebas de Spring Boot, encontramos que no siempre es necesario cargar toda la aplicación para comprobar que algo funcione. Por ejemplo, `@DataJpaTest` se enfoca en la parte de persistencia, como los repositorios y las consultas a la base de datos, mientras que `@SpringBootTest` carga un contexto más completo y permite probar cómo interactúan los diferentes componentes. Por eso, la primera suele ejecutarse más rápido, ya que necesita cargar menos elementos. También hay que tener en cuenta que en Spring Boot 4 se reorganizaron las dependencias de pruebas, por lo que se agregó `spring-boot-starter-data-jpa-test` al archivo `build.gradle` para disponer de las herramientas necesarias para las pruebas de JPA. En resumen, cada anotación tiene su utilidad: una sirve para comprobar específicamente el acceso a los datos y la otra permite probar un conjunto más amplio de la aplicación.
+Por lo que entendimos, `@DataJpaTest` sirve para probar la parte que maneja los datos, como los repositorios y las consultas, sin cargar todos los componentes del sistema. En cambio, `@SpringBootTest` levanta una parte mucho más completa de la aplicación, por ejemplo los controllers, los casos de uso y la seguridad. Por eso usamos `@DataJpaTest` en las pruebas de repositorio y `@SpringBootTest` para revisar flujos más completos. Cuando trabajamos con Spring Boot 4, vimos que `@DataJpaTest` cambió de paquete y que también hacía falta agregar una dependencia de pruebas aparte. Lo resolvimos agregando `spring-boot-starter-data-jpa-test` al `build.gradle` y usando el import nuevo de la anotación.
 
 ### 3. Prueba de integración
 
-<!-- Escribir aquí de 5 a 8 líneas con sus propias palabras. Responder: ¿en qué se diferencia de una prueba unitaria?, ¿qué recorre su prueba de punta a punta?, ¿cuándo conviene una y cuándo la otra? -->
+Una prueba unitaria revisa una parte pequeña del código por separado, mientras que una prueba de integración mira si varias partes trabajan bien juntas. En `FlujoCompletoIntegracionTest` usamos `@SpringBootTest` y `MockMvc` para recorrer el flujo real desde la petición, pasando por la seguridad, el controller y el caso de uso, hasta llegar al repositorio y a la base de datos H2. No usamos mocks para reemplazar esas partes del flujo. Probamos, por ejemplo, que un vendedor publique un producto y que un comprador pueda comprarlo, confirmar la compra y verla en su historial. También revisamos que un reembolso fuera del tiempo permitido sea rechazado. Estas pruebas sirven para encontrar problemas entre componentes, aunque tardan más que las unitarias, así que conviene usarlas en los procesos más importantes.
 
-La diferencia entre una prueba unitaria y una prueba de integración está principalmente en qué tanto del sistema se está comprobando. En una prueba unitaria se evalúa una parte específica del código y, normalmente, se utilizan mocks para simular las dependencias y evitar ejecutar todo el proceso. En cambio, una prueba de integración busca comprobar que los diferentes componentes funcionen bien cuando se conectan entre sí. Para esto, en el proyecto se tiene la clase `FlujoCompletoIntegracionTest`, que permite verificar un flujo que incluye el inicio de sesión, la publicación de un producto, la compra, la confirmación y las operaciones relacionadas con la base de datos. Esto es importante porque un componente puede funcionar correctamente por separado, pero presentar problemas cuando se conecta con los demás. Por esa razón, lo recomendable es tener varias pruebas unitarias para revisar la lógica de cada parte y algunas pruebas de integración que permitan comprobar los procesos más importantes del sistema.
+### 4. Más casos en el controller
 
----
+También agregamos casos donde la petición no debería terminar guardando información. Uno revisa qué pasa cuando se intenta eliminar un producto que no existe y la API devuelve un `404`. El otro revisa una regla de negocio que impide eliminar un producto cuando tiene compras activas. En los dos casos usamos `verify(..., never())` para comprobar que el método de guardar no se haya llamado. Esto es importante porque no sería suficiente con que la API devuelva un error: también tenemos que comprobar que no haya hecho un cambio que no debía hacer.
 
 ## 14. Gestión del Proyecto (Trello)
 
