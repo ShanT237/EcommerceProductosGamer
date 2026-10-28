@@ -1,0 +1,26 @@
+<article class="tarjeta" (mousemove)="inclinar($event)" (mouseleave)="soltar()" (click)="ver.emit(producto())" tabindex="0" (keydown.enter)="ver.emit(producto())">
+  <div class="brillo"></div>
+  <div class="arte">
+    <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" />
+    <div class="etiquetas">
+      <span class="etiqueta gama-{{ producto().gama }}">{{ producto().gama }}</span>
+      @if (producto().exclusividad === 'EXCLUSIVO') {
+        <span class="etiqueta excl">Exclusivo</span>
+      }
+    </div>
+  </div>
+  <div class="info">
+    <h3>{{ producto().nombre }}</h3>
+    <p class="desc">{{ producto().descripcion }}</p>
+    <div class="pie">
+      <strong class="precio">{{ precio(producto().precio) }}</strong>
+      @if (producto().stock <= 0) {
+        <span class="stock agotado">Agotado</span>
+      } @else if (producto().stock <= 5) {
+        <span class="stock pocas">Quedan {{ producto().stock }}</span>
+      } @else {
+        <span class="stock">{{ producto().stock }} en stock</span>
+      }
+    </div>
+  </div>
+</article>
