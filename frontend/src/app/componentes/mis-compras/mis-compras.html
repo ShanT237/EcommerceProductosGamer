@@ -1,0 +1,119 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <div>
+      <h1 class="titulo-seccion">Mis <span class="degradado">compras</span></h1>
+      <p class="muted">Historial, reembolsos y reseñas en un solo lugar.</p>
+    </div>
+    <div class="kpis">
+      <div class="panel kpi"><strong>{{ lista().length }}</strong><span>Compras</span></div>
+      <div class="panel kpi"><strong>{{ precio(gastado()) }}</strong><span>Gastado</span></div>
+      <div class="panel kpi puntos">
+        <strong>{{ puntos() }}</strong><span>Puntos</span>
+        <button class="btn btn-chico canjear" (click)="abrirPuntos()" [disabled]="puntos() <= 0">Redimir</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="chips">
+    @for (e of estados; track e) {
+      <button class="chip" [class.sel]="filtro() === e" (click)="filtro.set(e)">{{ e === '' ? 'Todas' : e }}</button>
+    }
+  </div>
+
+  @if (cargando()) {
+    <div class="lista">
+      @for (i of [1, 2, 3]; track i) { <div class="esqueleto"></div> }
+    </div>
+  } @else if (visibles().length === 0) {
+    <div class="panel vacio">
+      <p class="grande">◈</p>
+      <p>{{ lista().length === 0 ? 'Aún no has comprado nada.' : 'No hay compras en este estado.' }}</p>
+      <a routerLink="/catalogo" class="btn btn-neon btn-chico">Ir al catálogo</a>
+    </div>
+  } @else {
+    <div class="lista">
+      @for (c of visibles(); track c.id) {
+        <article class="panel compra aparece" [class.ocupada]="ocupada() === c.id">
+          <div class="datos">
+            <h3>{{ nombreDe(c.productoId) }}</h3>
+            <p class="muted">{{ fechaHora(c.fecha) }} · {{ c.cantidad }} × {{ precio(c.precioUnitario) }}</p>
+          </div>
+          <div class="monto">
+            <strong>{{ precio(c.subtotal) }}</strong>
+            <span class="estado estado-{{ c.estado }}">{{ c.estado }}</span>
+          </div>
+          <div class="botones">
+            @switch (c.estado) {
+              @case ('PENDIENTE') {
+                <button class="btn btn-neon btn-chico" (click)="confirmar(c)">Confirmar pago</button>
+                <button class="btn btn-chico" (click)="abrirDialogo('cupon', c)">Cupón</button>
+                <button class="btn btn-chico btn-peligro" (click)="cancelar(c)">Cancelar</button>
+              }
+              @case ('COMPLETADA') {
+                <button class="btn btn-chico" (click)="abrirDialogo('resena', c)">★ Reseñar</button>
+                <button class="btn btn-chico" (click)="abrirDialogo('vendedor', c)">Valorar vendedor</button>
+                <button class="btn btn-chico btn-peligro" (click)="reembolsar(c)">Reembolso</button>
+              }
+              @default { <span class="muted">Sin acciones disponibles</span> }
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+@if (dialogo(); as d) {
+  <div class="fondo-modal" (click)="cerrarDialogo()">
+    <form class="panel modal" (click)="$event.stopPropagation()" (ngSubmit)="enviarDialogo()">
+      <h2>
+        @switch (d.tipo) {
+          @case ('resena') { Reseña del producto }
+          @case ('vendedor') { Valorar al vendedor }
+          @default { Aplicar cupón }
+        }
+      </h2>
+      <p class="muted">{{ nombreDe(d.compra.productoId) }}</p>
+
+      @if (d.tipo === 'cupon') {
+        <div class="campo">
+          <label for="cupon">Código del cupón</label>
+          <input id="cupon" name="cupon" class="entrada" placeholder="VERANO26" [(ngModel)]="cupon">
+        </div>
+      } @else {
+        <div class="estrellas" role="radiogroup" aria-label="Calificación">
+          @for (n of [1, 2, 3, 4, 5]; track n) {
+            <button type="button" class="estrella" [class.on]="n <= estrellas()" (click)="estrellas.set(n)" [attr.aria-label]="n + ' estrellas'">★</button>
+          }
+        </div>
+        <div class="campo">
+          <label for="coment">Comentario</label>
+          <textarea id="coment" name="coment" class="entrada" maxlength="500" [(ngModel)]="comentario"
+                    [placeholder]="d.tipo === 'resena' ? 'Cuéntanos qué te pareció…' : 'Opcional'"></textarea>
+        </div>
+      }
+
+      <div class="acciones">
+        <button class="btn btn-neon" type="submit" [disabled]="ocupada() !== null">Enviar</button>
+        <button class="btn" type="button" (click)="cerrarDialogo()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (redimiendo()) {
+  <div class="fondo-modal" (click)="cerrarDialogo()">
+    <form class="panel modal" (click)="$event.stopPropagation()" (ngSubmit)="redimir()">
+      <h2>Redimir puntos</h2>
+      <p class="muted">Tienes {{ puntos() }} puntos disponibles.</p>
+      <div class="campo">
+        <label for="canje">Puntos a redimir</label>
+        <input id="canje" name="canje" class="entrada" type="number" min="1" [max]="puntos()" [(ngModel)]="puntosACanjear">
+      </div>
+      <div class="acciones">
+        <button class="btn btn-neon" type="submit">Redimir</button>
+        <button class="btn" type="button" (click)="cerrarDialogo()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+}
