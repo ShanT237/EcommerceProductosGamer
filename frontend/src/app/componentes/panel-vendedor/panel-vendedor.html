@@ -1,0 +1,223 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <h1 class="titulo-seccion">Mi <span class="degradado">tienda</span></h1>
+    <div class="pestanas" role="tablist">
+      @for (t of pestanas; track t.id) {
+        <button role="tab" [class.sel]="pestana() === t.id" (click)="pestana.set(t.id)">{{ t.etiqueta }}</button>
+      }
+    </div>
+  </header>
+
+  @switch (pestana()) {
+    @case ('resumen') {
+      <section class="aparece">
+        <div class="kpis">
+          <div class="panel kpi"><span>Ingresos</span><strong>{{ precio(ventas()?.ingresos ?? 0) }}</strong></div>
+          <div class="panel kpi"><span>Unidades vendidas</span><strong>{{ ventas()?.unidades ?? 0 }}</strong></div>
+          <div class="panel kpi"><span>Comisión</span><strong class="ambar">{{ precio(ventas()?.comision ?? 0) }}</strong></div>
+          <div class="panel kpi"><span>Calificación promedio</span><strong class="ambar">★ {{ (resenas()?.promedio ?? 0).toFixed(1) }}</strong></div>
+        </div>
+
+        <div class="dos">
+          <article class="panel bloque">
+            <h3>Más vendidos</h3>
+            @if (masVendidos().length === 0) {
+              <p class="muted">Aún no tienes ventas completadas.</p>
+            }
+            @for (p of masVendidos(); track p.productoId) {
+              <div class="barra-fila">
+                <div class="barra-texto"><span>{{ p.nombre }}</span><span class="muted">{{ p.unidades }} u.</span></div>
+                <div class="barra"><span [style.width.%]="(p.unidades / maxUnidades()) * 100"></span></div>
+              </div>
+            }
+          </article>
+
+          <article class="panel bloque">
+            <h3>Reseñas ({{ resenas()?.total ?? 0 }})</h3>
+            @for (b of barrasResenas(); track b.n) {
+              <div class="barra-fila">
+                <div class="barra-texto"><span>{{ b.n }} ★</span><span class="muted">{{ b.cuantas }}</span></div>
+                <div class="barra ambar-barra"><span [style.width.%]="b.pct"></span></div>
+              </div>
+            }
+            <p class="muted pequeno">{{ resenas()?.positivas ?? 0 }} positivas · {{ resenas()?.negativas ?? 0 }} negativas</p>
+          </article>
+        </div>
+
+        <article class="panel bloque">
+          <h3>Stock bajo</h3>
+          @if (stockBajo().length === 0) {
+            <p class="muted">Todo tu inventario está bien abastecido.</p>
+          }
+          <div class="alertas">
+            @for (s of stockBajo(); track s.productoId) {
+              <span class="alerta" [class.agotado]="s.agotado">{{ s.nombre }} · {{ s.agotado ? 'agotado' : s.stock + ' u.' }}</span>
+            }
+          </div>
+        </article>
+      </section>
+    }
+
+    @case ('productos') {
+      <section class="aparece">
+        @if (misProductos().length === 0) {
+          <div class="panel vacio">
+            <p class="grande">◈</p>
+            <p>Todavía no has publicado productos.</p>
+            <button class="btn btn-neon btn-chico" (click)="pestana.set('publicar')">Publicar el primero</button>
+          </div>
+        } @else {
+          <div class="lista">
+            @for (p of misProductos(); track p.id) {
+              <article class="panel fila">
+                <div class="mini"><app-arte-producto [nombre]="p.nombre" [categoria]="p.categoria" [gama]="p.gama" /></div>
+                <div class="datos">
+                  <h3>{{ p.nombre }}</h3>
+                  <p class="muted">{{ p.descripcion }}</p>
+                  <div class="etiquetas">
+                    <span class="etiqueta gama-{{ p.gama }}">{{ p.gama }}</span>
+                    @if (p.exclusividad === 'EXCLUSIVO') { <span class="etiqueta excl">Exclusivo</span> }
+                  </div>
+                </div>
+                <div class="cifras">
+                  <strong class="precio">{{ precio(p.precio) }}</strong>
+                  <span class="muted" [class.rojo]="p.stock <= 0">{{ p.stock }} en stock</span>
+                </div>
+                <div class="botones">
+                  <button class="btn btn-chico" (click)="editar(p)">Editar</button>
+                  <button class="btn btn-chico" (click)="visibilidad(p, false)">Pausar</button>
+                  <button class="btn btn-chico" (click)="visibilidad(p, true)">Reactivar</button>
+                  <button class="btn btn-chico btn-peligro" (click)="eliminar(p)">Eliminar</button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    @case ('promociones') {
+      <section class="dos aparece">
+        <form class="panel formulario" (ngSubmit)="crearPromocion()">
+          <h3>Promoción de temporada</h3>
+          <p class="muted">El descuento rige entre las fechas que elijas.</p>
+          <div class="campo">
+            <label for="pp">Producto</label>
+            <select id="pp" name="pp" class="entrada" [(ngModel)]="promoProducto">
+              <option value="">Elige un producto…</option>
+              @for (p of misProductos(); track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+            </select>
+          </div>
+          <div class="campo">
+            <label for="ppc">Descuento (%)</label>
+            <input id="ppc" name="ppc" class="entrada" type="number" min="1" max="99" [(ngModel)]="promoPorcentaje">
+          </div>
+          <div class="fila-2">
+            <div class="campo">
+              <label for="pd">Desde</label>
+              <input id="pd" name="pd" class="entrada" type="date" [(ngModel)]="promoDesde">
+            </div>
+            <div class="campo">
+              <label for="ph">Hasta</label>
+              <input id="ph" name="ph" class="entrada" type="date" [(ngModel)]="promoHasta">
+            </div>
+          </div>
+          @if (errorPromo()) { <p class="error">{{ errorPromo() }}</p> }
+          <button class="btn btn-neon" type="submit" [disabled]="guardandoPromo()">{{ guardandoPromo() ? 'Guardando…' : 'Configurar promoción' }}</button>
+        </form>
+
+        <form class="panel formulario" (ngSubmit)="aplicarDescuento()">
+          <h3>Descuento inmediato</h3>
+          <p class="muted">Baja el precio del producto desde ya. Los compradores lo ven reflejado en el catálogo.</p>
+          <div class="campo">
+            <label for="dp">Producto</label>
+            <select id="dp" name="dp" class="entrada" [(ngModel)]="descProducto">
+              <option value="">Elige un producto…</option>
+              @for (p of misProductos(); track p.id) { <option [value]="p.id">{{ p.nombre }} · {{ precio(p.precio) }}</option> }
+            </select>
+          </div>
+          <div class="campo">
+            <label for="dpc">Descuento (%)</label>
+            <input id="dpc" name="dpc" class="entrada" type="number" min="1" max="99" [(ngModel)]="descPorcentaje">
+          </div>
+          @if (errorDesc()) { <p class="error">{{ errorDesc() }}</p> }
+          <button class="btn btn-neon" type="submit" [disabled]="aplicandoDesc()">{{ aplicandoDesc() ? 'Aplicando…' : 'Aplicar descuento' }}</button>
+        </form>
+      </section>
+    }
+
+    @case ('publicar') {
+      <section class="publicar aparece">
+        <form class="panel formulario" (ngSubmit)="publicar()">
+          <h3>Nuevo producto</h3>
+          <div class="campo">
+            <label for="n">Nombre</label>
+            <input id="n" name="n" class="entrada" maxlength="100" [(ngModel)]="nombre" placeholder="Teclado mecánico RGB">
+          </div>
+          <div class="campo">
+            <label for="d">Descripción</label>
+            <textarea id="d" name="d" class="entrada" maxlength="500" [(ngModel)]="descripcion" placeholder="Switches rojos, layout español…"></textarea>
+          </div>
+          <div class="fila-2">
+            <div class="campo">
+              <label for="p">Precio (COP)</label>
+              <input id="p" name="p" class="entrada" type="number" min="1" [(ngModel)]="valor">
+            </div>
+            <div class="campo">
+              <label for="s">Stock</label>
+              <input id="s" name="s" class="entrada" type="number" min="0" [(ngModel)]="stock">
+            </div>
+          </div>
+          <div class="fila-2">
+            <div class="campo">
+              <label for="g">Gama</label>
+              <select id="g" name="g" class="entrada" [(ngModel)]="gama">
+                <option value="BAJA">Baja</option>
+                <option value="MEDIA">Media</option>
+                <option value="ALTA">Alta</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="e">Exclusividad</label>
+              <select id="e" name="e" class="entrada" [(ngModel)]="exclusividad">
+                <option value="NORMAL">Normal</option>
+                <option value="EXCLUSIVO">Exclusivo</option>
+              </select>
+            </div>
+          </div>
+          @if (errorForm()) { <p class="error">{{ errorForm() }}</p> }
+          <button class="btn btn-neon" type="submit" [disabled]="publicando()">{{ publicando() ? 'Publicando…' : 'Publicar producto' }}</button>
+        </form>
+
+        <div class="previa">
+          <p class="muted etiqueta-previa">Vista previa en el catálogo</p>
+          <app-tarjeta-producto [producto]="vistaPrevia()" />
+        </div>
+      </section>
+    }
+  }
+</div>
+
+@if (editando(); as p) {
+  <div class="fondo-modal" (click)="cerrarEdicion()">
+    <form class="panel modal" (click)="$event.stopPropagation()" (ngSubmit)="guardarEdicion()">
+      <h2>Editar producto</h2>
+      <div class="campo">
+        <label for="en">Nombre</label>
+        <input id="en" name="en" class="entrada" maxlength="100" [(ngModel)]="editNombre">
+      </div>
+      <div class="campo">
+        <label for="ed">Descripción</label>
+        <textarea id="ed" name="ed" class="entrada" maxlength="500" [(ngModel)]="editDescripcion"></textarea>
+      </div>
+      <div class="campo">
+        <label for="ep">Precio (COP)</label>
+        <input id="ep" name="ep" class="entrada" type="number" min="1" [(ngModel)]="editPrecio">
+      </div>
+      <div class="acciones">
+        <button class="btn btn-neon" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar cambios' }}</button>
+        <button class="btn" type="button" (click)="cerrarEdicion()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+}
