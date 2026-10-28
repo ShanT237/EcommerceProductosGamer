@@ -1,0 +1,58 @@
+<section class="hero">
+  <app-escena3d />
+  <div class="velo"></div>
+  <div class="contenedor hero-texto">
+    <span class="sello aparece">◈ Marketplace Gamer</span>
+    <h1 class="aparece">El arsenal <span class="degradado">definitivo</span><br>para tu setup.</h1>
+    <p class="aparece">Teclados, mouse, audio, sillas y colección exclusiva de vendedores independientes. Compra, gana puntos y sube de nivel.</p>
+    <div class="acciones aparece">
+      @if (auth.autenticado()) {
+        <a routerLink="/catalogo" class="btn btn-neon">Entrar al catálogo →</a>
+        @if (auth.rol() === 'VENDEDOR') {
+          <a routerLink="/vendedor" class="btn">Mi tienda</a>
+        } @else {
+          <a routerLink="/mis-compras" class="btn">Mis compras</a>
+        }
+      } @else {
+        <a routerLink="/registro" class="btn btn-neon">Crear cuenta gratis</a>
+        <a routerLink="/login" class="btn">Ya tengo cuenta</a>
+      }
+    </div>
+  </div>
+  <div class="bajar" aria-hidden="true"><span></span></div>
+</section>
+
+@if (global(); as g) {
+  <section class="contenedor cifras aparece">
+    <div class="panel cifra"><strong>{{ g.productosActivos }}</strong><span>Productos activos</span></div>
+    <div class="panel cifra"><strong>{{ g.vendedoresActivos }}</strong><span>Vendedores</span></div>
+    <div class="panel cifra"><strong>{{ g.comprasCompletadas }}</strong><span>Compras completadas</span></div>
+    <div class="panel cifra"><strong>{{ precio(g.ingresos) }}</strong><span>Ventas totales</span></div>
+  </section>
+}
+
+<section class="contenedor seccion">
+  <h2 class="titulo-seccion">¿Por qué <span class="degradado">GamerZone</span>?</h2>
+  <div class="rejilla-3">
+    @for (v of ventajas; track v.titulo) {
+      <article class="panel ventaja">
+        <span class="icono">{{ v.icono }}</span>
+        <h3>{{ v.titulo }}</h3>
+        <p class="muted">{{ v.texto }}</p>
+      </article>
+    }
+  </div>
+</section>
+
+<section class="contenedor seccion">
+  <h2 class="titulo-seccion">Así de <span class="degradado">fácil</span></h2>
+  <div class="rejilla-3">
+    @for (p of pasos; track p.n) {
+      <article class="panel paso">
+        <span class="numero">{{ p.n }}</span>
+        <h3>{{ p.titulo }}</h3>
+        <p class="muted">{{ p.texto }}</p>
+      </article>
+    }
+  </div>
+</section>

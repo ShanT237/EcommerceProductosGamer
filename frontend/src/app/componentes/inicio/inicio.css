@@ -1,0 +1,30 @@
+.hero { position: relative; min-height: min(86vh, 780px); display: flex; align-items: center; overflow: hidden; border-bottom: 1px solid var(--borde); }
+.velo { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 6, 15, 0.92) 0%, rgba(7, 6, 15, 0.55) 45%, rgba(7, 6, 15, 0.05) 100%); pointer-events: none; }
+.hero-texto { position: relative; z-index: 2; padding: 60px 0; max-width: 1240px; }
+.hero-texto > * { max-width: 620px; }
+.sello { display: inline-block; font-size: 15px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--cian); border: 1px solid rgba(34, 228, 255, 0.4); padding: 6px 14px; border-radius: 999px; margin-bottom: 22px; box-shadow: var(--brillo-cian); }
+h1 { font-size: clamp(36px, 6vw, 70px); font-weight: 900; margin-bottom: 20px; }
+.hero-texto p { font-size: 22px; color: var(--texto-2); line-height: 1.4; margin-bottom: 32px; }
+.acciones { display: flex; gap: 14px; flex-wrap: wrap; }
+.bajar { position: absolute; bottom: 22px; left: 50%; width: 26px; height: 42px; border: 2px solid var(--borde); border-radius: 14px; transform: translateX(-50%); z-index: 2; }
+.bajar span { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; background: var(--cian); border-radius: 2px; animation: rueda 1.6s infinite; }
+@keyframes rueda { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(14px); } }
+
+.cifras { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: -42px; position: relative; z-index: 3; }
+.cifra { padding: 22px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.cifra strong { font-family: var(--fuente-titulo); font-size: 28px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.cifra span { color: var(--texto-2); text-transform: uppercase; letter-spacing: 0.12em; font-size: 14px; }
+
+.seccion { padding: 80px 0 0; }
+.rejilla-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; }
+.ventaja, .paso { padding: 28px; transition: transform 0.25s, border-color 0.25s; }
+.ventaja:hover, .paso:hover { transform: translateY(-6px); border-color: rgba(34, 228, 255, 0.45); }
+.icono { font-size: 34px; display: block; margin-bottom: 12px; }
+h3 { font-size: 18px; margin-bottom: 8px; }
+.numero { font-family: var(--fuente-titulo); font-size: 44px; font-weight: 900; background: linear-gradient(120deg, var(--cian), var(--magenta)); -webkit-background-clip: text; background-clip: text; color: transparent; display: block; margin-bottom: 8px; }
+
+@media (max-width: 860px) {
+  .cifras { grid-template-columns: repeat(2, 1fr); }
+  .rejilla-3 { grid-template-columns: 1fr; }
+  .velo { background: rgba(7, 6, 15, 0.62); }
+}
