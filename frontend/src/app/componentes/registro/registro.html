@@ -1,0 +1,50 @@
+<div class="contenedor centro">
+  <form class="panel caja aparece" (ngSubmit)="crear()">
+    <span class="sello">◈ Nuevo jugador</span>
+    <h1>Crea tu cuenta en <span class="degradado">GamerZone</span></h1>
+
+    <div class="pestanas" role="tablist">
+      <button type="button" role="tab" [class.sel]="modo() === 'COMPRADOR'" (click)="modo.set('COMPRADOR')">Quiero comprar</button>
+      <button type="button" role="tab" [class.sel]="modo() === 'VENDEDOR'" (click)="modo.set('VENDEDOR')">Quiero vender</button>
+    </div>
+
+    <div class="campo">
+      <label for="nombre">{{ modo() === 'VENDEDOR' ? 'Nombre de la tienda o persona' : 'Nombre' }}</label>
+      <input id="nombre" name="nombre" class="entrada" [(ngModel)]="nombre" maxlength="100">
+    </div>
+    <div class="campo">
+      <label for="correo">Correo</label>
+      <input id="correo" name="correo" class="entrada" type="email" autocomplete="username" [(ngModel)]="correo">
+    </div>
+
+    @if (modo() === 'VENDEDOR') {
+      <div class="fila">
+        <div class="campo">
+          <label for="tipo">Tipo</label>
+          <select id="tipo" name="tipo" class="entrada" [(ngModel)]="tipo">
+            <option value="PERSONA_NATURAL">Persona natural</option>
+            <option value="EMPRESA">Empresa</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="doc">{{ etiquetaDocumento() }}</label>
+          <input id="doc" name="doc" class="entrada" [(ngModel)]="documento" maxlength="30">
+        </div>
+      </div>
+    }
+
+    <div class="campo">
+      <label for="clave">Contraseña (mín. 8 caracteres)</label>
+      <input id="clave" name="clave" class="entrada" type="password" autocomplete="new-password" [(ngModel)]="contrasena">
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button class="btn btn-neon" type="submit" [disabled]="cargando()">
+      {{ cargando() ? 'Creando…' : 'Crear cuenta' }}
+    </button>
+    <p class="muted pie">¿Ya tienes cuenta? <a routerLink="/login" class="enlace">Ingresa</a></p>
+  </form>
+</div>

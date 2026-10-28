@@ -1,0 +1,12 @@
+.centro { min-height: calc(100vh - 160px); display: grid; place-items: center; padding: 40px 0; }
+.caja { width: min(500px, 100%); padding: 38px 34px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 80px rgba(255, 46, 166, 0.1); }
+.sello { font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--magenta); }
+h1 { font-size: 26px; }
+.pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; border-radius: 14px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--borde); }
+.pestanas button { padding: 10px; border: none; border-radius: 10px; background: transparent; color: var(--texto-2); font-weight: 700; font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.2s; }
+.pestanas button.sel { color: #07060f; background: linear-gradient(110deg, var(--cian), var(--violeta)); box-shadow: var(--brillo-cian); }
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+.pie { text-align: center; font-size: 16px; }
+.enlace { color: var(--cian); font-weight: 700; }
+.enlace:hover { text-decoration: underline; }
