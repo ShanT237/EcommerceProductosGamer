@@ -1,0 +1,142 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <div>
+      <h1 class="titulo-seccion">Catálogo <span class="degradado">gamer</span></h1>
+      <p class="muted">
+        @if (resultado(); as r) { {{ r.totalElementos }} producto{{ r.totalElementos === 1 ? '' : 's' }} encontrado{{ r.totalElementos === 1 ? '' : 's' }} }
+        @else { Cargando el arsenal… }
+      </p>
+    </div>
+    <div class="buscador">
+      <span class="lupa">⌕</span>
+      <input class="entrada" type="search" placeholder="Busca teclados, mouse, sillas…" aria-label="Buscar productos"
+             [(ngModel)]="texto" (ngModelChange)="cambiaFiltro()">
+    </div>
+  </header>
+
+  <div class="cuerpo">
+    <aside class="filtros panel">
+      <h3>Filtros</h3>
+
+      <div class="campo">
+        <label>Gama</label>
+        <div class="chips">
+          @for (g of gamas; track g.valor) {
+            <button type="button" class="chip" [class.sel]="gama() === g.valor" (click)="elegirGama(g.valor)">{{ g.etiqueta }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="cat">Categoría</label>
+        <input id="cat" class="entrada" list="lista-categorias" placeholder="Todas" [(ngModel)]="categoria" (ngModelChange)="cambiaFiltro()">
+        <datalist id="lista-categorias">
+          @for (c of categorias(); track c) { <option [value]="c"></option> }
+        </datalist>
+      </div>
+
+      <div class="campo">
+        <label>Precio (COP)</label>
+        <div class="par">
+          <input class="entrada" type="number" min="0" placeholder="Mín." aria-label="Precio mínimo" [(ngModel)]="precioMin" (ngModelChange)="cambiaFiltro()">
+          <input class="entrada" type="number" min="0" placeholder="Máx." aria-label="Precio máximo" [(ngModel)]="precioMax" (ngModelChange)="cambiaFiltro()">
+        </div>
+      </div>
+
+      <label class="interruptor">
+        <input type="checkbox" [(ngModel)]="soloPreventa" (ngModelChange)="cambiaFiltro()">
+        <span class="pista"><span class="bola"></span></span>
+        Solo preventa
+      </label>
+
+      <button class="btn btn-chico" type="button" (click)="limpiar()">Limpiar filtros</button>
+    </aside>
+
+    <section class="resultados">
+      @if (error()) {
+        <div class="panel vacio">
+          <p>{{ error() }}</p>
+          <button class="btn btn-chico" (click)="cargar()">Reintentar</button>
+        </div>
+      } @else if (cargando() && !resultado()) {
+        <div class="rejilla">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div class="esqueleto"></div> }
+        </div>
+      } @else if (resultado(); as r) {
+        @if (r.contenido.length === 0) {
+          <div class="panel vacio">
+            <p class="grande">◈</p>
+            <p>No encontramos productos con esos filtros.</p>
+            <button class="btn btn-chico" (click)="limpiar()">Limpiar filtros</button>
+          </div>
+        } @else {
+          <div class="rejilla" [class.cargando]="cargando()">
+            @for (p of r.contenido; track p.id) {
+              <app-tarjeta-producto class="aparece" [producto]="p" (ver)="abrir($event)" />
+            }
+          </div>
+
+          @if (r.totalPaginas > 1) {
+            <nav class="paginacion" aria-label="Paginación">
+              <button class="btn btn-chico" [disabled]="pagina() === 0" (click)="irA(pagina() - 1)">←</button>
+              @for (n of paginas(); track n) {
+                <button class="btn btn-chico num" [class.actual]="n === pagina()" (click)="irA(n)">{{ n + 1 }}</button>
+              }
+              <button class="btn btn-chico" [disabled]="pagina() >= r.totalPaginas - 1" (click)="irA(pagina() + 1)">→</button>
+            </nav>
+          }
+        }
+      }
+    </section>
+  </div>
+</div>
+
+@if (seleccionado(); as p) {
+  <div class="fondo-modal" (click)="cerrar()">
+    <div class="modal panel" role="dialog" aria-modal="true" [attr.aria-label]="p.nombre" (click)="$event.stopPropagation()">
+      <button class="cerrar" (click)="cerrar()" aria-label="Cerrar">✕</button>
+
+      <div class="modal-arte">
+        <app-arte-producto [nombre]="p.nombre" [categoria]="p.categoria" [gama]="p.gama" />
+      </div>
+
+      <div class="modal-info">
+        <div class="etiquetas">
+          <span class="etiqueta gama-{{ p.gama }}">Gama {{ p.gama }}</span>
+          @if (p.exclusividad === 'EXCLUSIVO') { <span class="etiqueta excl">Exclusivo</span> }
+          @if (p.categoria) { <span class="etiqueta muted">{{ p.categoria }}</span> }
+        </div>
+        <h2>{{ p.nombre }}</h2>
+        <p class="muted descripcion">{{ p.descripcion }}</p>
+        <p class="precio-grande">{{ precio(p.precio) }}</p>
+        <p class="stock" [class.agotado]="p.stock <= 0">{{ p.stock > 0 ? p.stock + ' unidades disponibles' : 'Producto agotado' }}</p>
+
+        @if (!esComprador()) {
+          <p class="nota">Estás navegando como vendedor. Ingresa con una cuenta de comprador para comprar.</p>
+        } @else if (reserva(); as c) {
+          <div class="resumen-pago">
+            <p>Reserva creada · {{ c.cantidad }} × {{ precio(c.precioUnitario) }}</p>
+            <strong>Total: {{ precio(c.subtotal) }}</strong>
+          </div>
+          <div class="acciones">
+            <button class="btn btn-neon" [disabled]="procesando()" (click)="pagar()">{{ procesando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>
+            <button class="btn" [disabled]="procesando()" (click)="cancelarReserva()">Cancelar</button>
+          </div>
+        } @else {
+          <div class="compra">
+            <div class="cantidad">
+              <button class="btn btn-chico" (click)="cambiarCantidad(-1)" [disabled]="cantidad() <= 1">−</button>
+              <span>{{ cantidad() }}</span>
+              <button class="btn btn-chico" (click)="cambiarCantidad(1)" [disabled]="cantidad() >= p.stock">+</button>
+            </div>
+            <span class="muted">Total: <strong class="total">{{ precio(total()) }}</strong></span>
+          </div>
+          <div class="acciones">
+            <button class="btn btn-neon" [disabled]="procesando() || p.stock <= 0" (click)="reservar()">{{ procesando() ? 'Reservando…' : 'Comprar' }}</button>
+            <button class="btn" (click)="alternarFavorito()">{{ esFavorito() ? '♥ En favoritos' : '♡ Favoritos' }}</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
