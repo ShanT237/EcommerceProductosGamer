@@ -1,1 +1,152 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #07060f;
+  --bg-2: #0d0b1c;
+  --panel: rgba(255, 255, 255, 0.045);
+  --panel-2: rgba(255, 255, 255, 0.075);
+  --borde: rgba(255, 255, 255, 0.1);
+  --texto: #ecebff;
+  --texto-2: #a9a6c9;
+  --cian: #22e4ff;
+  --magenta: #ff2ea6;
+  --violeta: #8b5cf6;
+  --lima: #a3ff6b;
+  --ambar: #ffb020;
+  --rojo: #ff4d6d;
+  --fuente-titulo: 'Orbitron', 'Segoe UI', system-ui, sans-serif;
+  --fuente: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  --radio: 16px;
+  --brillo-cian: 0 0 22px rgba(34, 228, 255, 0.35);
+  --brillo-magenta: 0 0 22px rgba(255, 46, 166, 0.35);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  font-family: var(--fuente);
+  font-size: 18px;
+  color: var(--texto);
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(139, 92, 246, 0.28), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(255, 46, 166, 0.18), transparent 60%),
+    radial-gradient(800px 500px at 50% 110%, rgba(34, 228, 255, 0.14), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* rejilla sutil de fondo */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+h1, h2, h3, h4 { font-family: var(--fuente-titulo); letter-spacing: 0.02em; line-height: 1.15; }
+
+::selection { background: var(--magenta); color: #fff; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #2a2745; border-radius: 10px; }
+
+/* ---------- utilidades compartidas ---------- */
+.contenedor { width: min(1240px, 92vw); margin-inline: auto; }
+.pagina { padding: 36px 0 90px; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  background: var(--panel-2);
+  color: var(--texto);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.3); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-neon {
+  border: none;
+  color: #07060f;
+  background: linear-gradient(110deg, var(--cian), var(--violeta) 55%, var(--magenta));
+  box-shadow: var(--brillo-cian);
+}
+.btn-neon:hover:not(:disabled) { box-shadow: 0 0 34px rgba(34, 228, 255, 0.55), 0 0 60px rgba(255, 46, 166, 0.3); }
+.btn-peligro { color: var(--rojo); border-color: rgba(255, 77, 109, 0.4); }
+.btn-peligro:hover:not(:disabled) { background: rgba(255, 77, 109, 0.12); }
+.btn-chico { padding: 7px 14px; font-size: 14px; border-radius: 10px; }
+
+.campo { display: flex; flex-direction: column; gap: 7px; }
+.campo label { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--texto-2); font-weight: 600; }
+.entrada {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--texto);
+  font-family: inherit;
+  font-size: 18px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.entrada:focus { border-color: var(--cian); box-shadow: 0 0 0 3px rgba(34, 228, 255, 0.18); }
+select.entrada option { background: #141228; }
+textarea.entrada { resize: vertical; min-height: 90px; }
+
+.etiqueta {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+.gama-ALTA { color: var(--magenta); }
+.gama-MEDIA { color: var(--cian); }
+.gama-BAJA { color: var(--lima); }
+.excl { color: var(--ambar); }
+
+.titulo-seccion { font-size: clamp(26px, 4vw, 40px); font-weight: 900; }
+.degradado {
+  background: linear-gradient(100deg, var(--cian), var(--violeta) 50%, var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.muted { color: var(--texto-2); }
+.vacio { text-align: center; padding: 60px 20px; color: var(--texto-2); }
+
+@keyframes aparecer { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.aparece { animation: aparecer 0.5s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
