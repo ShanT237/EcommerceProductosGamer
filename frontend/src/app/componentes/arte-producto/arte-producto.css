@@ -1,0 +1,8 @@
+:host { display: block; width: 100%; }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+.flota { animation: flota 4.5s ease-in-out infinite; transform-origin: center; }
+@keyframes flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.tecla { animation: parpadeo 2.6s ease-in-out infinite; }
+@keyframes parpadeo { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.linea { stroke-dasharray: 400; stroke-dashoffset: 400; animation: trazo 3s ease-out infinite; }
+@keyframes trazo { 0% { stroke-dashoffset: 400; } 60%, 100% { stroke-dashoffset: 0; } }
