@@ -130,15 +130,15 @@ public class Compra {
      * Aplica un cupón: reemplaza el precio unitario por el ya descontado. Solo mientras la
      * compra está PENDIENTE (después de confirmarla el precio queda fijo) y una sola vez.
      */
-    public void aplicarCupon(Precio nuevoPrecioUnitario) {
-        Objects.requireNonNull(nuevoPrecioUnitario, "El nuevo precio unitario es obligatorio");
+    public void aplicarCupon(Cupon cupon) {
+        Objects.requireNonNull(cupon, "El cupón es obligatorio");
         if (estado != EstadoCompra.PENDIENTE) {
             throw new ReglaDominioException("Solo se puede aplicar un cupón a una compra pendiente");
         }
         if (cuponAplicado) {
             throw new ReglaDominioException("La compra ya tiene un cupón aplicado");
         }
-        this.precioUnitario = nuevoPrecioUnitario;
+        this.precioUnitario = cupon.aplicarA(precioUnitario);
         this.cuponAplicado = true;
     }
 
