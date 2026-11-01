@@ -33,11 +33,8 @@ public class CrearComboUseCase {
                 .orElseThrow(() -> new NoSuchElementException("El vendedor no existe"));
         vendedor.validarPuedePublicar();
 
-        if (productoIds != null) {
-            productoIds.forEach(productoId -> validarProductoDelVendedor(productoId, vendedorId));
-        }
-
         Combo combo = Combo.crear(id, vendedorId, nombre, descripcion, descuento, productoIds);
+        combo.getProductos().forEach(productoId -> validarProductoDelVendedor(productoId, vendedorId));
 
         comboRepository.guardar(combo);
 
@@ -48,8 +45,6 @@ public class CrearComboUseCase {
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
         producto.asegurarNoEliminado();
-        if (!producto.getVendedorId().equals(vendedorId)) {
-            throw new ReglaDominioException("El producto no pertenece al vendedor del combo");
-        }
+        producto.asegurarPerteneceA(vendedorId);
     }
 }
