@@ -64,6 +64,13 @@ public class Regalo {
         return regalo;
     }
 
+    public void asegurarDestinoValido() {
+        if ((idProducto == null) == (idCombo == null)) {
+            throw new ReglaDominioException(
+                    "Un regalo debe estar asociado a un producto o a un combo, pero no a ambos");
+        }
+    }
+
     private void verificarTransicion(EstadoRegalo siguiente) {
         if (estado.esFinal()) {
             throw new ReglaDominioException(
