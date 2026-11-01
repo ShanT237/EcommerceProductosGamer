@@ -60,7 +60,7 @@ public class RealizarCompraUseCase {
         Precio precioBase = new Precio(producto.getPrecio());
         Precio precioUnitario = promocionRepository
                 .obtenerVigentePorProductoId(productoId, ahora.toLocalDate())
-                .map(promocion -> precioBase.aplicarDescuento(promocion.getPorcentaje()))
+                .map(promocion -> promocion.aplicarA(precioBase))
                 .orElse(precioBase);
 
         Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, productoId, cantidad,

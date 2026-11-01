@@ -1,10 +1,11 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
-import com.uniquindio.backend.domain.valueobject.TipoVendedor;
-import lombok.Getter;
 import com.uniquindio.backend.domain.service.HashContrasena;
+import com.uniquindio.backend.domain.valueobject.TipoVendedor;
+import com.uniquindio.backend.domain.valueobject.Contrasena;
 import lombok.AccessLevel;
+import lombok.Getter;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -85,6 +86,12 @@ public class Vendedor {
             throw new ReglaDominioException("El hash de la contraseña no puede estar vacío");
         }
         this.contrasenaHash = hash;
+    }
+
+    public void establecerContrasenaSegura(String plana, HashContrasena hasher) {
+        Objects.requireNonNull(hasher, "El servicio de hash es obligatorio");
+        Contrasena.validarFortaleza(plana);
+        definirContrasena(hasher.hashear(plana));
     }
 
     /**
