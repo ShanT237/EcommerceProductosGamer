@@ -4,7 +4,6 @@ import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.repository.VendedorRepository;
 import com.uniquindio.backend.domain.service.HashContrasena;
-import com.uniquindio.backend.domain.valueobject.Contrasena;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,10 +29,8 @@ public class RegistrarVendedorUseCase {
         if (vendedorRepository.existeConDocumento(documento)) {
             throw new ConflictoException("Ya existe un vendedor con ese documento");
         }
-        Contrasena.validarFortaleza(contrasena);
-
         Vendedor vendedor = Vendedor.registrar(id, nombre, correo, tipo, documento);
-        vendedor.definirContrasena(hashContrasena.hashear(contrasena));
+        vendedor.establecerContrasenaSegura(contrasena, hashContrasena);
 
         vendedorRepository.guardar(vendedor);
 
