@@ -5,7 +5,6 @@ import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import org.springframework.transaction.annotation.Transactional;
 import com.uniquindio.backend.domain.service.HashContrasena;
-import com.uniquindio.backend.domain.valueobject.Contrasena;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -43,10 +42,8 @@ public class RegistrarUsuarioUseCase {
         if (usuarioRepository.existeConCorreo(correo)) {
             throw new ConflictoException("Ya existe un usuario con ese correo");
         }
-        Contrasena.validarFortaleza(contrasena);
-
         Usuario usuario = Usuario.registrar(id, nombre, correo);
-        usuario.definirContrasena(hashContrasena.hashear(contrasena));
+        usuario.establecerContrasenaSegura(contrasena, hashContrasena);
 
         usuarioRepository.guardar(usuario);
 
