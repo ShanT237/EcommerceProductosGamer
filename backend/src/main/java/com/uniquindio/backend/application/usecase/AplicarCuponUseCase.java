@@ -37,7 +37,7 @@ public class AplicarCuponUseCase {
                 .orElseThrow(() -> new NoSuchElementException("El cupón no existe"));
         cupon.validarUso(LocalDate.now(clock));
 
-        compra.aplicarCupon(compra.getPrecioUnitario().aplicarDescuento(cupon.getPorcentaje()));
+        compra.aplicarCupon(cupon);
         cupon.registrarUso();
 
         compraRepository.guardar(compra);

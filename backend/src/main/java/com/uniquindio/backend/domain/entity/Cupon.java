@@ -1,6 +1,7 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -72,6 +73,11 @@ public class Cupon {
             throw new ReglaDominioException("El cupón ya no tiene usos disponibles");
         }
         this.usos++;
+    }
+
+    public Precio aplicarA(Precio precio) {
+        Objects.requireNonNull(precio, "El precio es obligatorio");
+        return precio.aplicarDescuento(porcentaje);
     }
 
     @Override
