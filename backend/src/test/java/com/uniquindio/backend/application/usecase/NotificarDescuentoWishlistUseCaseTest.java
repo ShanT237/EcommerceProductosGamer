@@ -75,6 +75,12 @@ class NotificarDescuentoWishlistUseCaseTest {
     }
 
     @Test
+    @DisplayName("Valida el descuento aunque ninguna wishlist contenga el producto")
+    void rechazaSiNoHayDescuentoNiWishlists() {
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(producto.getId(), 120.0));
+    }
+
+    @Test
     @DisplayName("AplicarDescuento baja el precio y notifica a las wishlists")
     void aplicarDescuentoNotifica() {
         UUID user = usuarioConWishlist(true);
