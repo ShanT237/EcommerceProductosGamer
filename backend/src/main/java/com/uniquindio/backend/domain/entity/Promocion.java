@@ -1,6 +1,8 @@
 package com.uniquindio.backend.domain.entity;
 
+import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -60,6 +62,21 @@ public class Promocion {
 
     public boolean seSolapaCon(LocalDate otraDesde, LocalDate otraHasta) {
         return !otraDesde.isAfter(hasta) && !otraHasta.isBefore(desde);
+    }
+
+    public void asegurarSinSolapamiento(Iterable<Promocion> existentes) {
+        Objects.requireNonNull(existentes, "Las promociones existentes son obligatorias");
+        for (Promocion existente : existentes) {
+            if (productoId.equals(existente.productoId)
+                    && seSolapaCon(existente.desde, existente.hasta)) {
+                throw new ConflictoException("El producto ya tiene una promoción en ese rango de fechas");
+            }
+        }
+    }
+
+    public Precio aplicarA(Precio precioBase) {
+        Objects.requireNonNull(precioBase, "El precio base es obligatorio");
+        return precioBase.aplicarDescuento(porcentaje);
     }
 
     @Override
