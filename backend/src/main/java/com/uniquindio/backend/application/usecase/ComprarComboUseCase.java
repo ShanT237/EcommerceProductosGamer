@@ -6,7 +6,6 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.*;
-import com.uniquindio.backend.domain.valueobject.Precio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +55,7 @@ public class ComprarComboUseCase {
         List<Compra> compras = new ArrayList<>();
         for (Producto producto : productos) {
             producto.reducirStock(cantidad);
-            Precio precioUnitario = new Precio(producto.getPrecio()).aplicarDescuento(combo.getDescuento());
+            var precioUnitario = combo.calcularPrecioUnitario(producto);
             compras.add(Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), cantidad,
                     ahora, precioUnitario));
         }
