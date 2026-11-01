@@ -70,6 +70,12 @@ class CrearComboUseCaseTest {
     }
 
     @Test
+    void listaDeProductosNulaSeRechazaDesdeLaEntidad() {
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(UUID.randomUUID(), vendedor.getId(),
+                "Combo", "Desc", 10.0, null));
+    }
+
+    @Test
     void productoDeOtroVendedorLanzaReglaDominioYNoGuarda() {
         UUID id = UUID.randomUUID();
         Producto ajeno = producto(UUID.randomUUID(), "Ajeno");
