@@ -56,3 +56,21 @@
     }
   </div>
 </section>
+
+<section class="contenedor seccion fundadores">
+  <h2 class="titulo-seccion">Los <span class="degradado">fundadores</span></h2>
+  <div class="fundadores-cuerpo">
+    <figure class="panel foto-fundadores">
+      <img src="fundadores.jpg" width="1536" height="1024" loading="lazy"
+           alt="Los tres fundadores de GamerZone en su oficina, frente al letrero de E-Commerce Gamer">
+    </figure>
+    <ul class="lista-fundadores">
+      @for (f of fundadores; track f.usuario) {
+        <li class="panel fundador">
+          <h3>{{ f.nombre }}</h3>
+          <a [href]="'https://github.com/' + f.usuario" target="_blank" rel="noopener">github.com/{{ f.usuario }}</a>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
