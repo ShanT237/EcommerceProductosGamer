@@ -23,8 +23,20 @@ h1 { font-size: clamp(36px, 6vw, 70px); font-weight: 900; margin-bottom: 20px; }
 h3 { font-size: 18px; margin-bottom: 8px; }
 .numero { font-family: var(--fuente-titulo); font-size: 44px; font-weight: 900; background: linear-gradient(120deg, var(--cian), var(--magenta)); -webkit-background-clip: text; background-clip: text; color: transparent; display: block; margin-bottom: 8px; }
 
+.fundadores { padding-bottom: 80px; }
+.fundadores-cuerpo { display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px; margin-top: 28px; }
+.foto-fundadores { margin: 0; overflow: hidden; }
+.foto-fundadores img { display: block; width: 100%; height: auto; }
+.lista-fundadores { list-style: none; display: grid; grid-auto-rows: 1fr; gap: 20px; }
+.fundador { padding: 24px 28px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.fundador h3 { margin: 0; font-size: 20px; }
+.fundador a { color: var(--cian); letter-spacing: 0.04em; width: fit-content; }
+.fundador a:hover { text-shadow: var(--brillo-cian); text-decoration: underline; }
+.fundador a:focus-visible { outline: 2px solid var(--cian); outline-offset: 3px; border-radius: 4px; }
+
 @media (max-width: 860px) {
   .cifras { grid-template-columns: repeat(2, 1fr); }
   .rejilla-3 { grid-template-columns: 1fr; }
+  .fundadores-cuerpo { grid-template-columns: 1fr; }
   .velo { background: rgba(7, 6, 15, 0.62); }
 }
