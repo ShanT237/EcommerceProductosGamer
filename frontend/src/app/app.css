@@ -7,7 +7,7 @@
 .barra-interna { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 16px; }
 
 .logo { display: flex; align-items: center; gap: 10px; }
-.logo-icono { font-size: 26px; color: var(--cian); text-shadow: var(--brillo-cian); animation: giro 8s linear infinite; display: inline-block; }
+.logo-icono { font-size: 26px; color: var(--cian); text-shadow: var(--brillo-cian); animation: giro 3.5s linear infinite; display: inline-block; }
 .logo-texto { font-family: var(--fuente-titulo); font-weight: 700; font-size: 20px; letter-spacing: 0.14em; }
 .logo-texto b { color: var(--magenta); text-shadow: var(--brillo-magenta); }
 @keyframes giro { to { transform: rotate(360deg); } }
