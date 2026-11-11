@@ -30,6 +30,12 @@ export class Inicio implements OnInit {
     { icono: '🎁', titulo: 'Puntos y regalos', texto: 'Acumula puntos, redímelos y desbloquea regalos por metas de compra.' },
   ];
 
+  protected fundadores = [
+    { nombre: 'Juan David Tapiero', usuario: 'Juanda2312' },
+    { nombre: 'Santiago Torres', usuario: 'ShanT237' },
+    { nombre: 'Jose Manuel Bedoya', usuario: 'thelegendsxv' },
+  ];
+
   ngOnInit() {
     if (this.auth.autenticado()) {
       this.reportes.global().subscribe({ next: (g) => this.global.set(g), error: () => this.global.set(null) });
