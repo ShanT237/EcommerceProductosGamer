@@ -32,7 +32,7 @@ export class Escena3d implements AfterViewInit, OnDestroy {
 
   private construir(canvas: HTMLCanvasElement, renderer: THREE.WebGLRenderer) {
     const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const velocidad = reducido ? 0.15 : 1;
+    const velocidad = reducido ? 0.15 : 0.35;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const escena = new THREE.Scene();
