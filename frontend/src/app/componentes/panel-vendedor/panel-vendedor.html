@@ -147,53 +147,7 @@
     }
 
     @case ('publicar') {
-      <section class="publicar aparece">
-        <form class="panel formulario" (ngSubmit)="publicar()">
-          <h3>Nuevo producto</h3>
-          <div class="campo">
-            <label for="n">Nombre</label>
-            <input id="n" name="n" class="entrada" maxlength="100" [(ngModel)]="nombre" placeholder="Teclado mecánico RGB">
-          </div>
-          <div class="campo">
-            <label for="d">Descripción</label>
-            <textarea id="d" name="d" class="entrada" maxlength="500" [(ngModel)]="descripcion" placeholder="Switches rojos, layout español…"></textarea>
-          </div>
-          <div class="fila-2">
-            <div class="campo">
-              <label for="p">Precio (COP)</label>
-              <input id="p" name="p" class="entrada" type="number" min="1" [(ngModel)]="valor">
-            </div>
-            <div class="campo">
-              <label for="s">Stock</label>
-              <input id="s" name="s" class="entrada" type="number" min="0" [(ngModel)]="stock">
-            </div>
-          </div>
-          <div class="fila-2">
-            <div class="campo">
-              <label for="g">Gama</label>
-              <select id="g" name="g" class="entrada" [(ngModel)]="gama">
-                <option value="BAJA">Baja</option>
-                <option value="MEDIA">Media</option>
-                <option value="ALTA">Alta</option>
-              </select>
-            </div>
-            <div class="campo">
-              <label for="e">Exclusividad</label>
-              <select id="e" name="e" class="entrada" [(ngModel)]="exclusividad">
-                <option value="NORMAL">Normal</option>
-                <option value="EXCLUSIVO">Exclusivo</option>
-              </select>
-            </div>
-          </div>
-          @if (errorForm()) { <p class="error">{{ errorForm() }}</p> }
-          <button class="btn btn-neon" type="submit" [disabled]="publicando()">{{ publicando() ? 'Publicando…' : 'Publicar producto' }}</button>
-        </form>
-
-        <div class="previa">
-          <p class="muted etiqueta-previa">Vista previa en el catálogo</p>
-          <app-tarjeta-producto [producto]="vistaPrevia()" />
-        </div>
-      </section>
+      <app-formulario-publicar (publicado)="alPublicar()" />
     }
   }
 </div>
