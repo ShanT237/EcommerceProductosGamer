@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Subject, debounceTime } from 'rxjs';
 import { Compra, Gama, Pagina, Producto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
+import { CarritoService } from '../../servicios/carrito.service';
 import { CompraService } from '../../servicios/compra.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
@@ -23,6 +24,7 @@ import { TarjetaProducto } from '../tarjeta-producto/tarjeta-producto';
 export class Catalogo implements OnInit {
   private productos = inject(ProductoService);
   private compras = inject(CompraService);
+  private carrito = inject(CarritoService);
   private toast = inject(ToastService);
   private router = inject(Router);
   protected auth = inject(AuthService);
@@ -153,6 +155,14 @@ export class Catalogo implements OnInit {
   protected cambiarCantidad(delta: number) {
     const max = this.seleccionado()?.stock ?? 1;
     this.cantidad.set(Math.min(Math.max(1, this.cantidad() + delta), Math.max(max, 1)));
+  }
+
+  protected alCarrito() {
+    const p = this.seleccionado();
+    if (!p) return;
+    this.carrito.agregar(p, this.cantidad());
+    this.toast.ok('Añadido al carrito.');
+    this.cerrar();
   }
 
   protected reservar() {

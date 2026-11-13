@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Exclusividad, Gama, MetricasResenas, Producto, ProductoStockBajo, ProductoVendido, ReporteVentas } from '../../modelos/modelos';
+import { MetricasResenas, Producto, ProductoStockBajo, ProductoVendido, ReporteVentas } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ReporteService } from '../../servicios/reporte.service';
@@ -8,13 +8,13 @@ import { ToastService } from '../../servicios/toast.service';
 import { mensajeDeError } from '../../servicios/api.util';
 import { precio } from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
-import { TarjetaProducto } from '../tarjeta-producto/tarjeta-producto';
+import { FormularioPublicar } from '../formulario-publicar/formulario-publicar';
 
 type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar';
 
 @Component({
   selector: 'app-panel-vendedor',
-  imports: [FormsModule, ArteProducto, TarjetaProducto],
+  imports: [FormsModule, ArteProducto, FormularioPublicar],
   templateUrl: './panel-vendedor.html',
   styleUrl: './panel-vendedor.css',
   host: { '(document:keydown.escape)': 'cerrarEdicion()' },
@@ -57,28 +57,6 @@ export class PanelVendedor implements OnInit {
   protected editPrecio = signal<number | null>(null);
   protected guardando = signal(false);
 
-  // ---- publicar ----
-  protected nombre = signal('');
-  protected descripcion = signal('');
-  protected valor = signal<number | null>(null);
-  protected stock = signal<number | null>(1);
-  protected gama = signal<Gama>('MEDIA');
-  protected exclusividad = signal<Exclusividad>('NORMAL');
-  protected publicando = signal(false);
-  protected errorForm = signal('');
-
-  protected vistaPrevia = computed<Producto>(() => ({
-    id: 'previa',
-    vendedorId: this.auth.sesion()?.id ?? '',
-    nombre: this.nombre() || 'Tu producto',
-    descripcion: this.descripcion() || 'Así se verá tu producto en el catálogo.',
-    precio: this.valor() ?? 0,
-    stock: this.stock() ?? 0,
-    gama: this.gama(),
-    exclusividad: this.exclusividad(),
-    categoria: null,
-  }));
-
   // ---- promociones por temporada y descuentos ----
   protected promoProducto = signal('');
   protected promoPorcentaje = signal<number | null>(null);
@@ -106,6 +84,12 @@ export class PanelVendedor implements OnInit {
     this.reportes.metricasResenas().subscribe({ next: (m) => this.resenas.set(m), error: () => undefined });
     this.reportes.masVendidos(5, yo).subscribe({ next: (l) => this.masVendidos.set(l), error: () => undefined });
     this.reportes.stockBajo(5).subscribe({ next: (l) => this.stockBajo.set(l), error: () => undefined });
+  }
+
+  // ---------- publicar (el formulario vive en FormularioPublicar) ----------
+  protected alPublicar() {
+    this.cargarCatalogo();
+    this.pestana.set('productos');
   }
 
   // ---------- editar / pausar / eliminar ----------
@@ -199,35 +183,5 @@ export class PanelVendedor implements OnInit {
       },
       error: (e) => { this.aplicandoDesc.set(false); this.errorDesc.set(mensajeDeError(e)); },
     });
-  }
-
-  // ---------- publicar ----------
-  protected publicar() {
-    this.errorForm.set('');
-    if (!this.nombre().trim()) return this.errorForm.set('El nombre es obligatorio.');
-    if (!this.descripcion().trim()) return this.errorForm.set('La descripción es obligatoria.');
-    if (this.valor() == null || this.valor()! <= 0) return this.errorForm.set('El precio debe ser mayor a cero.');
-    if (this.stock() == null || this.stock()! < 0) return this.errorForm.set('El stock no puede ser negativo.');
-
-    this.publicando.set(true);
-    this.productos
-      .publicar({
-        nombre: this.nombre().trim(),
-        descripcion: this.descripcion().trim(),
-        precio: this.valor()!,
-        stock: this.stock()!,
-        gama: this.gama(),
-        exclusividad: this.exclusividad(),
-      })
-      .subscribe({
-        next: () => {
-          this.publicando.set(false);
-          this.toast.ok('¡Producto publicado!');
-          this.nombre.set(''); this.descripcion.set(''); this.valor.set(null); this.stock.set(1);
-          this.cargarCatalogo();
-          this.pestana.set('productos');
-        },
-        error: (e) => { this.publicando.set(false); this.errorForm.set(mensajeDeError(e)); },
-      });
   }
 }

@@ -1,0 +1,15 @@
+:host { display: block; }
+.publicar { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; align-items: start; }
+.formulario { padding: 30px; display: flex; flex-direction: column; gap: 18px; }
+.formulario h3 { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+.fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+.error-campo { color: var(--rojo); font-size: 15px; }
+.entrada[aria-invalid='true'] { border-color: var(--rojo); }
+.previa { position: sticky; top: 90px; max-width: 340px; width: 100%; }
+.etiqueta-previa { font-size: 14px; text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 10px; }
+
+@media (max-width: 960px) {
+  .publicar { grid-template-columns: 1fr; }
+  .previa { position: static; }
+}

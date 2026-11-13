@@ -9,6 +9,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -133,5 +136,76 @@ class FlujoCompletoIntegracionTest {
                                   "gama": "BAJA", "exclusividad": "NORMAL" }
                                 """))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Regla de negocio real: comprar más que el stock responde 422 y no descuenta stock")
+    void comprarMasQueElStockRetorna422YNoDescuentaStock() throws Exception {
+        // Arrange: un producto con solo 2 unidades y un nombre único para encontrarlo después
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String nombreUnico = "Mouse-stock-" + UUID.randomUUID();
+
+        String productoJson = mockMvc.perform(post("/api/productos")
+                        .header("Authorization", "Bearer " + tokenVendedor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "nombre": "%s",
+                                  "descripcion": "Producto con stock limitado para la prueba",
+                                  "precio": 80000, "stock": 2,
+                                  "gama": "BAJA", "exclusividad": "NORMAL" }
+                                """.formatted(nombreUnico)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String productoId = JsonPath.read(productoJson, "$.id");
+
+        // Act + Assert: pedir 3 unidades viola la regla del dominio -> 422 con su mensaje
+        mockMvc.perform(post("/api/compras")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "productoId": "%s", "cantidad": 3 }
+                                """.formatted(productoId)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.mensaje").value("No hay suficiente stock disponible"));
+
+        // Assert: una consulta nueva, leída de la base, sigue mostrando las 2 unidades
+        mockMvc.perform(get("/api/productos")
+                        .param("texto", nombreUnico)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].stock").value(2));
+    }
+
+    @Test
+    @DisplayName("Seguridad real: comprar sin token responde 401")
+    void comprarSinTokenRetorna401() throws Exception {
+        // Act + Assert: sin cabecera Authorization el filtro JWT corta la petición
+        mockMvc.perform(post("/api/compras")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "productoId": "00000000-0000-0000-0000-000000000000", "cantidad": 1 }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    @DisplayName("Validación real: publicar con datos inválidos responde 400 con un mensaje que nombra el campo")
+    void publicarConDatosInvalidosRetorna400ConMensaje() throws Exception {
+        // Arrange
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+
+        // Act + Assert: nombre vacío y precio negativo no pasan @Valid
+        mockMvc.perform(post("/api/productos")
+                        .header("Authorization", "Bearer " + tokenVendedor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "nombre": "", "descripcion": "Datos invalidos a proposito",
+                                  "precio": -5, "stock": 1,
+                                  "gama": "ALTA", "exclusividad": "NORMAL" }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").value(containsString("nombre")));
     }
 }

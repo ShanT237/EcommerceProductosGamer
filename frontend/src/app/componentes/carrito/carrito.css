@@ -1,0 +1,28 @@
+.cuerpo { display: grid; grid-template-columns: 1fr 340px; gap: 26px; align-items: start; margin-top: 28px; }
+.lista { display: flex; flex-direction: column; gap: 14px; }
+
+.item { display: grid; grid-template-columns: 110px 1fr auto auto auto; gap: 20px; align-items: center; padding: 16px 22px; transition: border-color 0.2s; }
+.item:hover { border-color: rgba(34, 228, 255, 0.35); }
+.mini { width: 110px; }
+.datos h3 { font-size: 17px; margin-bottom: 4px; }
+.datos p { font-size: 16px; margin-bottom: 6px; }
+.cantidad { display: flex; align-items: center; gap: 12px; font-family: var(--fuente-titulo); font-size: 18px; }
+.linea { font-family: var(--fuente-titulo); font-size: 18px; color: var(--cian); min-width: 110px; text-align: right; }
+
+.resumen { position: sticky; top: 90px; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.resumen h3 { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+.fila { display: flex; justify-content: space-between; align-items: baseline; }
+.total strong { font-family: var(--fuente-titulo); font-size: 24px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.nota { font-size: 15px; line-height: 1.3; }
+
+.vacio .grande { font-size: 56px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.vacio .btn { margin-top: 14px; }
+
+@media (max-width: 960px) {
+  .cuerpo { grid-template-columns: 1fr; }
+  .resumen { position: static; }
+  .item { grid-template-columns: 90px 1fr; }
+  .mini { width: 90px; }
+  .cantidad, .linea, .quitar { grid-column: 1 / -1; }
+  .linea { text-align: left; }
+}

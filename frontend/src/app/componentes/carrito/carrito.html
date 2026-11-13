@@ -1,0 +1,62 @@
+<div class="contenedor pagina">
+  <header class="aparece">
+    <h1 class="titulo-seccion">Mi <span class="degradado">carrito</span></h1>
+    <p class="muted">Compra simulada: cada producto se reserva y se confirma en orden.</p>
+  </header>
+
+  <div class="cuerpo">
+    <section aria-label="Productos en el carrito">
+      @if (carrito.items().length === 0) {
+        <div class="panel vacio">
+          <p class="grande">◈</p>
+          <p>Tu carrito está vacío.</p>
+          <a routerLink="/catalogo" class="btn btn-neon btn-chico">Ir al catálogo</a>
+        </div>
+      } @else {
+        <div class="lista">
+          @for (i of carrito.items(); track i.producto.id) {
+            <article class="panel item aparece">
+              <div class="mini">
+                <app-arte-producto [nombre]="i.producto.nombre" [categoria]="i.producto.categoria" [gama]="i.producto.gama" />
+              </div>
+
+              <div class="datos">
+                <h3>{{ i.producto.nombre }}</h3>
+                <p class="muted">{{ precio(i.producto.precio) }} c/u</p>
+                @if (i.producto.exclusividad === 'EXCLUSIVO') {
+                  <span class="etiqueta excl">Exclusivo · máx. 1</span>
+                }
+              </div>
+
+              <div class="cantidad">
+                <button type="button" class="btn btn-chico menos" aria-label="Quitar una unidad"
+                        [disabled]="carrito.pagando() || i.cantidad <= 1"
+                        (click)="carrito.cambiarCantidad(i.producto.id, i.cantidad - 1)">−</button>
+                <span>{{ i.cantidad }}</span>
+                <button type="button" class="btn btn-chico mas" aria-label="Añadir una unidad"
+                        [disabled]="carrito.pagando() || i.cantidad >= carrito.limiteDe(i.producto)"
+                        (click)="carrito.cambiarCantidad(i.producto.id, i.cantidad + 1)">+</button>
+              </div>
+
+              <strong class="linea">{{ precio(i.producto.precio * i.cantidad) }}</strong>
+
+              <button type="button" class="btn btn-chico btn-peligro quitar"
+                      [disabled]="carrito.pagando()"
+                      (click)="carrito.quitar(i.producto.id)">Quitar</button>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <aside class="panel resumen">
+      <h3>Resumen</h3>
+      <div class="fila"><span class="muted">Unidades</span><strong>{{ carrito.unidades() }}</strong></div>
+      <div class="fila total"><span class="muted">Subtotal</span><strong>{{ precio(carrito.subtotal()) }}</strong></div>
+      <button type="button" class="btn btn-neon pagar"
+              [disabled]="carrito.pagando() || carrito.items().length === 0"
+              (click)="pagar()">{{ carrito.pagando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>
+      <p class="muted nota">No hay pasarela de pago real. Si un producto falla, se detiene el pago y el resto sigue en tu carrito.</p>
+    </aside>
+  </div>
+</div>

@@ -19,6 +19,11 @@
   content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
   background: linear-gradient(90deg, var(--cian), var(--magenta)); border-radius: 2px; box-shadow: var(--brillo-cian);
 }
+.contador-carrito {
+  display: inline-block; min-width: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px;
+  background: linear-gradient(110deg, var(--cian), var(--magenta)); color: #07060f;
+  font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; letter-spacing: 0;
+}
 .usuario { display: flex; align-items: center; gap: 8px; color: var(--texto); font-size: 15px; text-transform: none; letter-spacing: 0.02em; }
 .usuario em { font-style: normal; font-size: 11px; letter-spacing: 0.16em; color: var(--cian); border: 1px solid var(--cian); padding: 1px 8px; border-radius: 999px; }
 .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--lima); box-shadow: 0 0 10px var(--lima); }

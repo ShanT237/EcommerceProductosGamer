@@ -37,13 +37,11 @@
 .vacio .grande { font-size: 56px; color: var(--cian); text-shadow: var(--brillo-cian); }
 .vacio .btn { margin-top: 14px; }
 
-.publicar { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; align-items: start; }
+/* Formularios de la pestaña Promociones y del modal de edición. El de publicar vive en FormularioPublicar. */
 .formulario { padding: 30px; display: flex; flex-direction: column; gap: 18px; }
 .formulario h3 { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
 .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
-.previa { position: sticky; top: 90px; max-width: 340px; width: 100%; }
-.etiqueta-previa { font-size: 14px; text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 10px; }
 
 .fondo-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(4, 3, 10, 0.78); backdrop-filter: blur(6px); animation: aparecer 0.2s ease both; }
 .gz-modal { width: min(480px, 100%); padding: 30px; display: flex; flex-direction: column; gap: 16px; background: #0e0c20; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 90px rgba(139, 92, 246, 0.2); }
@@ -52,10 +50,9 @@
 
 @media (max-width: 960px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
-  .dos, .publicar { grid-template-columns: 1fr; }
+  .dos { grid-template-columns: 1fr; }
   .fila { grid-template-columns: 90px 1fr; }
   .mini { width: 90px; }
   .cifras { align-items: flex-start; grid-column: 1 / -1; }
   .botones { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }
-  .previa { position: static; }
 }

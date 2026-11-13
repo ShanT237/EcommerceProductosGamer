@@ -13,6 +13,7 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 ## 📋 Tabla de Contenidos
 1. [Integrantes y nicho](#1-integrantes-y-nicho)
 2. [Cómo ejecutar el proyecto y usuarios de prueba](#2-cómo-ejecutar-el-proyecto-y-usuarios-de-prueba)
+  - [2.1 Frontend, carrito y pantallas](#21-frontend-carrito-y-pantallas)
 3. [Endpoints principales](#3-endpoints-principales)
 4. [Correcciones de la Entrega 1](#4-correcciones-de-la-entrega-1)
 5. [¿Quién compra y por qué?](#5-quién-compra-y-por-qué)
@@ -85,6 +86,69 @@ Sin token la API responde `401`; con el token del rol equivocado, `403`.
 3. `PUT /api/compras/{id}/confirmar` → la compra queda `COMPLETADA`.
 4. `POST /api/resenas` (reseñar) y `POST /api/valoraciones-vendedor` (valorar al vendedor).
 5. **Error de negocio a propósito:** con `ana.demo@correo.com`, `PUT /api/compras/dddddddd-dddd-dddd-dddd-ddddddddddd2/reembolso`. Esa compra de demo supera las 48 horas del plazo, por lo que la regla del dominio rechaza el reembolso con `422`.
+
+---
+
+## 2.1. Frontend, carrito y pantallas
+
+El frontend es una aplicación **Angular 21** (componentes standalone, signals y formularios reactivos) que consume la API del backend.
+
+**Requisitos:** Node 20 o superior y el backend corriendo en `http://localhost:8080` (sección 2).
+
+```powershell
+cd frontend
+npm install
+npm start                      # abre http://localhost:4200
+```
+
+La URL de la API está en `frontend/src/app/config.ts` (`API_URL`); hay que cambiarla ahí al desplegar. Para entrar usa los usuarios de prueba de la sección 2: la pantalla de login tiene botones que rellenan las cuentas de demo.
+
+### Carrito de compra simulado
+
+Un comprador añade productos desde el modal del catálogo con **Añadir al carrito** (también puede usar **Comprar** para una compra directa). En `/carrito` ajusta las cantidades, que nunca superan el stock (un producto exclusivo admite una sola unidad), quita ítems y pulsa **Pagar (simulado)**.
+
+No hay pasarela de pago: pagar significa crear y confirmar cada compra con los endpoints existentes (`POST /api/compras` y `PUT /api/compras/{id}/confirmar`), ítem por ítem y en orden. El proceso se detiene en el primer error: los ítems ya pagados salen del carrito y quedan `COMPLETADA`, y el ítem que falló y los pendientes se conservan. Si falla la confirmación, la reserva se cancela para devolver el stock. Mientras se procesa, el botón queda bloqueado ("Procesando…") y un segundo clic se ignora.
+
+**Limitaciones:**
+
+- El carrito vive solo en el navegador: no persiste al recargar la página y se vacía al cerrar sesión o cambiar de usuario.
+- El pago no es transaccional: si un ítem falla, las compras que ya se confirmaron no se revierten.
+- El precio del carrito es el que tenía el producto al añadirlo; el precio definitivo lo fija el backend al reservar.
+
+### Publicar un producto (formulario reactivo)
+
+En **Mi tienda → Publicar**, el vendedor llena un formulario reactivo que valida antes de enviar: nombre y descripción obligatorios, precio mayor a cero y stock entero de cero o más. Si hay errores no se envía ninguna petición y cada campo muestra su aviso. Al enviar, el botón queda bloqueado ("Publicando…") y, si el backend rechaza la petición, se muestra su mensaje (por ejemplo `403` si el rol no corresponde o `422` si el vendedor está dado de baja). Una vista previa muestra cómo quedará la tarjeta en el catálogo.
+
+### Mensajes de error
+
+Todos los errores HTTP pasan por `mensajeDeError`: se muestra el `mensaje` que manda el backend y, si no hay cuerpo, un texto por defecto según el código (`400` datos no válidos, `401` sesión no válida, `403` sin permiso, `404` no encontrado, `409` ya existe, `422` regla de negocio, `500` error del servidor y `0` sin conexión). Nunca se muestra el JSON crudo.
+
+### Pantallas
+
+![Login](docs/pantallas/01-login.png)
+*Login con botones para las cuentas de demo.*
+
+![Catálogo](docs/pantallas/02-catalogo.png)
+*Catálogo paginado con filtros y búsqueda.*
+
+![Carrito](docs/pantallas/03-carrito.png)
+*Carrito con cantidades limitadas por el stock y resumen del pago.*
+
+![Carrito con error de stock](docs/pantallas/04-carrito-error-stock.png)
+*Pago detenido por falta de stock (`422`): el ítem se conserva y el mensaje viene del backend.*
+
+![Formulario de publicación](docs/pantallas/05-publicar-formulario.png)
+*Formulario reactivo de publicación con vista previa de la tarjeta.*
+
+![Errores de validación](docs/pantallas/06-publicar-error-validacion.png)
+*Avisos por campo con el formulario vacío; no se envía ninguna petición.*
+
+![Mis compras](docs/pantallas/07-mis-compras.png)
+*Historial de compras con sus estados y acciones (reseña, valoración, reembolso).*
+
+### Ensayo de punta a punta
+
+El recorrido completo (publicar, comprar con carrito, errores de negocio y de seguridad) está en [`docs/ensayo-punta-a-punta.md`](docs/ensayo-punta-a-punta.md), con el resultado esperado de cada paso. La colección de Postman equivalente para la API está en [`docs/postman/flujo-completo.json`](docs/postman/flujo-completo.json).
 
 ---
 
@@ -369,6 +433,7 @@ El catálogo se busca con `GET /api/productos?texto=mouse&categoria=Perifericos&
 
 - **No existe un rol ADMIN.** Las metas de recompensa y el envío de regalos (CU-24) quedan restringidos a `VENDEDOR`, aunque conceptualmente son de administración; cualquier vendedor puede enviar cualquier regalo.
 - `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
+- El carrito del frontend no persiste (ver la sección [2.1](#21-frontend-carrito-y-pantallas)) y el pago simulado no revierte las compras ya confirmadas si un ítem posterior falla.
   Los endpoints de cada operación están en [`backend/Docs/api/mapeo-dominio-api.md`](backend/Docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`, botón **Authorize** para pegar el token del login).
 
 ---
@@ -378,6 +443,14 @@ El catálogo se busca con `GET /api/productos?texto=mouse&categoria=Perifericos&
 ```powershell
 cd backend
 .\gradlew.bat test      # Linux/Mac: ./gradlew test
+```
+
+Pruebas del frontend (Vitest) y compilación:
+
+```powershell
+cd frontend
+npx ng test --watch=false
+npx ng build
 ```
  
 ---
@@ -395,6 +468,7 @@ En esta parte agregamos pruebas para revisar que el backend no solo funcione por
 | 2. Pruebas con `@DataJpaTest` | `ConsultasCatalogoJpaTest`, `VendedorRepositoryJpaTest`, `PersistenciaSecundariaJpaTest` |
 | 3. Prueba de integración | `integracion/FlujoCompletoIntegracionTest` |
 | 4. Error 404 y regla de negocio | `EliminarProductoControllerTest` |
+| 5. Errores HTTP de compra y publicación (401, 422 y 400) | `integracion/FlujoCompletoIntegracionTest` |
 
 ### 0. Pruebas del repositorio
 
@@ -415,6 +489,10 @@ Una prueba unitaria revisa una parte pequeña del código por separado, mientras
 ### 4. Más casos en el controller
 
 También agregamos casos donde la petición no debería terminar guardando información. Uno revisa qué pasa cuando se intenta eliminar un producto que no existe y la API devuelve un `404`. El otro revisa una regla de negocio que impide eliminar un producto cuando tiene compras activas. En los dos casos usamos `verify(..., never())` para comprobar que el método de guardar no se haya llamado. Esto es importante porque no sería suficiente con que la API devuelva un error: también tenemos que comprobar que no haya hecho un cambio que no debía hacer.
+
+### 5. Errores HTTP de compra y publicación
+
+El frontend le muestra al usuario el `mensaje` que manda el backend, así que fijamos con pruebas de integración los códigos y mensajes que consume. En `FlujoCompletoIntegracionTest`: comprar más unidades que el stock responde `422` con "No hay suficiente stock disponible" y el stock del producto no cambia en la base; comprar sin token responde `401`; y publicar con el nombre vacío y un precio negativo responde `400` con un mensaje que nombra el campo. Los mismos casos están en la carpeta B de la colección de Postman (`docs/postman/flujo-completo.json`). En el frontend, las pruebas con Vitest cubren `mensajeDeError`, el carrito (incluido el pago secuencial y el doble clic) y el formulario de publicación (validación, botón bloqueado y errores del servidor).
 
 ## 14. Gestión del Proyecto (Trello)
 

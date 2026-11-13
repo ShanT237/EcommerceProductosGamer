@@ -1,0 +1,74 @@
+<section class="publicar aparece">
+  <form class="panel formulario" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    <h3>Nuevo producto</h3>
+
+    <div class="campo">
+      <label for="fp-nombre">Nombre</label>
+      <input id="fp-nombre" class="entrada" maxlength="100" formControlName="nombre" placeholder="Teclado mecánico RGB"
+             [attr.aria-invalid]="form.controls.nombre.touched && form.controls.nombre.invalid">
+      @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+        <p class="error-campo">El nombre es obligatorio</p>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="fp-descripcion">Descripción</label>
+      <textarea id="fp-descripcion" class="entrada" maxlength="500" formControlName="descripcion"
+                placeholder="Switches rojos, layout español…"
+                [attr.aria-invalid]="form.controls.descripcion.touched && form.controls.descripcion.invalid"></textarea>
+      @if (form.controls.descripcion.touched && form.controls.descripcion.hasError('required')) {
+        <p class="error-campo">La descripción es obligatoria</p>
+      }
+    </div>
+
+    <div class="fila-2">
+      <div class="campo">
+        <label for="fp-precio">Precio (COP)</label>
+        <input id="fp-precio" class="entrada" type="number" formControlName="precio"
+               [attr.aria-invalid]="form.controls.precio.touched && form.controls.precio.invalid">
+        @if (form.controls.precio.touched && form.controls.precio.invalid) {
+          <p class="error-campo">El precio debe ser mayor a cero</p>
+        }
+      </div>
+      <div class="campo">
+        <label for="fp-stock">Stock</label>
+        <input id="fp-stock" class="entrada" type="number" formControlName="stock"
+               [attr.aria-invalid]="form.controls.stock.touched && form.controls.stock.invalid">
+        @if (form.controls.stock.touched && form.controls.stock.invalid) {
+          <p class="error-campo">El stock debe ser un número entero de cero o más</p>
+        }
+      </div>
+    </div>
+
+    <div class="fila-2">
+      <div class="campo">
+        <label for="fp-gama">Gama</label>
+        <select id="fp-gama" class="entrada" formControlName="gama">
+          <option value="BAJA">Baja</option>
+          <option value="MEDIA">Media</option>
+          <option value="ALTA">Alta</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="fp-exclusividad">Exclusividad</label>
+        <select id="fp-exclusividad" class="entrada" formControlName="exclusividad">
+          <option value="NORMAL">Normal</option>
+          <option value="EXCLUSIVO">Exclusivo</option>
+        </select>
+      </div>
+    </div>
+
+    @if (errorServidor()) {
+      <p class="error" role="alert">{{ errorServidor() }}</p>
+    }
+
+    <button class="btn btn-neon enviar" type="submit" [disabled]="publicando()">
+      {{ publicando() ? 'Publicando…' : 'Publicar producto' }}
+    </button>
+  </form>
+
+  <div class="previa">
+    <p class="muted etiqueta-previa">Vista previa en el catálogo</p>
+    <app-tarjeta-producto [producto]="vistaPrevia()" />
+  </div>
+</section>
