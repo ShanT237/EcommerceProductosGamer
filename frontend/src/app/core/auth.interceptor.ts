@@ -14,7 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(peticion).pipe(
     catchError((error: HttpErrorResponse) => {
       const esLogin = req.url.endsWith('/auth/login');
-      if (error.status === 401 && esApi && !esLogin && token) {
+      if (error.status === 401 && esApi && !esLogin && token && auth.token() === token) {
         auth.cerrarSesion(true);
       }
       return throwError(() => error);
