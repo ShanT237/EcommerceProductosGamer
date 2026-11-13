@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../servicios/auth.service';
 import { mensajeDeError } from '../../servicios/api.util';
@@ -7,21 +7,23 @@ import { ToastService } from '../../servicios/toast.service';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
 export class Login {
+  private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
   private ruta = inject(ActivatedRoute);
   private toast = inject(ToastService);
 
-  protected correo = signal('');
-  protected contrasena = signal('');
+  protected formulario = this.fb.nonNullable.group({
+    correo: ['', [Validators.required, Validators.email]],
+    contrasena: ['', Validators.required],
+  });
   protected cargando = signal(false);
   protected error = signal('');
-  protected expirada = this.ruta.snapshot.queryParamMap.get('expirada') === '1';
 
   protected demos = [
     { etiqueta: 'Comprador demo', correo: 'jose.demo@correo.com', clave: 'JoseGamer2026' },
@@ -29,19 +31,22 @@ export class Login {
   ];
 
   protected usarDemo(d: { correo: string; clave: string }) {
-    this.correo.set(d.correo);
-    this.contrasena.set(d.clave);
+    this.formulario.setValue({ correo: d.correo, contrasena: d.clave });
+    this.formulario.markAsPristine();
+    this.formulario.markAsUntouched();
     this.error.set('');
   }
 
   protected ingresar() {
-    if (!this.correo().trim() || !this.contrasena()) {
-      this.error.set('Escribe tu correo y tu contraseña.');
+    this.error.set('');
+    if (this.formulario.invalid) {
+      this.formulario.markAllAsTouched();
       return;
     }
+
+    const { correo, contrasena } = this.formulario.getRawValue();
     this.cargando.set(true);
-    this.error.set('');
-    this.auth.login(this.correo().trim(), this.contrasena()).subscribe({
+    this.auth.login(correo.trim(), contrasena).subscribe({
       next: () => {
         this.cargando.set(false);
         this.toast.ok(`¡Bienvenido, ${this.auth.nombre()}!`);
