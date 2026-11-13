@@ -29,8 +29,8 @@ h3 { font-size: 17px; margin-bottom: 4px; }
 .vacio .btn { margin-top: 14px; }
 
 .fondo-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(4, 3, 10, 0.78); backdrop-filter: blur(6px); animation: aparecer 0.2s ease both; }
-.modal { width: min(460px, 100%); padding: 30px; display: flex; flex-direction: column; gap: 16px; background: #0e0c20; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 90px rgba(139, 92, 246, 0.2); }
-.modal h2 { font-size: 22px; }
+.gz-modal { width: min(460px, 100%); padding: 30px; display: flex; flex-direction: column; gap: 16px; background: #0e0c20; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 90px rgba(139, 92, 246, 0.2); }
+.gz-modal h2 { font-size: 22px; }
 .estrellas { display: flex; gap: 6px; }
 .estrella { background: none; border: none; font-size: 38px; color: rgba(255, 255, 255, 0.18); transition: transform 0.15s, color 0.15s; line-height: 1; }
 .estrella:hover { transform: scale(1.2); }

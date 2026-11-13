@@ -46,7 +46,7 @@
 
 <div class="toasts" aria-live="polite">
   @for (t of toast.toasts(); track t.id) {
-    <button class="toast toast-{{ t.tipo }}" (click)="toast.quitar(t.id)">
+    <button class="gz-toast toast-{{ t.tipo }}" (click)="toast.quitar(t.id)">
       <span class="toast-icono">{{ t.tipo === 'ok' ? '✔' : t.tipo === 'error' ? '✖' : 'ℹ' }}</span>
       {{ t.texto }}
     </button>

@@ -46,8 +46,8 @@
 .etiqueta-previa { font-size: 14px; text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 10px; }
 
 .fondo-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(4, 3, 10, 0.78); backdrop-filter: blur(6px); animation: aparecer 0.2s ease both; }
-.modal { width: min(480px, 100%); padding: 30px; display: flex; flex-direction: column; gap: 16px; background: #0e0c20; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 90px rgba(139, 92, 246, 0.2); }
-.modal h2 { font-size: 22px; }
+.gz-modal { width: min(480px, 100%); padding: 30px; display: flex; flex-direction: column; gap: 16px; background: #0e0c20; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 90px rgba(139, 92, 246, 0.2); }
+.gz-modal h2 { font-size: 22px; }
 .acciones { display: flex; gap: 10px; }
 
 @media (max-width: 960px) {
