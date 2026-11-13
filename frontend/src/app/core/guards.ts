@@ -10,6 +10,14 @@ export const authGuard: CanActivateFn = (_ruta, estado) => {
   return auth.autenticado() ? true : router.createUrlTree(['/login'], { queryParams: { volver: estado.url } });
 };
 
+/** Evita que una persona con sesión activa vuelva al formulario de login. */
+export const guestGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.autenticado()) return true;
+  return router.createUrlTree([auth.rol() === 'VENDEDOR' ? '/vendedor' : '/catalogo']);
+};
+
 /** Solo deja pasar al rol indicado (COMPRADOR o VENDEDOR). */
 export const rolGuard = (rol: Rol): CanActivateFn => () => {
   const auth = inject(AuthService);
