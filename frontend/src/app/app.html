@@ -14,6 +14,11 @@
       @if (auth.autenticado()) {
         <a routerLink="/catalogo" routerLinkActive="activo" (click)="cerrarMenu()">Catálogo</a>
         @if (auth.rol() === 'COMPRADOR') {
+          <a routerLink="/carrito" routerLinkActive="activo" (click)="cerrarMenu()">Carrito
+            @if (carrito.unidades() > 0) {
+              <span class="contador-carrito">{{ carrito.unidades() }}</span>
+            }
+          </a>
           <a routerLink="/mis-compras" routerLinkActive="activo" (click)="cerrarMenu()">Mis compras</a>
           <a routerLink="/perfil" routerLinkActive="activo" (click)="cerrarMenu()">Perfil</a>
         }
