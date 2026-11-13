@@ -1,0 +1,93 @@
+<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" role="img" [attr.aria-label]="nombre()" class="gama-{{ gama() }}">
+  <defs>
+    <radialGradient [attr.id]="uid + '-halo'" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient [attr.id]="uid + '-cuerpo'" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a2650" />
+      <stop offset="100%" stop-color="#0f0d24" />
+    </linearGradient>
+    <linearGradient [attr.id]="uid + '-acento'" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="currentColor" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    <filter [attr.id]="uid + '-brillo'" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="b" />
+      <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="120" cy="82" rx="110" ry="70" [attr.fill]="urlHalo" />
+  <ellipse cx="120" cy="140" rx="70" ry="7" fill="currentColor" opacity="0.18" />
+
+  @switch (tipo()) {
+    @case ('teclado') {
+      <g class="flota">
+        <rect x="26" y="52" width="188" height="72" rx="10" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="1.6" [attr.filter]="urlBrillo" />
+        @for (t of teclas; track $index) {
+          <rect [attr.x]="t.x" [attr.y]="t.y" width="10.6" height="10.6" rx="2.4" fill="currentColor" class="tecla" [style.animation-delay]="t.retraso + 's'" />
+        }
+        <rect x="64" y="106" width="112" height="10" rx="3" fill="currentColor" opacity="0.55" />
+      </g>
+    }
+    @case ('mouse') {
+      <g class="flota">
+        <rect x="88" y="26" width="64" height="106" rx="32" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="1.8" [attr.filter]="urlBrillo" />
+        <line x1="120" y1="26" x2="120" y2="70" [attr.stroke]="urlAcento" stroke-width="1.6" />
+        <path d="M88 70 H152" [attr.stroke]="urlAcento" stroke-width="1.4" />
+        <rect x="114" y="42" width="12" height="20" rx="6" fill="currentColor" class="tecla" />
+        <circle cx="120" cy="104" r="7" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.8" />
+      </g>
+    }
+    @case ('audifonos') {
+      <g class="flota">
+        <path d="M58 92 C58 30 182 30 182 92" fill="none" [attr.stroke]="urlAcento" stroke-width="9" stroke-linecap="round" [attr.filter]="urlBrillo" />
+        <rect x="44" y="82" width="34" height="52" rx="14" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="1.8" />
+        <rect x="162" y="82" width="34" height="52" rx="14" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="1.8" />
+        <circle cx="61" cy="108" r="6" fill="currentColor" class="tecla" />
+        <circle cx="179" cy="108" r="6" fill="currentColor" class="tecla" />
+        <path d="M52 128 C52 148 90 150 98 144" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+        <circle cx="102" cy="143" r="5" fill="currentColor" />
+      </g>
+    }
+    @case ('silla') {
+      <g class="flota">
+        <rect x="86" y="14" width="68" height="68" rx="22" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="1.8" [attr.filter]="urlBrillo" />
+        <rect x="100" y="26" width="40" height="44" rx="14" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.7" />
+        <rect x="78" y="86" width="84" height="20" rx="10" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="1.8" />
+        <rect x="114" y="106" width="12" height="22" rx="3" fill="#2a2650" />
+        <path d="M70 140 L120 126 L170 140" fill="none" [attr.stroke]="urlAcento" stroke-width="4" stroke-linecap="round" />
+        <circle cx="70" cy="144" r="4" fill="currentColor" /><circle cx="170" cy="144" r="4" fill="currentColor" /><circle cx="120" cy="148" r="4" fill="currentColor" />
+      </g>
+    }
+    @case ('monitor') {
+      <g class="flota">
+        <rect x="32" y="22" width="176" height="104" rx="9" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="2" [attr.filter]="urlBrillo" />
+        <rect x="41" y="31" width="158" height="86" rx="4" fill="#0a0820" />
+        <path d="M41 98 L84 70 L112 88 L146 52 L199 90 V117 H41 Z" fill="currentColor" opacity="0.28" />
+        <polyline points="41,98 84,70 112,88 146,52 199,90" fill="none" stroke="currentColor" stroke-width="2.2" class="linea" />
+        <rect x="108" y="126" width="24" height="14" fill="#2a2650" />
+        <rect x="84" y="138" width="72" height="7" rx="3.5" [attr.fill]="urlAcento" />
+      </g>
+    }
+    @case ('control') {
+      <g class="flota">
+        <path d="M70 52 H170 C196 52 208 84 204 112 C201 132 184 136 174 122 L162 106 H78 L66 122 C56 136 39 132 36 112 C32 84 44 52 70 52 Z" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="2" [attr.filter]="urlBrillo" />
+        <circle cx="86" cy="86" r="11" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="86" cy="86" r="4.5" fill="currentColor" class="tecla" />
+        <circle cx="154" cy="98" r="10" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="154" cy="98" r="4" fill="currentColor" class="tecla" />
+        <path d="M112 74 h10 v-8 h8 v8 h10 v8 h-10 v8 h-8 v-8 h-10 Z" fill="#2a2650" stroke="currentColor" stroke-width="1" opacity="0.9" transform="translate(-30 0) scale(0.9)" />
+        <circle cx="168" cy="72" r="4" fill="#ff2ea6" /><circle cx="182" cy="82" r="4" fill="#22e4ff" /><circle cx="154" cy="82" r="4" fill="#a3ff6b" /><circle cx="168" cy="92" r="4" fill="#ffb020" />
+      </g>
+    }
+    @default {
+      <g class="flota">
+        <polygon points="120,14 176,60 120,146 64,60" [attr.fill]="urlCuerpo" [attr.stroke]="urlAcento" stroke-width="2" [attr.filter]="urlBrillo" />
+        <polygon points="120,14 148,60 120,146 92,60" fill="currentColor" opacity="0.25" />
+        <polyline points="64,60 176,60" stroke="currentColor" stroke-width="1.6" fill="none" />
+        <polyline points="120,14 92,60 120,146 148,60 120,14" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.8" />
+        <circle cx="120" cy="60" r="5" fill="currentColor" class="tecla" />
+      </g>
+    }
+  }
+</svg>

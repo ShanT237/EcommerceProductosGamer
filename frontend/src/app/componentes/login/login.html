@@ -1,0 +1,36 @@
+<div class="contenedor centro">
+  <form class="panel caja aparece" (ngSubmit)="ingresar()">
+    <span class="sello">◈ Acceso</span>
+    <h1>Ingresa a <span class="degradado">GamerZone</span></h1>
+
+    @if (expirada) {
+      <p class="aviso">Tu sesión expiró. Vuelve a ingresar.</p>
+    }
+
+    <div class="campo">
+      <label for="correo">Correo</label>
+      <input id="correo" name="correo" class="entrada" type="email" autocomplete="username" placeholder="tu@correo.com" [(ngModel)]="correo">
+    </div>
+    <div class="campo">
+      <label for="clave">Contraseña</label>
+      <input id="clave" name="clave" class="entrada" type="password" autocomplete="current-password" placeholder="••••••••" [(ngModel)]="contrasena">
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button class="btn btn-neon" type="submit" [disabled]="cargando()">
+      {{ cargando() ? 'Entrando…' : 'Ingresar' }}
+    </button>
+
+    <div class="demos">
+      <span class="muted">Cuentas de prueba:</span>
+      @for (d of demos; track d.correo) {
+        <button type="button" class="btn btn-chico" (click)="usarDemo(d)">{{ d.etiqueta }}</button>
+      }
+    </div>
+
+    <p class="muted pie">¿No tienes cuenta? <a routerLink="/registro" class="enlace">Créala aquí</a></p>
+  </form>
+</div>
