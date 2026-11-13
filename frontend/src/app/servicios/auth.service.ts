@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { API_URL } from '../config';
 import { Rol, Sesion, TipoVendedor } from '../modelos/modelos';
+import { ToastService } from './toast.service';
 
 const CLAVE = 'gamerzone.token';
 
@@ -23,6 +24,7 @@ function decodificar(token: string | null): Sesion | null {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   private _token = signal<string | null>(this.leer());
   readonly token = this._token.asReadonly();
@@ -64,6 +66,7 @@ export class AuthService {
 
   cerrarSesion(expirada = false) {
     this.guardar(null);
-    this.router.navigate(['/login'], expirada ? { queryParams: { expirada: 1 } } : {});
+    if (expirada) this.toast.info('Tu sesión expiró. Vuelve a ingresar.');
+    this.router.navigate(['/login']);
   }
 }
