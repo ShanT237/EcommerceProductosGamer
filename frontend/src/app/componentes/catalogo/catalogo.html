@@ -93,7 +93,7 @@
 
 @if (seleccionado(); as p) {
   <div class="fondo-modal" (click)="cerrar()">
-    <div class="modal panel" role="dialog" aria-modal="true" [attr.aria-label]="p.nombre" (click)="$event.stopPropagation()">
+    <div class="gz-modal panel" role="dialog" aria-modal="true" [attr.aria-label]="p.nombre" (click)="$event.stopPropagation()">
       <button class="cerrar" (click)="cerrar()" aria-label="Cerrar">✕</button>
 
       <div class="modal-arte">

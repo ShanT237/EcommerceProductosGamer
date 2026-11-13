@@ -200,7 +200,7 @@
 
 @if (editando(); as p) {
   <div class="fondo-modal" (click)="cerrarEdicion()">
-    <form class="panel modal" (click)="$event.stopPropagation()" (ngSubmit)="guardarEdicion()">
+    <form class="panel gz-modal" (click)="$event.stopPropagation()" (ngSubmit)="guardarEdicion()">
       <h2>Editar producto</h2>
       <div class="campo">
         <label for="en">Nombre</label>

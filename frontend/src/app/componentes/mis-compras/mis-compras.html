@@ -65,7 +65,7 @@
 
 @if (dialogo(); as d) {
   <div class="fondo-modal" (click)="cerrarDialogo()">
-    <form class="panel modal" (click)="$event.stopPropagation()" (ngSubmit)="enviarDialogo()">
+    <form class="panel gz-modal" (click)="$event.stopPropagation()" (ngSubmit)="enviarDialogo()">
       <h2>
         @switch (d.tipo) {
           @case ('resena') { Reseña del producto }
@@ -103,7 +103,7 @@
 
 @if (redimiendo()) {
   <div class="fondo-modal" (click)="cerrarDialogo()">
-    <form class="panel modal" (click)="$event.stopPropagation()" (ngSubmit)="redimir()">
+    <form class="panel gz-modal" (click)="$event.stopPropagation()" (ngSubmit)="redimir()">
       <h2>Redimir puntos</h2>
       <p class="muted">Tienes {{ puntos() }} puntos disponibles.</p>
       <div class="campo">
