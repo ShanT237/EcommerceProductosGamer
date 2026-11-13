@@ -1,9 +1,12 @@
 package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
+import com.uniquindio.backend.domain.exception.ConflictoException;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,5 +61,19 @@ class PromocionTest {
         assertTrue(p.seSolapaCon(HASTA, HASTA.plusDays(5)));
         assertTrue(p.seSolapaCon(DESDE.minusDays(5), DESDE));
         assertFalse(p.seSolapaCon(HASTA.plusDays(1), HASTA.plusDays(5)));
+    }
+
+    @Test
+    void validaSolapamientosYAplicaElDescuento() {
+        UUID productoId = UUID.randomUUID();
+        Promocion existente = Promocion.programar(UUID.randomUUID(), productoId, 10, DESDE, HASTA);
+        Promocion solapada = Promocion.programar(UUID.randomUUID(), productoId, 20, HASTA, HASTA.plusDays(5));
+        Promocion consecutiva = Promocion.programar(UUID.randomUUID(), productoId, 20,
+                HASTA.plusDays(1), HASTA.plusDays(5));
+
+        assertThrows(ConflictoException.class,
+                () -> solapada.asegurarSinSolapamiento(List.of(existente)));
+        assertDoesNotThrow(() -> consecutiva.asegurarSinSolapamiento(List.of(existente)));
+        assertEquals(90.0, existente.aplicarA(new Precio(100.0)).valor(), 0.001);
     }
 }

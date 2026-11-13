@@ -1,0 +1,40 @@
+<div class="contenedor centro">
+  <form class="panel caja aparece" [formGroup]="formulario" (ngSubmit)="ingresar()">
+    <span class="sello">◈ Acceso</span>
+    <h1>Ingresa a <span class="degradado">GamerZone</span></h1>
+
+    <div class="campo">
+      <label for="correo">Correo</label>
+      <input id="correo" name="correo" class="entrada form-control" type="email" autocomplete="username" placeholder="tu@correo.com" formControlName="correo" [attr.aria-invalid]="formulario.controls.correo.invalid && formulario.controls.correo.touched" [attr.aria-describedby]="formulario.controls.correo.touched && formulario.controls.correo.invalid ? 'correo-error' : null">
+      @if (formulario.controls.correo.touched && formulario.controls.correo.hasError('required')) {
+        <p class="error" id="correo-error">El correo es obligatorio.</p>
+      } @else if (formulario.controls.correo.touched && formulario.controls.correo.hasError('email')) {
+        <p class="error" id="correo-error">Escribe un correo electrónico válido.</p>
+      }
+    </div>
+    <div class="campo">
+      <label for="clave">Contraseña</label>
+      <input id="clave" name="clave" class="entrada form-control" type="password" autocomplete="current-password" placeholder="••••••••" formControlName="contrasena" [attr.aria-invalid]="formulario.controls.contrasena.invalid && formulario.controls.contrasena.touched" [attr.aria-describedby]="formulario.controls.contrasena.touched && formulario.controls.contrasena.invalid ? 'clave-error' : null">
+      @if (formulario.controls.contrasena.touched && formulario.controls.contrasena.hasError('required')) {
+        <p class="error" id="clave-error">La contraseña es obligatoria.</p>
+      }
+    </div>
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <button class="btn btn-neon" type="submit" [disabled]="cargando()">
+      {{ cargando() ? 'Entrando…' : 'Ingresar' }}
+    </button>
+
+    <div class="demos">
+      <span class="muted">Cuentas de prueba:</span>
+      @for (d of demos; track d.correo) {
+        <button type="button" class="btn btn-chico" (click)="usarDemo(d)">{{ d.etiqueta }}</button>
+      }
+    </div>
+
+    <p class="muted pie">¿No tienes cuenta? <a routerLink="/registro" class="enlace">Créala aquí</a></p>
+  </form>
+</div>

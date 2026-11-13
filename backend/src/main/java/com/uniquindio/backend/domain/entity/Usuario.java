@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.entity;
 
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.HashContrasena;
+import com.uniquindio.backend.domain.valueobject.Contrasena;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -16,6 +17,8 @@ import java.util.UUID;
  */
 @Getter
 public class Usuario {
+
+    public static final int COMPRAS_POR_REGALO = 5;
 
     private final UUID id;
     private String nombre;
@@ -108,6 +111,33 @@ public class Usuario {
 
     public boolean verificarContrasena(String plana, HashContrasena hasher) {
         return contrasenaHash != null && hasher.coincide(plana, contrasenaHash);
+    }
+
+    public void establecerContrasenaSegura(String plana, HashContrasena hasher) {
+        Objects.requireNonNull(hasher, "El servicio de hash es obligatorio");
+        Contrasena.validarFortaleza(plana);
+        definirContrasena(hasher.hashear(plana));
+    }
+
+    public void cambiarContrasena(String actual, String nueva, HashContrasena hasher) {
+        asegurarActivo();
+        if (!verificarContrasena(actual, hasher)) {
+            throw new ReglaDominioException("La contraseña actual es incorrecta");
+        }
+        Contrasena.validarFortaleza(nueva);
+        if (nueva.equals(actual)) {
+            throw new ReglaDominioException("La nueva contraseña debe ser distinta de la actual");
+        }
+        establecerContrasenaSegura(nueva, hasher);
+    }
+
+    public void asegurarPuedeElegirRegalo(long comprasCompletadas, long regalosAsignados) {
+        long regalosConDerecho = comprasCompletadas / COMPRAS_POR_REGALO;
+        if (regalosAsignados >= regalosConDerecho) {
+            throw new ReglaDominioException(
+                    "El usuario aún no alcanza la meta de " + COMPRAS_POR_REGALO
+                            + " compras completadas para un nuevo regalo");
+        }
     }
 
     public void asegurarActivo() {

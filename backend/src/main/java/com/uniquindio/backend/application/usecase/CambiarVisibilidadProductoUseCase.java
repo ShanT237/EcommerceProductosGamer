@@ -22,12 +22,7 @@ public class CambiarVisibilidadProductoUseCase {
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new NoSuchElementException("El producto no existe"));
         producto.asegurarPerteneceA(vendedorId);
-
-        if (activo) {
-            producto.activar();
-        } else {
-            producto.pausar();
-        }
+        producto.cambiarVisibilidad(activo);
 
         productoRepository.guardar(producto);
 

@@ -1,0 +1,41 @@
+<div class="contenedor pagina">
+  <header class="aparece">
+    <h1 class="titulo-seccion">Mi <span class="degradado">perfil</span></h1>
+    <p class="muted">Sesión iniciada como {{ auth.sesion()?.correo }}</p>
+  </header>
+
+  <div class="columnas">
+    <form class="panel caja aparece" (ngSubmit)="guardarPerfil()">
+      <h3>Datos personales</h3>
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" name="nombre" class="entrada" maxlength="100" [(ngModel)]="nombre">
+      </div>
+      <div class="campo">
+        <label for="correo">Correo</label>
+        <input id="correo" name="correo" class="entrada" type="email" maxlength="150" [(ngModel)]="correo">
+      </div>
+      <p class="muted nota">Si cambias el correo, tendrás que ingresar de nuevo.</p>
+      @if (errorPerfil()) { <p class="error">{{ errorPerfil() }}</p> }
+      <button class="btn btn-neon" type="submit" [disabled]="guardandoPerfil()">{{ guardandoPerfil() ? 'Guardando…' : 'Guardar cambios' }}</button>
+    </form>
+
+    <form class="panel caja aparece" (ngSubmit)="cambiarClave()">
+      <h3>Cambiar contraseña</h3>
+      <div class="campo">
+        <label for="actual">Contraseña actual</label>
+        <input id="actual" name="actual" class="entrada" type="password" autocomplete="current-password" [(ngModel)]="actual">
+      </div>
+      <div class="campo">
+        <label for="nueva">Contraseña nueva (mín. 8 caracteres)</label>
+        <input id="nueva" name="nueva" class="entrada" type="password" autocomplete="new-password" [(ngModel)]="nueva">
+      </div>
+      <div class="campo">
+        <label for="repetida">Repite la contraseña nueva</label>
+        <input id="repetida" name="repetida" class="entrada" type="password" autocomplete="new-password" [(ngModel)]="repetida">
+      </div>
+      @if (errorClave()) { <p class="error">{{ errorClave() }}</p> }
+      <button class="btn btn-neon" type="submit" [disabled]="guardandoClave()">{{ guardandoClave() ? 'Guardando…' : 'Actualizar contraseña' }}</button>
+    </form>
+  </div>
+</div>

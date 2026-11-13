@@ -29,9 +29,7 @@ public class ModificarProductosComboUseCase {
         Producto producto = productoRepository.obtenerPorId(productoId)
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
         producto.asegurarNoEliminado();
-        if (!producto.getVendedorId().equals(combo.getVendedorId())) {
-            throw new ReglaDominioException("El producto no pertenece al vendedor del combo");
-        }
+        producto.asegurarPerteneceA(combo.getVendedorId());
 
         combo.agregarProducto(productoId);
 

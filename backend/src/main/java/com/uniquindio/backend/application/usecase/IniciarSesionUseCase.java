@@ -3,7 +3,6 @@ package com.uniquindio.backend.application.usecase;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.exception.AutenticacionException;
-import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import com.uniquindio.backend.domain.repository.VendedorRepository;
 import com.uniquindio.backend.domain.service.EmisorToken;
@@ -48,9 +47,7 @@ public class IniciarSesionUseCase {
                 .filter(v -> v.verificarContrasena(contrasena, hashContrasena));
         if (vendedorEncontrado.isPresent()) {
             Vendedor vendedor = vendedorEncontrado.get();
-            if (!vendedor.isActivo()) {
-                throw new ReglaDominioException("El vendedor se encuentra dado de baja");
-            }
+            vendedor.asegurarActivo();
             return emisorToken.emitir(vendedor.getId(), vendedor.getCorreo(), Rol.VENDEDOR);
         }
 

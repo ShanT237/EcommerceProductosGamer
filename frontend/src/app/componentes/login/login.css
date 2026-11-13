@@ -1,0 +1,10 @@
+.centro { min-height: calc(100vh - 160px); display: grid; place-items: center; padding: 40px 0; }
+.caja { width: min(460px, 100%); padding: 38px 34px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 80px rgba(139, 92, 246, 0.12); }
+.sello { font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--cian); }
+h1 { font-size: 28px; }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+.aviso { color: var(--ambar); background: rgba(255, 176, 32, 0.1); border: 1px solid rgba(255, 176, 32, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+.demos { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border-top: 1px dashed var(--borde); padding-top: 16px; font-size: 15px; }
+.pie { text-align: center; font-size: 16px; }
+.enlace { color: var(--cian); font-weight: 700; }
+.enlace:hover { text-decoration: underline; }

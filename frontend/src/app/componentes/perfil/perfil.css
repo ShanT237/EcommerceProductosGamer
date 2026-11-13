@@ -1,0 +1,6 @@
+.columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; align-items: start; }
+.caja { padding: 30px; display: flex; flex-direction: column; gap: 18px; }
+.caja h3 { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+.nota { font-size: 15px; }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+@media (max-width: 860px) { .columnas { grid-template-columns: 1fr; } }

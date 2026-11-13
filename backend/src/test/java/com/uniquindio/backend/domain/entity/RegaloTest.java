@@ -118,6 +118,15 @@ class RegaloTest {
     }
 
     @Test
+    @DisplayName("Detecta un destino inválido al validar un regalo reconstruido")
+    void detectaDestinoInvalidoAlValidar() {
+        Regalo sinDestino = Regalo.reconstruir(UUID.randomUUID(), EstadoRegalo.DISPONIBLE,
+                LocalDateTime.now(), null, null, null, null, false);
+
+        assertThrows(ReglaDominioException.class, sinDestino::asegurarDestinoValido);
+    }
+
+    @Test
     @DisplayName("Notifica una sola vez, y solo al usuario elegido")
     void notificarReglas() {
         UUID idUsuario = UUID.randomUUID();

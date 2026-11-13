@@ -25,8 +25,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AsignarRegaloPorMetaUseCase {
 
-    public static final int COMPRAS_POR_REGALO = 5;
-
     private final UsuarioRepository usuarioRepository;
     private final CompraRepository compraRepository;
     private final RegaloRepository regaloRepository;
@@ -38,13 +36,9 @@ public class AsignarRegaloPorMetaUseCase {
                 .orElseThrow(() -> new NoSuchElementException("El usuario no existe"));
         usuario.asegurarActivo();
 
-        long regalosConDerecho = compraRepository.contarCompletadasDe(usuarioId) / COMPRAS_POR_REGALO;
-        long regalosAsignados = regaloRepository.contarAsignadosA(usuarioId);
-        if (regalosAsignados >= regalosConDerecho) {
-            throw new ReglaDominioException(
-                    "El usuario aún no alcanza la meta de " + COMPRAS_POR_REGALO
-                            + " compras completadas para un nuevo regalo");
-        }
+        usuario.asegurarPuedeElegirRegalo(
+                compraRepository.contarCompletadasDe(usuarioId),
+                regaloRepository.contarAsignadosA(usuarioId));
 
         Regalo regalo = regaloRepository.obtenerPorId(regaloId)
                 .orElseThrow(() -> new NoSuchElementException("El regalo no existe"));
@@ -57,11 +51,9 @@ public class AsignarRegaloPorMetaUseCase {
 
     /** Si el regalo es un combo, basta con poseer uno de sus productos para rechazarlo. */
     private boolean usuarioYaPosee(UUID usuarioId, Regalo regalo) {
+        regalo.asegurarDestinoValido();
         if (regalo.getIdProducto() != null) {
             return compraRepository.existeCompraDe(usuarioId, regalo.getIdProducto());
-        }
-        if (regalo.getIdCombo() == null) {
-            throw new ReglaDominioException("El regalo no tiene producto ni combo asociado");
         }
         Combo combo = comboRepository.obtenerPorId(regalo.getIdCombo())
                 .orElseThrow(() -> new NoSuchElementException("El combo del regalo no existe"));

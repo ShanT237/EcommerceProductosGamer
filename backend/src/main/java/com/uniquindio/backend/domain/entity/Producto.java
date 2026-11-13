@@ -167,6 +167,14 @@ public class Producto {
         this.pausado = false;
     }
 
+    public void cambiarVisibilidad(boolean activo) {
+        if (activo) {
+            activar();
+        } else {
+            pausar();
+        }
+    }
+
     /**
      * Regla 1: el stock no puede ser negativo.
      */
@@ -274,6 +282,12 @@ public class Producto {
         }
         this.precioOriginal = this.precio;
         this.precio = new Precio(this.precio).aplicarDescuento(porcentaje).valor();
+    }
+
+    public void asegurarPrecioReducidoDesde(double precioAnterior) {
+        if (precio >= precioAnterior) {
+            throw new ReglaDominioException("Solo se notifica cuando el producto tiene descuento");
+        }
     }
 
     @Override

@@ -39,4 +39,15 @@ class UsuarioTest {
         usuario.activar();
         assertTrue(usuario.isActivo());
     }
+
+    @Test
+    @DisplayName("La meta de regalos depende de compras completadas y regalos ya asignados")
+    void validaElegibilidadParaElegirRegalo() {
+        Usuario usuario = Usuario.registrar(UUID.randomUUID(), "Gamer3", "gamer3@test.com");
+
+        assertThrows(ReglaDominioException.class, () -> usuario.asegurarPuedeElegirRegalo(4, 0));
+        assertDoesNotThrow(() -> usuario.asegurarPuedeElegirRegalo(5, 0));
+        assertDoesNotThrow(() -> usuario.asegurarPuedeElegirRegalo(10, 1));
+        assertThrows(ReglaDominioException.class, () -> usuario.asegurarPuedeElegirRegalo(10, 2));
+    }
 }

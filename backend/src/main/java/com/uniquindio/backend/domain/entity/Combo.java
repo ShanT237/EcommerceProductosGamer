@@ -108,6 +108,14 @@ public class Combo {
         return new Precio(suma).aplicarDescuento(descuento).valor();
     }
 
+    public Precio calcularPrecioUnitario(Producto producto) {
+        Objects.requireNonNull(producto, "El producto es obligatorio");
+        if (!productos.contains(producto.getId())) {
+            throw new ReglaDominioException("El producto no pertenece al combo");
+        }
+        return new Precio(producto.getPrecio()).aplicarDescuento(descuento);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

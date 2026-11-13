@@ -50,6 +50,15 @@ public class Notificacion {
                 mensaje, LocalDateTime.now());
     }
 
+    public static Notificacion porDescuentoEnWishlist(UUID usuarioId, Producto producto,
+                                                      double precioAnterior) {
+        Objects.requireNonNull(producto, "El producto es obligatorio");
+        producto.asegurarPrecioReducidoDesde(precioAnterior);
+        String detalle = String.format("ahora cuesta %.2f (antes %.2f)",
+                producto.getPrecio(), precioAnterior);
+        return porCambioEnWishlist(usuarioId, producto, TipoNotificacion.DESCUENTO, detalle);
+    }
+
     public static Notificacion reconstruir(UUID id, UUID usuarioId, UUID productoId,
                                            TipoNotificacion tipo, String mensaje,
                                            LocalDateTime fecha, boolean leida) {

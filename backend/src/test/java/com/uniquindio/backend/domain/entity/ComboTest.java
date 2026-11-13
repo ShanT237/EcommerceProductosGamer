@@ -93,6 +93,23 @@ class ComboTest {
     }
 
     @Test
+    @DisplayName("Calcula el precio unitario de cada producto con el descuento del combo")
+    void calculaPrecioUnitarioDelCombo() {
+        UUID vendedorId = UUID.randomUUID();
+        Producto teclado = Producto.publicar(UUID.randomUUID(), vendedorId, "Teclado", "Mecánico",
+                100.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        Producto mouse = Producto.publicar(UUID.randomUUID(), vendedorId, "Mouse", "Óptico",
+                50.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        Combo combo = Combo.crear(UUID.randomUUID(), vendedorId, "Combo", "Setup", 20.0,
+                List.of(teclado.getId(), mouse.getId()));
+
+        assertEquals(80.0, combo.calcularPrecioUnitario(teclado).valor(), 0.001);
+        assertThrows(ReglaDominioException.class, () -> combo.calcularPrecioUnitario(
+                Producto.publicar(UUID.randomUUID(), vendedorId, "Silla", "Ergonómica",
+                        200.0, 10, Gama.ALTA, Exclusividad.NORMAL)));
+    }
+
+    @Test
     @DisplayName("Permite agregar un nuevo producto y evita productos duplicados")
     void agregarProducto() {
         UUID vendedorId = UUID.randomUUID();
