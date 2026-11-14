@@ -21,6 +21,7 @@ h3 { font-size: 16px; }
 .desc { color: var(--texto-2); font-size: 16px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pie { margin-top: auto; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-top: 6px; }
 .precio { font-family: var(--fuente-titulo); font-size: 19px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.precios { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
 .stock { font-size: 14px; color: var(--texto-2); }
 .stock.pocas { color: var(--ambar); }
 .stock.agotado { color: var(--rojo); font-weight: 700; }

@@ -57,7 +57,9 @@ public class ProductoMapper {
                 producto.getStock(),
                 producto.getGama(),
                 producto.getExclusividad(),
-                producto.getCategoria()
+                producto.getCategoria(),
+                producto.getPrecioOriginal(),
+                producto.getPorcentajeDescuento()
         );
     }
 

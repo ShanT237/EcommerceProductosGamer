@@ -51,6 +51,7 @@ export class PanelVendedor implements OnInit {
     const yo = this.auth.sesion()?.id;
     return this.productos.catalogo().filter((p) => p.vendedorId === yo);
   });
+  protected conDescuento = computed(() => this.misProductos().filter((p) => !!p.precioOriginal));
   protected editando = signal<Producto | null>(null);
   protected editNombre = signal('');
   protected editDescripcion = signal('');
@@ -68,6 +69,8 @@ export class PanelVendedor implements OnInit {
   protected descPorcentaje = signal<number | null>(null);
   protected aplicandoDesc = signal(false);
   protected errorDesc = signal('');
+  /** Id del producto cuyo descuento se está quitando (evita dobles clics). */
+  protected quitandoDesc = signal<string | null>(null);
 
   ngOnInit() {
     this.cargarCatalogo();
@@ -118,7 +121,7 @@ export class PanelVendedor implements OnInit {
           this.toast.ok('Producto actualizado.');
           this.cargarCatalogo();
         };
-        if (precioNuevo !== p.precio) {
+        if (!p.precioOriginal && precioNuevo !== p.precio) {
           this.productos.modificarPrecio(p.id, precioNuevo).subscribe({
             next: despues,
             error: (e) => { this.guardando.set(false); this.toast.error(mensajeDeError(e)); this.cargarCatalogo(); },
@@ -182,6 +185,19 @@ export class PanelVendedor implements OnInit {
         this.cargarCatalogo();
       },
       error: (e) => { this.aplicandoDesc.set(false); this.errorDesc.set(mensajeDeError(e)); },
+    });
+  }
+
+  protected quitarDescuento(p: Producto) {
+    if (this.quitandoDesc()) return;
+    this.quitandoDesc.set(p.id);
+    this.productos.quitarDescuento(p.id).subscribe({
+      next: (r) => {
+        this.quitandoDesc.set(null);
+        this.toast.ok(`Descuento retirado: "${r.nombre}" vuelve a costar ${precio(r.nuevoPrecio)}.`);
+        this.cargarCatalogo();
+      },
+      error: (e) => { this.quitandoDesc.set(null); this.toast.error(mensajeDeError(e)); },
     });
   }
 }

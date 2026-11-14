@@ -251,6 +251,12 @@ public class Producto {
      */
     public void cambiarPrecio(double nuevoPrecio) {
         asegurarNoEliminado();
+        if (precioOriginal != null) {
+            // Con un descuento activo, `precioOriginal` quedaría desactualizado y quitar el descuento
+            // restauraría un precio viejo: primero se quita el descuento y luego se cambia el precio.
+            throw new ReglaDominioException(
+                    "El producto tiene un descuento activo: quítalo antes de cambiar el precio");
+        }
         if (nuevoPrecio <= 0) {
             throw new ReglaDominioException("El precio del producto debe ser positivo");
         }
@@ -282,6 +288,29 @@ public class Producto {
         }
         this.precioOriginal = this.precio;
         this.precio = new Precio(this.precio).aplicarDescuento(porcentaje).valor();
+    }
+
+    /** Quita el descuento inmediato: el producto vuelve al precio que tenía antes de aplicarlo. */
+    public void quitarDescuento() {
+        asegurarNoEliminado();
+        if (precioOriginal == null) {
+            throw new ReglaDominioException("El producto no tiene un descuento activo");
+        }
+        this.precio = this.precioOriginal;
+        this.precioOriginal = null;
+    }
+
+    public boolean tieneDescuento() {
+        return precioOriginal != null;
+    }
+
+    /** Porcentaje del descuento activo (redondeado a 2 decimales); {@code null} si no hay descuento. */
+    public Double getPorcentajeDescuento() {
+        if (precioOriginal == null) {
+            return null;
+        }
+        double porcentaje = (1 - precio / precioOriginal) * 100;
+        return Math.round(porcentaje * 100.0) / 100.0;
     }
 
     public void asegurarPrecioReducidoDesde(double precioAnterior) {

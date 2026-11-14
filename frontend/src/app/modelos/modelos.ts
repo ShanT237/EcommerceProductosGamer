@@ -23,6 +23,19 @@ export interface Producto {
   gama: Gama;
   exclusividad: Exclusividad;
   categoria: string | null;
+  /** Precio antes del descuento inmediato; `null` o ausente si no hay descuento activo. */
+  precioOriginal?: number | null;
+  /** Porcentaje del descuento activo; `null` o ausente si no hay. */
+  porcentajeDescuento?: number | null;
+}
+
+/** Respuesta de `POST /api/descuentos` y `DELETE /api/descuentos/{productoId}`. */
+export interface ProductoDescuento {
+  id: string;
+  nombre: string;
+  nuevoPrecio: number;
+  precioOriginal: number | null;
+  porcentajeDescuento: number | null;
 }
 
 export interface Pagina<T> {

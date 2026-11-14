@@ -80,8 +80,18 @@
                   </div>
                 </div>
                 <div class="cifras">
+                  @if (p.precioOriginal; as original) {
+                    <span class="precio-original">{{ precio(original) }}</span>
+                  }
                   <strong class="precio">{{ precio(p.precio) }}</strong>
+                  @if (p.porcentajeDescuento) {
+                    <span class="etiqueta descuento">-{{ p.porcentajeDescuento }}%</span>
+                  }
                   <span class="muted" [class.rojo]="p.stock <= 0">{{ p.stock }} en stock</span>
+                  @if (p.precioOriginal) {
+                    <button type="button" class="btn btn-chico quitar-descuento"
+                            [disabled]="quitandoDesc() === p.id" (click)="quitarDescuento(p)">Quitar descuento</button>
+                  }
                 </div>
                 <div class="botones">
                   <button class="btn btn-chico" (click)="editar(p)">Editar</button>
@@ -133,7 +143,9 @@
             <label for="dp">Producto</label>
             <select id="dp" name="dp" class="entrada" [(ngModel)]="descProducto">
               <option value="">Elige un producto…</option>
-              @for (p of misProductos(); track p.id) { <option [value]="p.id">{{ p.nombre }} · {{ precio(p.precio) }}</option> }
+              @for (p of misProductos(); track p.id) {
+                <option [value]="p.id" [disabled]="!!p.precioOriginal">{{ p.nombre }} · {{ precio(p.precio) }}{{ p.precioOriginal ? ' · ya tiene descuento' : '' }}</option>
+              }
             </select>
           </div>
           <div class="campo">
@@ -142,6 +154,19 @@
           </div>
           @if (errorDesc()) { <p class="error">{{ errorDesc() }}</p> }
           <button class="btn btn-neon" type="submit" [disabled]="aplicandoDesc()">{{ aplicandoDesc() ? 'Aplicando…' : 'Aplicar descuento' }}</button>
+
+          @if (conDescuento().length > 0) {
+            <div class="activos">
+              <h4>Descuentos activos</h4>
+              @for (p of conDescuento(); track p.id) {
+                <div class="activo">
+                  <span>{{ p.nombre }} · -{{ p.porcentajeDescuento }}% · <s class="precio-original">{{ precio(p.precioOriginal ?? 0) }}</s> → {{ precio(p.precio) }}</span>
+                  <button type="button" class="btn btn-chico btn-peligro" [disabled]="quitandoDesc() === p.id"
+                          (click)="quitarDescuento(p)">Quitar</button>
+                </div>
+              }
+            </div>
+          }
         </form>
       </section>
     }
@@ -166,7 +191,11 @@
       </div>
       <div class="campo">
         <label for="ep">Precio (COP)</label>
-        <input id="ep" name="ep" class="entrada" type="number" min="1" [(ngModel)]="editPrecio">
+        <input id="ep" name="ep" class="entrada" type="number" min="1" [(ngModel)]="editPrecio"
+               [attr.disabled]="p.precioOriginal ? '' : null">
+        @if (p.precioOriginal) {
+          <p class="muted pequeno">Tiene un descuento activo: quítalo para poder cambiar el precio.</p>
+        }
       </div>
       <div class="acciones">
         <button class="btn btn-neon" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar cambios' }}</button>

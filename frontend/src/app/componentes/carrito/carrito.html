@@ -22,7 +22,10 @@
 
               <div class="datos">
                 <h3>{{ i.producto.nombre }}</h3>
-                <p class="muted">{{ precio(i.producto.precio) }} c/u</p>
+                <p class="muted">
+                  @if (i.producto.precioOriginal; as original) { <s class="precio-original">{{ precio(original) }}</s> }
+                  {{ precio(i.producto.precio) }} c/u
+                </p>
                 @if (i.producto.exclusividad === 'EXCLUSIVO') {
                   <span class="etiqueta excl">Exclusivo · máx. 1</span>
                 }
