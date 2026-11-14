@@ -21,6 +21,16 @@
           </a>
           <a routerLink="/mis-compras" routerLinkActive="activo" (click)="cerrarMenu()">Mis compras</a>
           <a routerLink="/perfil" routerLinkActive="activo" (click)="cerrarMenu()">Perfil</a>
+          <a routerLink="/notificaciones" routerLinkActive="activo" class="campana" (click)="cerrarMenu()"
+             [attr.aria-label]="notificaciones.noLeidas() > 0 ? 'Notificaciones, ' + notificaciones.noLeidas() + ' sin leer' : 'Notificaciones'"
+             title="Notificaciones">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+            </svg>
+            @if (notificaciones.noLeidas() > 0) {
+              <span class="contador-carrito contador-campana">{{ notificaciones.noLeidas() }}</span>
+            }
+          </a>
         }
         @if (auth.rol() === 'VENDEDOR') {
           <a routerLink="/vendedor" routerLinkActive="activo" (click)="cerrarMenu()">Mi tienda</a>

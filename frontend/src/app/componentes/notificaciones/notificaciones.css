@@ -1,0 +1,36 @@
+.cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 26px; }
+.kpi { padding: 14px 22px; display: flex; flex-direction: column; min-width: 130px; }
+.kpi strong { font-family: var(--fuente-titulo); font-size: 22px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.kpi span { color: var(--texto-2); font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; }
+
+.lista { display: flex; flex-direction: column; gap: 12px; }
+.esqueleto { height: 76px; border-radius: 16px; border: 1px solid var(--borde); background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%); background-size: 300% 100%; animation: brillo 1.4s infinite; }
+@keyframes brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+.notificacion {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+  width: 100%; padding: 16px 20px; text-align: left; color: var(--texto); font-size: inherit;
+  transition: border-color 0.2s, opacity 0.2s;
+}
+.notificacion:hover { border-color: rgba(34, 228, 255, 0.35); }
+.notificacion.ocupada { opacity: 0.5; pointer-events: none; }
+.notificacion:not(.no-leida) { cursor: default; color: var(--texto-2); }
+.notificacion.no-leida { border-color: rgba(34, 228, 255, 0.45); background: var(--panel-2); }
+
+.marca { width: 10px; height: 10px; border-radius: 50%; background: transparent; }
+.no-leida .marca { background: var(--cian); box-shadow: var(--brillo-cian); }
+
+.texto { display: flex; flex-direction: column; gap: 4px; }
+.mensaje { font-size: 18px; }
+.no-leida .mensaje { font-weight: 700; }
+.fecha { font-size: 14px; }
+
+.estado { font-size: 12px; letter-spacing: 0.14em; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor; color: var(--texto-2); }
+.estado-nueva { color: var(--cian); }
+
+.vacio .grande { font-size: 56px; color: var(--cian); text-shadow: var(--brillo-cian); }
+
+@media (max-width: 860px) {
+  .notificacion { grid-template-columns: auto 1fr; }
+  .estado { grid-column: 2; justify-self: start; }
+}
