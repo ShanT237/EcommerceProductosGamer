@@ -70,6 +70,8 @@ export class Catalogo implements OnInit {
   protected cantidad = signal(1);
   protected reserva = signal<Compra | null>(null);
   protected procesando = signal(false);
+  protected cupon = signal('');
+  protected cuponAplicado = signal(false);
   protected favoritos = signal<ReadonlySet<string>>(new Set());
   protected esComprador = computed(() => this.auth.rol() === 'COMPRADOR');
   protected total = computed(() => (this.seleccionado()?.precio ?? 0) * this.cantidad());
@@ -144,12 +146,16 @@ export class Catalogo implements OnInit {
     this.seleccionado.set(p);
     this.cantidad.set(1);
     this.reserva.set(null);
+    this.cupon.set('');
+    this.cuponAplicado.set(false);
   }
 
   protected cerrar() {
     if (this.procesando()) return;
     this.seleccionado.set(null);
     this.reserva.set(null);
+    this.cupon.set('');
+    this.cuponAplicado.set(false);
   }
 
   protected cambiarCantidad(delta: number) {
@@ -169,6 +175,8 @@ export class Catalogo implements OnInit {
     const p = this.seleccionado();
     if (!p) return;
     this.procesando.set(true);
+    this.cupon.set('');
+    this.cuponAplicado.set(false);
     this.compras.realizar(p.id, this.cantidad()).subscribe({
       next: (c) => {
         this.reserva.set(c);
@@ -210,6 +218,8 @@ export class Catalogo implements OnInit {
       next: () => {
         this.procesando.set(false);
         this.reserva.set(null);
+        this.cupon.set('');
+        this.cuponAplicado.set(false);
         this.toast.info('Reserva cancelada.');
         this.cargar();
       },
@@ -234,5 +244,37 @@ export class Catalogo implements OnInit {
       },
       error: (e) => this.toast.error(mensajeDeError(e)),
     });
+  }
+  protected aplicarCupon() {
+    const c = this.reserva();
+    const codigo = this.cupon().trim();
+    if (!c) return;
+    if (!codigo) return this.toast.error('Escribe el código del cupón.');
+
+    this.procesando.set(true);
+    this.compras.aplicarCupon(c.id, codigo).subscribe({
+      next: (actualizada) => {
+        if (actualizada && typeof actualizada.subtotal === 'number') {
+          this.terminarCupon(actualizada);
+        } else {
+          // Si el backend no devuelve la compra, se vuelve a consultar para ver el total con descuento.
+          this.compras.listar().subscribe({
+            next: (l) => this.terminarCupon(l.find((x) => x.id === c.id) ?? c),
+            error: () => this.terminarCupon(c),
+          });
+        }
+      },
+      error: (e) => {
+        this.procesando.set(false);
+        this.toast.error(mensajeDeError(e));
+      },
+    });
+  }
+
+  private terminarCupon(compra: Compra) {
+    this.reserva.set(compra);
+    this.cuponAplicado.set(true);
+    this.procesando.set(false);
+    this.toast.ok('Cupón aplicado.');
   }
 }

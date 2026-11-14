@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CarritoService } from '../../servicios/carrito.service';
 import { precio } from '../../servicios/formato';
@@ -17,9 +17,10 @@ export class Carrito {
   private toast = inject(ToastService);
   private router = inject(Router);
   protected precio = precio;
+  protected cupon = signal('');
 
   protected pagar() {
-    this.carrito.pagar().subscribe((r) => {
+    this.carrito.pagar(this.cupon().trim().toUpperCase() || undefined).subscribe((r) => {
       if (!r.fallo) {
         this.toast.ok(`¡Compra simulada exitosa! ${r.completadas.length} producto(s) pagado(s).`);
         this.router.navigateByUrl('/mis-compras');

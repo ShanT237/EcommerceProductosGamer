@@ -84,14 +84,14 @@ export class CarritoService {
    * Paga los ítems en orden y se detiene en el primer error. Los ítems pagados salen del carrito;
    * el fallido y los pendientes se conservan. Si ya hay un pago en curso (o no hay ítems) no emite nada.
    */
-  pagar(): Observable<ResultadoPago> {
+  pagar(cupon?: string): Observable<ResultadoPago> {
     return defer(() => {
       const pendientes = this._items();
       if (this._pagando() || pendientes.length === 0) return EMPTY;
 
       this._pagando.set(true);
       return from(pendientes).pipe(
-        concatMap((item) => this.pagarItem(item)),
+        concatMap((item) => this.pagarItem(item, cupon)),
         takeWhile((intento) => intento.ok, true),
         toArray(),
         tap((intentos) => {
@@ -105,21 +105,27 @@ export class CarritoService {
   }
 
   /** Reserva (POST) y confirma (PUT). Si la confirmación falla, cancela la reserva para devolver el stock. */
-  private pagarItem(item: ItemCarrito): Observable<Intento> {
+  private pagarItem(item: ItemCarrito, cupon?: string): Observable<Intento> {
     const fallido = (e: unknown): IntentoFallido => ({ ok: false, item, mensaje: mensajeDeError(e) });
 
     return this.compras.realizar(item.producto.id, item.cantidad).pipe(
-      switchMap((reserva) =>
-        this.compras.confirmar(reserva.id).pipe(
+      switchMap((reserva) => {
+        // Con cupón: aplicarlo (la compra sigue PENDIENTE) y luego confirmar.
+        const paso$ = cupon
+          ? this.compras.aplicarCupon(reserva.id, cupon).pipe(switchMap(() => this.compras.confirmar(reserva.id)))
+          : this.compras.confirmar(reserva.id);
+
+        return paso$.pipe(
           map((confirmada): Intento => ({ ok: true, item, compra: confirmada })),
+          // Si falla el cupón o la confirmación, se cancela la reserva para devolver el stock.
           catchError((e) =>
             this.compras.cancelar(reserva.id).pipe(
-              catchError(() => of(null)), // si cancelar falla, igual se reporta el error de confirmar
+              catchError(() => of(null)),
               map((): Intento => fallido(e)),
             ),
           ),
-        ),
-      ),
+        );
+      }),
       catchError((e) => of<Intento>(fallido(e))),
     );
   }

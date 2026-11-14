@@ -15,7 +15,7 @@ export class CompraService {
   cancelar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/cancelar`, {}); }
   reembolsar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/reembolso`, {}); }
   aplicarCupon(id: string, codigo: string) {
-    return this.http.put(`${API_URL}/compras/${id}/cupon`, { codigo });
+    return this.http.put<Compra>(`${API_URL}/compras/${id}/cupon`, { codigo });
   }
   resenar(idCompra: string, valorCalificacion: number, comentario: string) {
     return this.http.post(`${API_URL}/resenas`, { idCompra, valorCalificacion, comentario });

@@ -53,6 +53,12 @@
       <h3>Resumen</h3>
       <div class="fila"><span class="muted">Unidades</span><strong>{{ carrito.unidades() }}</strong></div>
       <div class="fila total"><span class="muted">Subtotal</span><strong>{{ precio(carrito.subtotal()) }}</strong></div>
+      <div class="campo">
+        <label for="cupon">Cupón (opcional)</label>
+        <input id="cupon" class="entrada" placeholder="VERANO26" [value]="cupon()"
+               [disabled]="carrito.pagando()"
+               (input)="cupon.set($any($event.target).value)">
+      </div>
       <button type="button" class="btn btn-neon pagar"
               [disabled]="carrito.pagando() || carrito.items().length === 0"
               (click)="pagar()">{{ carrito.pagando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>

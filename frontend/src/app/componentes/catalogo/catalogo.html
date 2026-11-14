@@ -117,6 +117,15 @@
           <div class="resumen-pago">
             <p>Reserva creada · {{ c.cantidad }} × {{ precio(c.precioUnitario) }}</p>
             <strong>Total: {{ precio(c.subtotal) }}</strong>
+            @if (cuponAplicado()) {
+              <p class="muted">Cupón aplicado ✔</p>
+            } @else {
+              <div class="cupon-fila">
+                <input class="entrada" placeholder="Código de cupón (ej. VERANO26)" aria-label="Código de cupón"
+                       [(ngModel)]="cupon" (keydown.enter)="aplicarCupon()">
+                <button type="button" class="btn btn-chico" [disabled]="procesando()" (click)="aplicarCupon()">Aplicar</button>
+              </div>
+            }
           </div>
           <div class="acciones">
             <button class="btn btn-neon" [disabled]="procesando()" (click)="pagar()">{{ procesando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>
