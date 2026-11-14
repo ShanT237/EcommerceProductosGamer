@@ -133,6 +133,9 @@ textarea.entrada { resize: vertical; min-height: 90px; }
 .gama-MEDIA { color: var(--cian); }
 .gama-BAJA { color: var(--lima); }
 .excl { color: var(--ambar); }
+/* Descuento inmediato: insignia "-20%" y precio anterior tachado (catálogo, detalle, carrito y panel). */
+.etiqueta.descuento { color: var(--magenta); background: rgba(255, 46, 166, 0.12); }
+.precio-original { font-family: var(--fuente); font-size: 15px; font-weight: 500; color: var(--texto-2); text-decoration: line-through; text-shadow: none; }
 
 .titulo-seccion { font-size: clamp(26px, 4vw, 40px); font-weight: 900; }
 .degradado {
@@ -157,5 +160,3 @@ textarea.entrada { resize: vertical; min-height: 90px; }
   --bs-link-color: var(--cian);
   --bs-link-hover-color: var(--cian);
 }
-
-

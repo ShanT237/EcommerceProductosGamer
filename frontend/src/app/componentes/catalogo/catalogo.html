@@ -120,7 +120,13 @@
         </div>
         <h2>{{ p.nombre }}</h2>
         <p class="muted descripcion">{{ p.descripcion }}</p>
-        <p class="precio-grande">{{ precio(p.precio) }}</p>
+        <p class="precio-grande">
+          {{ precio(p.precio) }}
+          @if (p.precioOriginal; as original) {
+            <s class="precio-original">{{ precio(original) }}</s>
+            <span class="etiqueta descuento">-{{ p.porcentajeDescuento }}%</span>
+          }
+        </p>
         <p class="stock" [class.agotado]="p.stock <= 0">{{ p.stock > 0 ? p.stock + ' unidades disponibles' : 'Producto agotado' }}</p>
 
         @if (!esComprador()) {

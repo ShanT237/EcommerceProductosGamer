@@ -43,7 +43,7 @@
 .etiquetas { display: flex; gap: 8px; flex-wrap: wrap; }
 .gz-modal h2 { font-size: 26px; }
 .descripcion { line-height: 1.4; font-size: 19px; }
-.precio-grande { font-family: var(--fuente-titulo); font-size: 32px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.precio-grande { font-family: var(--fuente-titulo); font-size: 32px; color: var(--cian); text-shadow: var(--brillo-cian); display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .stock { color: var(--texto-2); font-size: 16px; }
 .stock.agotado { color: var(--rojo); font-weight: 700; }
 .compra { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

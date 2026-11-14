@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { API_URL } from '../config';
-import { FiltroCatalogo, NuevoProducto, Pagina, Producto } from '../modelos/modelos';
+import { FiltroCatalogo, NuevoProducto, Pagina, Producto, ProductoDescuento } from '../modelos/modelos';
 
 @Injectable({ providedIn: 'root' })
 export class ProductoService {
@@ -51,6 +51,11 @@ export class ProductoService {
   }
 
   aplicarDescuento(productoId: string, porcentaje: number) {
-    return this.http.post<{ id: string; nombre: string; nuevoPrecio: number }>(`${API_URL}/descuentos`, { productoId, porcentaje });
+    return this.http.post<ProductoDescuento>(`${API_URL}/descuentos`, { productoId, porcentaje });
+  }
+
+  /** Retira el descuento inmediato: el producto vuelve a su precio anterior. */
+  quitarDescuento(productoId: string) {
+    return this.http.delete<ProductoDescuento>(`${API_URL}/descuentos/${productoId}`);
   }
 }
