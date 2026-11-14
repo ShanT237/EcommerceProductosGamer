@@ -104,6 +104,15 @@ export interface NuevoProducto {
   exclusividad: Exclusividad;
 }
 
+export interface Notificacion {
+  id: string;
+  productoId: string;
+  tipo: 'DESCUENTO';
+  mensaje: string;
+  fecha: string;
+  leida: boolean;
+}
+
 export interface ErrorApi {
   status?: number;
   mensaje?: string;

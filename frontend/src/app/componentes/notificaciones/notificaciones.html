@@ -1,0 +1,34 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <div>
+      <h1 class="titulo-seccion">Mis <span class="degradado">notificaciones</span></h1>
+      <p class="muted">Avisos de descuento de los productos de tu lista de deseos.</p>
+    </div>
+    <div class="panel kpi"><strong>{{ servicio.noLeidas() }}</strong><span>Sin leer</span></div>
+  </header>
+
+  @if (cargando() && servicio.notificaciones().length === 0) {
+    <div class="lista">
+      @for (i of [1, 2, 3]; track i) { <div class="esqueleto"></div> }
+    </div>
+  } @else if (servicio.notificaciones().length === 0) {
+    <div class="panel vacio">
+      <p class="grande">◈</p>
+      <p>No tienes notificaciones por ahora.</p>
+    </div>
+  } @else {
+    <div class="lista">
+      @for (n of servicio.notificaciones(); track n.id) {
+        <button type="button" class="panel notificacion aparece" [class.no-leida]="!n.leida"
+                [class.ocupada]="ocupada() === n.id" (click)="abrir(n)">
+          <span class="marca" aria-hidden="true"></span>
+          <span class="texto">
+            <span class="mensaje">{{ n.mensaje }}</span>
+            <span class="muted fecha">{{ fechaHora(n.fecha) }}</span>
+          </span>
+          <span class="estado" [class.estado-nueva]="!n.leida">{{ n.leida ? 'LEÍDA' : 'NUEVA' }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>
