@@ -71,6 +71,13 @@ public class Notificacion {
         this.leida = true;
     }
 
+    /** Garantiza que la notificación pertenece al usuario indicado (Regla 8: solo el dueño la gestiona). */
+    public void asegurarPerteneceA(UUID usuarioId) {
+        if (!this.usuarioId.equals(usuarioId)) {
+            throw new ReglaDominioException("La notificación no pertenece al usuario");
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
