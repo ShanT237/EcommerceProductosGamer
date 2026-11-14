@@ -1,4 +1,4 @@
-<article class="tarjeta" (mousemove)="inclinar($event)" (mouseleave)="soltar()" (click)="ver.emit(producto())" tabindex="0" (keydown.enter)="ver.emit(producto())">
+<article class="tarjeta card h-100" (mousemove)="inclinar($event)" (mouseleave)="soltar()" (click)="ver.emit(producto())" tabindex="0" (keydown.enter)="ver.emit(producto())">
   <div class="brillo"></div>
   <div class="arte">
     <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" />
@@ -15,9 +15,9 @@
               (click)="alAlternar($event)" (keydown.enter)="$event.stopPropagation()">{{ favorito() ? '♥' : '♡' }}</button>
     }
   </div>
-  <div class="info">
-    <h3>{{ producto().nombre }}</h3>
-    <p class="desc">{{ producto().descripcion }}</p>
+  <div class="info card-body">
+    <h3 class="card-title mb-0">{{ producto().nombre }}</h3>
+    <p class="desc card-text mb-0">{{ producto().descripcion }}</p>
     <div class="pie">
       <strong class="precio">{{ precio(producto().precio) }}</strong>
       @if (producto().stock <= 0) {

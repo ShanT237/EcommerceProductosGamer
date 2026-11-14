@@ -20,14 +20,17 @@
 .interruptor input:checked + .pista .bola { transform: translateX(20px); }
 .interruptor input:focus-visible + .pista { outline: 2px solid var(--cian); outline-offset: 2px; }
 
-.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; transition: opacity 0.2s; }
+.rejilla { transition: opacity 0.2s; } /* la cuadrícula la da Bootstrap: row + row-cols-* */
 .rejilla.cargando { opacity: 0.55; }
 .esqueleto { height: 350px; border-radius: 20px; border: 1px solid var(--borde); background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%); background-size: 300% 100%; animation: brillo 1.4s infinite; }
 @keyframes brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 .vacio .grande { font-size: 56px; color: var(--cian); text-shadow: var(--brillo-cian); }
 .vacio .btn { margin-top: 14px; }
 
-.paginacion { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
+.paginacion { margin-top: 36px; }
+.texto-pagina { text-align: center; margin-top: 12px; color: var(--texto-2); font-weight: 600; letter-spacing: 0.08em; }
+/* form-control de Bootstrap pone fondo transparente al enfocar: se conserva el fondo oscuro del tema */
+.entrada:focus { background-color: rgba(0, 0, 0, 0.35); }
 .num.actual { background: linear-gradient(110deg, var(--cian), var(--violeta)); color: #07060f; border-color: transparent; box-shadow: var(--brillo-cian); }
 
 /* ---------- gz-modal ---------- */
@@ -53,7 +56,7 @@
 .cupon-fila .entrada { padding: 8px 12px; font-size: 16px; }
 .nota { color: var(--ambar); font-size: 16px; padding: 12px 14px; border: 1px solid rgba(255, 176, 32, 0.35); border-radius: 12px; background: rgba(255, 176, 32, 0.07); }
 
-@media (max-width: 960px) {
+@media (max-width: 991.98px) { /* mismo corte que lg de Bootstrap */
   .cuerpo { grid-template-columns: 1fr; }
   .filtros { position: static; }
   .gz-modal { grid-template-columns: 1fr; }
