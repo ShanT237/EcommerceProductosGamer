@@ -9,13 +9,18 @@
     </div>
     <div class="buscador">
       <span class="lupa">⌕</span>
-      <input class="entrada" type="search" placeholder="Busca teclados, mouse, sillas…" aria-label="Buscar productos"
+      <input class="entrada form-control" type="search" placeholder="Busca teclados, mouse, sillas…" aria-label="Buscar productos"
              [(ngModel)]="texto" (ngModelChange)="cambiaFiltro()">
     </div>
   </header>
 
+  <button type="button" class="btn btn-chico d-lg-none mb-3 w-100" (click)="filtrosAbiertos.set(!filtrosAbiertos())"
+          [attr.aria-expanded]="filtrosAbiertos()" aria-controls="panel-filtros">
+    {{ filtrosAbiertos() ? 'Ocultar filtros' : 'Mostrar filtros' }}
+  </button>
+
   <div class="cuerpo">
-    <aside class="filtros panel">
+    <aside id="panel-filtros" class="filtros panel d-lg-flex" [class.d-none]="!filtrosAbiertos()">
       <h3>Filtros</h3>
 
       <div class="campo">
@@ -29,7 +34,7 @@
 
       <div class="campo">
         <label for="cat">Categoría</label>
-        <input id="cat" class="entrada" list="lista-categorias" placeholder="Todas" [(ngModel)]="categoria" (ngModelChange)="cambiaFiltro()">
+        <input id="cat" class="entrada form-control" list="lista-categorias" placeholder="Todas" [(ngModel)]="categoria" (ngModelChange)="cambiaFiltro()">
         <datalist id="lista-categorias">
           @for (c of categorias(); track c) { <option [value]="c"></option> }
         </datalist>
@@ -38,8 +43,8 @@
       <div class="campo">
         <label>Precio (COP)</label>
         <div class="par">
-          <input class="entrada" type="number" min="0" placeholder="Mín." aria-label="Precio mínimo" [(ngModel)]="precioMin" (ngModelChange)="cambiaFiltro()">
-          <input class="entrada" type="number" min="0" placeholder="Máx." aria-label="Precio máximo" [(ngModel)]="precioMax" (ngModelChange)="cambiaFiltro()">
+          <input class="entrada form-control" type="number" min="0" placeholder="Mín." aria-label="Precio mínimo" [(ngModel)]="precioMin" (ngModelChange)="cambiaFiltro()">
+          <input class="entrada form-control" type="number" min="0" placeholder="Máx." aria-label="Precio máximo" [(ngModel)]="precioMax" (ngModelChange)="cambiaFiltro()">
         </div>
       </div>
 
@@ -59,33 +64,39 @@
           <button class="btn btn-chico" (click)="cargar()">Reintentar</button>
         </div>
       } @else if (cargando() && !resultado()) {
-        <div class="rejilla">
-          @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div class="esqueleto"></div> }
+        <div class="rejilla row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div class="col"><div class="esqueleto"></div></div> }
         </div>
       } @else if (resultado(); as r) {
         @if (r.contenido.length === 0) {
-          <div class="panel vacio">
+          <div class="panel vacio" role="status">
             <p class="grande">◈</p>
             <p>No encontramos productos con esos filtros.</p>
             <button class="btn btn-chico" (click)="limpiar()">Limpiar filtros</button>
           </div>
         } @else {
-          <div class="rejilla" [class.cargando]="cargando()">
+          <div class="rejilla row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4" [class.cargando]="cargando()">
             @for (p of r.contenido; track p.id) {
-              <app-tarjeta-producto class="aparece" [producto]="p" [favorito]="wishlist.esFavorito(p.id)"
-                                    (ver)="abrir($event)" (alternar)="alternarDe($event)" />
+              <div class="col">
+                <app-tarjeta-producto class="aparece h-100" [producto]="p" [favorito]="wishlist.esFavorito(p.id)"
+                                      (ver)="abrir($event)" (alternar)="alternarDe($event)" />
+              </div>
             }
           </div>
 
-          @if (r.totalPaginas > 1) {
-            <nav class="paginacion" aria-label="Paginación">
-              <button class="btn btn-chico" [disabled]="pagina() === 0" (click)="irA(pagina() - 1)">←</button>
-              @for (n of paginas(); track n) {
-                <button class="btn btn-chico num" [class.actual]="n === pagina()" (click)="irA(n)">{{ n + 1 }}</button>
-              }
-              <button class="btn btn-chico" [disabled]="pagina() >= r.totalPaginas - 1" (click)="irA(pagina() + 1)">→</button>
-            </nav>
-          }
+          <nav class="paginacion" aria-label="Paginación del catálogo">
+            <div class="d-flex justify-content-center align-items-center flex-wrap gap-2">
+              <button type="button" class="btn btn-chico" [disabled]="!hayAnterior() || cargando()" (click)="irA(r.pagina - 1)">← Anterior</button>
+              <span class="d-none d-md-inline-flex gap-2">
+                @for (n of paginas(); track n) {
+                  <button type="button" class="btn btn-chico num" [class.actual]="n === r.pagina" [attr.aria-current]="n === r.pagina ? 'page' : null"
+                          [disabled]="cargando()" (click)="irA(n)">{{ n + 1 }}</button>
+                }
+              </span>
+              <button type="button" class="btn btn-chico" [disabled]="!haySiguiente() || cargando()" (click)="irA(r.pagina + 1)">Siguiente →</button>
+            </div>
+            <p class="texto-pagina" aria-live="polite">{{ textoPagina() }}</p>
+          </nav>
         }
       }
     </section>
@@ -122,7 +133,7 @@
               <p class="muted">Cupón aplicado ✔</p>
             } @else {
               <div class="cupon-fila">
-                <input class="entrada" placeholder="Código de cupón (ej. VERANO26)" aria-label="Código de cupón"
+                <input class="entrada form-control" placeholder="Código de cupón (ej. VERANO26)" aria-label="Código de cupón"
                        [(ngModel)]="cupon" (keydown.enter)="aplicarCupon()">
                 <button type="button" class="btn btn-chico" [disabled]="procesando()" (click)="aplicarCupon()">Aplicar</button>
               </div>
