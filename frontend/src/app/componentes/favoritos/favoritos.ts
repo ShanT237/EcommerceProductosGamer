@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Producto } from '../../modelos/modelos';
 import { mensajeDeError } from '../../servicios/api.util';
 import { ToastService } from '../../servicios/toast.service';
@@ -16,6 +16,7 @@ import { TarjetaProducto } from '../tarjeta-producto/tarjeta-producto';
 export class Favoritos {
   protected wishlist = inject(WishlistService);
   private toast = inject(ToastService);
+  private router = inject(Router);
 
   protected quitar(p: Producto) {
     this.wishlist.alternar(p).subscribe({
@@ -26,5 +27,9 @@ export class Favoritos {
 
   protected reintentar() {
     this.wishlist.cargar().subscribe({ error: () => undefined });
+  }
+
+  protected ver(p: Producto) {
+    this.router.navigate(['/catalogo'], { queryParams: { producto: p.id } });
   }
 }

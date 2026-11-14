@@ -8,6 +8,12 @@
         <span class="etiqueta excl">Exclusivo</span>
       }
     </div>
+    @if (favorito() !== null) {
+      <button type="button" class="corazon" [class.activo]="favorito()"
+              [attr.aria-pressed]="favorito()"
+              [attr.aria-label]="favorito() ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+              (click)="alAlternar($event)" (keydown.enter)="$event.stopPropagation()">{{ favorito() ? '♥' : '♡' }}</button>
+    }
   </div>
   <div class="info">
     <h3>{{ producto().nombre }}</h3>

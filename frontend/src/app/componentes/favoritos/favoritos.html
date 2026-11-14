@@ -29,7 +29,7 @@
     <div class="rejilla" [class.cargando]="wishlist.cargando()">
       @for (p of wishlist.productos(); track p.id) {
         <div class="item aparece">
-          <app-tarjeta-producto [producto]="p" />
+          <app-tarjeta-producto [producto]="p" (ver)="ver($event)" />
           <button type="button" class="btn btn-chico btn-peligro quitar"
                   [attr.aria-label]="'Quitar ' + p.nombre + ' de favoritos'"
                   (click)="quitar(p)">♥ Quitar de favoritos</button>
