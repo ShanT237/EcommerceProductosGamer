@@ -52,13 +52,27 @@ export class Catalogo implements OnInit {
   protected resultado = signal<Pagina<Producto> | null>(null);
   protected cargando = signal(false);
   protected error = signal('');
-  protected tamano = 8;
+  protected tamano = 6; // 6 = múltiplo de 1, 2 y 3 columnas (cuadrícula Bootstrap)
   private ultimaPeticion = 0;
+  private urlRevisada = false;
   private busquedas = new Subject<void>();
 
-  protected categorias = computed(() => {
-    const todas = this.productos.catalogo().map((p) => p.categoria).filter((c): c is string => !!c);
-    return [...new Set(todas)].sort();
+  // Sugerencias del filtro de categoría: se juntan de las páginas que ya llegaron del backend
+  // (no se pide el catálogo completo; la paginación sigue siendo la única consulta).
+  private categoriasVistas = signal<ReadonlySet<string>>(new Set());
+  protected categorias = computed(() => [...this.categoriasVistas()].sort());
+
+  // ---- paginación: todo sale de la respuesta del backend (pagina empieza en 0) ----
+  protected filtrosAbiertos = signal(false); // en celular los filtros van plegados
+  protected totalPaginas = computed(() => this.resultado()?.totalPaginas ?? 0);
+  protected textoPagina = computed(() => {
+    const r = this.resultado();
+    return r && r.totalPaginas > 0 ? `Página ${r.pagina + 1} de ${r.totalPaginas}` : '';
+  });
+  protected hayAnterior = computed(() => (this.resultado()?.pagina ?? 0) > 0);
+  protected haySiguiente = computed(() => {
+    const r = this.resultado();
+    return !!r && r.pagina < r.totalPaginas - 1;
   });
 
   protected paginas = computed(() => {
@@ -91,11 +105,7 @@ export class Catalogo implements OnInit {
   }
 
   ngOnInit() {
-    this.productos.cargarCatalogo().subscribe({
-      next: () => this.abrirDesdeUrl(),
-      error: () => this.abrirDesdeUrl(), // si falla, igual intenta con favoritos
-    });
-    this.cargar();
+    this.cargar(); // única consulta al abrir: una página (page + size) al backend
   }
 
   protected cambiaFiltro() { this.busquedas.next(); }
@@ -114,7 +124,7 @@ export class Catalogo implements OnInit {
 
   protected irA(p: number) {
     const total = this.resultado()?.totalPaginas ?? 0;
-    if (p < 0 || p >= total || p === this.pagina()) return;
+    if (this.cargando() || p < 0 || p >= total || p === this.pagina()) return;
     this.pagina.set(p);
     this.cargar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -138,6 +148,14 @@ export class Catalogo implements OnInit {
           if (id !== this.ultimaPeticion) return; // llegó una respuesta vieja: se ignora
           this.resultado.set(r);
           this.cargando.set(false);
+          const nuevas = r.contenido.map((p) => p.categoria).filter((c): c is string => !!c);
+          if (nuevas.some((c) => !this.categoriasVistas().has(c))) {
+            this.categoriasVistas.set(new Set([...this.categoriasVistas(), ...nuevas]));
+          }
+          if (!this.urlRevisada) {
+            this.urlRevisada = true;
+            this.abrirDesdeUrl();
+          }
         },
         error: (e) => {
           if (id !== this.ultimaPeticion) return;
@@ -289,7 +307,7 @@ export class Catalogo implements OnInit {
     const id = this.ruta.snapshot.queryParamMap.get('producto');
     if (!id) return;
     const p =
-      this.productos.catalogo().find((x) => x.id === id) ??
+      this.resultado()?.contenido.find((x) => x.id === id) ??
       this.wishlist.productos().find((x) => x.id === id);
     if (p) this.abrir(p);
     // Limpia el parámetro para que al cerrar y recargar no se reabra solo.
