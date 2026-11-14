@@ -15,5 +15,7 @@ public record BuscarProductoResponse(
         int stock,
         Gama gama,
         Exclusividad exclusividad,
-        String categoria
+        String categoria,
+        Double precioOriginal,        // precio antes del descuento; null si no hay descuento activo
+        Double porcentajeDescuento    // porcentaje del descuento activo; null si no hay
 ) {}

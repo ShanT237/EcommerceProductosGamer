@@ -60,6 +60,18 @@ class ModificarProductoUseCaseTest {
     }
 
     @Test
+    void conDescuentoActivoRechazaCambiarElPrecioYNoToca() {
+        producto.aplicarDescuento(20);
+        productoRepository.guardar(producto);
+
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(producto.getId(), vendedorId, 150));
+
+        Producto guardado = productoRepository.obtenerPorId(producto.getId()).orElseThrow();
+        assertEquals(80.0, guardado.getPrecio(), 0.001);
+        assertEquals(100.0, guardado.getPrecioOriginal());
+    }
+
+    @Test
     void productoInexistenteLanzaNoSuchElement() {
         assertThrows(NoSuchElementException.class, () -> useCase.ejecutar(UUID.randomUUID(), vendedorId, 80));
     }

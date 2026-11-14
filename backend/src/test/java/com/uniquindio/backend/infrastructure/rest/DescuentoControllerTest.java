@@ -1,7 +1,9 @@
 package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.usecase.AplicarDescuentoUseCase;
+import com.uniquindio.backend.application.usecase.QuitarDescuentoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -17,13 +19,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.comprador;
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,6 +45,9 @@ class DescuentoControllerTest {
 
     @MockitoBean
     private AplicarDescuentoUseCase aplicarDescuentoUseCase;
+
+    @MockitoBean
+    private QuitarDescuentoUseCase quitarDescuentoUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -113,5 +121,70 @@ class DescuentoControllerTest {
                         .content(cuerpo("", 20)))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    void aplicarDevuelveElPrecioOriginalYElPorcentaje() throws Exception {
+        when(aplicarDescuentoUseCase.ejecutar(productoId, vendedorId, 20.0))
+                .thenReturn(productoConDescuento());
+
+        mockMvc.perform(post("/api/descuentos")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpo("", 20)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nuevoPrecio").value(80.0))
+                .andExpect(jsonPath("$.precioOriginal").value(100.0))
+                .andExpect(jsonPath("$.porcentajeDescuento").value(20.0));
+    }
+
+    @Test
+    void quitarUsaElVendedorDelTokenYDevuelveElPrecioRestaurado() throws Exception {
+        Producto sinDescuento = productoConDescuento();
+        sinDescuento.quitarDescuento();
+        when(quitarDescuentoUseCase.ejecutar(productoId, vendedorId)).thenReturn(sinDescuento);
+
+        mockMvc.perform(delete("/api/descuentos/{productoId}", productoId)
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.id").value(productoId.toString()))
+                .andExpect(jsonPath("$.nuevoPrecio").value(100.0))
+                .andExpect(jsonPath("$.precioOriginal").doesNotExist())
+                .andExpect(jsonPath("$.porcentajeDescuento").doesNotExist());
+
+        Mockito.verify(quitarDescuentoUseCase).ejecutar(productoId, vendedorId);
+    }
+
+    @Test
+    void quitarSinDescuentoActivoRetorna422() throws Exception {
+        when(quitarDescuentoUseCase.ejecutar(productoId, vendedorId))
+                .thenThrow(new ReglaDominioException("El producto no tiene un descuento activo"));
+
+        mockMvc.perform(delete("/api/descuentos/{productoId}", productoId)
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isUnprocessableContent());    // 422
+    }
+
+    @Test
+    void quitarDeProductoInexistenteRetorna404() throws Exception {
+        when(quitarDescuentoUseCase.ejecutar(productoId, vendedorId))
+                .thenThrow(new NoSuchElementException("El producto no existe"));
+
+        mockMvc.perform(delete("/api/descuentos/{productoId}", productoId)
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isNotFound());                // 404
+    }
+
+    @Test
+    void quitarSinTokenRetorna401() throws Exception {
+        mockMvc.perform(delete("/api/descuentos/{productoId}", productoId))
+                .andExpect(status().isUnauthorized());            // 401
+    }
+
+    @Test
+    void unCompradorNoPuedeQuitarRetorna403() throws Exception {
+        mockMvc.perform(delete("/api/descuentos/{productoId}", productoId)
+                        .with(comprador(UUID.randomUUID())))
+                .andExpect(status().isForbidden());               // 403
     }
 }
