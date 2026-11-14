@@ -46,14 +46,6 @@ export class ProductoService {
     return this.http.delete<void>(`${API_URL}/productos/${id}`);
   }
 
-  anadirWishlist(productoId: string) {
-    return this.http.post(`${API_URL}/wishlists`, { productoId });
-  }
-
-  quitarWishlist(productoId: string) {
-    return this.http.delete(`${API_URL}/wishlists/${productoId}`);
-  }
-
   configurarPromocion(productoId: string, porcentaje: number, desde: string, hasta: string) {
     return this.http.post(`${API_URL}/promociones`, { productoId, porcentaje, desde, hasta });
   }

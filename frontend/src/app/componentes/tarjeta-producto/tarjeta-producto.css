@@ -24,3 +24,8 @@ h3 { font-size: 16px; }
 .stock { font-size: 14px; color: var(--texto-2); }
 .stock.pocas { color: var(--ambar); }
 .stock.agotado { color: var(--rojo); font-weight: 700; }
+
+.corazon { position: absolute; top: 10px; right: 10px; z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--borde); background: rgba(0, 0, 0, 0.45); color: var(--texto-2); font-size: 20px; line-height: 1; transition: transform 0.15s, color 0.2s, border-color 0.2s; }
+.corazon:hover { transform: scale(1.12); color: var(--magenta); border-color: var(--magenta); }
+.corazon.activo { color: var(--magenta); border-color: var(--magenta); text-shadow: var(--brillo-magenta); }
+.corazon:focus-visible { outline: 2px solid var(--cian); outline-offset: 2px; }

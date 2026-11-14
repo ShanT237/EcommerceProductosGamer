@@ -12,10 +12,18 @@ import { ArteProducto } from '../arte-producto/arte-producto';
 })
 export class TarjetaProducto {
   producto = input.required<Producto>();
+  /** `null` = sin corazón (p. ej. vista previa del vendedor); true/false = corazón lleno/vacío. */
+  favorito = input<boolean | null>(null);
   ver = output<Producto>();
+  alternar = output<Producto>();
 
   private elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   protected precio = precio;
+
+  protected alAlternar(e: Event) {
+    e.stopPropagation(); // que el clic del corazón no abra el detalle
+    this.alternar.emit(this.producto());
+  }
 
   protected inclinar(e: MouseEvent) {
     const caja = this.elemento.nativeElement.getBoundingClientRect();

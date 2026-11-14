@@ -1,0 +1,40 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <h1 class="titulo-seccion">Mis <span class="degradado">favoritos</span></h1>
+    <p class="muted">
+      @if (!wishlist.cargando() && !wishlist.error()) {
+        {{ wishlist.productos().length }} producto{{ wishlist.productos().length === 1 ? '' : 's' }} en tu lista de deseos
+      } @else {
+        Tu lista de deseos, siempre a la mano.
+      }
+    </p>
+  </header>
+
+  @if (wishlist.error()) {
+    <div class="panel vacio">
+      <p>{{ wishlist.error() }}</p>
+      <button type="button" class="btn btn-chico" (click)="reintentar()">Reintentar</button>
+    </div>
+  } @else if (wishlist.cargando() && wishlist.productos().length === 0) {
+    <div class="rejilla">
+      @for (i of [1, 2, 3, 4]; track i) { <div class="esqueleto"></div> }
+    </div>
+  } @else if (wishlist.productos().length === 0) {
+    <div class="panel vacio">
+      <p class="grande">♡</p>
+      <p>Aún no tienes favoritos. Guarda productos desde el catálogo para seguirles el precio.</p>
+      <a routerLink="/catalogo" class="btn btn-neon btn-chico">Ir al catálogo</a>
+    </div>
+  } @else {
+    <div class="rejilla" [class.cargando]="wishlist.cargando()">
+      @for (p of wishlist.productos(); track p.id) {
+        <div class="item aparece">
+          <app-tarjeta-producto [producto]="p" (ver)="ver($event)" />
+          <button type="button" class="btn btn-chico btn-peligro quitar"
+                  [attr.aria-label]="'Quitar ' + p.nombre + ' de favoritos'"
+                  (click)="quitar(p)">♥ Quitar de favoritos</button>
+        </div>
+      }
+    </div>
+  }
+</div>
