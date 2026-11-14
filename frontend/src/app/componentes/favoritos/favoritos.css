@@ -1,0 +1,13 @@
+.cabecera { margin-bottom: 28px; }
+
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; transition: opacity 0.2s; }
+.rejilla.cargando { opacity: 0.55; }
+
+.item { display: flex; flex-direction: column; gap: 10px; }
+.quitar { width: 100%; }
+
+.esqueleto { height: 350px; border-radius: 20px; border: 1px solid var(--borde); background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%); background-size: 300% 100%; animation: brillo 1.4s infinite; }
+@keyframes brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+.vacio .grande { font-size: 56px; color: var(--magenta); text-shadow: var(--brillo-magenta); }
+.vacio .btn { margin-top: 14px; }

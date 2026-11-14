@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, debounceTime } from 'rxjs';
 import { Compra, Gama, Pagina, Producto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
@@ -9,6 +9,7 @@ import { CarritoService } from '../../servicios/carrito.service';
 import { CompraService } from '../../servicios/compra.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
+import { WishlistService } from '../../servicios/wishlist.service';
 import { mensajeDeError } from '../../servicios/api.util';
 import { precio } from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
@@ -27,6 +28,8 @@ export class Catalogo implements OnInit {
   private carrito = inject(CarritoService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private ruta = inject(ActivatedRoute);
+  protected wishlist = inject(WishlistService);
   protected auth = inject(AuthService);
   protected precio = precio;
 
@@ -72,12 +75,12 @@ export class Catalogo implements OnInit {
   protected procesando = signal(false);
   protected cupon = signal('');
   protected cuponAplicado = signal(false);
-  protected favoritos = signal<ReadonlySet<string>>(new Set());
   protected esComprador = computed(() => this.auth.rol() === 'COMPRADOR');
   protected total = computed(() => (this.seleccionado()?.precio ?? 0) * this.cantidad());
+  // El estado de favoritos vive en WishlistService (viene del servidor), no aquí.
   protected esFavorito = computed(() => {
     const p = this.seleccionado();
-    return !!p && this.favoritos().has(p.id);
+    return !!p && this.wishlist.ids().has(p.id);
   });
 
   constructor() {
@@ -88,7 +91,10 @@ export class Catalogo implements OnInit {
   }
 
   ngOnInit() {
-    this.productos.cargarCatalogo().subscribe({ error: () => undefined });
+    this.productos.cargarCatalogo().subscribe({
+      next: () => this.abrirDesdeUrl(),
+      error: () => this.abrirDesdeUrl(), // si falla, igual intenta con favoritos
+    });
     this.cargar();
   }
 
@@ -230,21 +236,21 @@ export class Catalogo implements OnInit {
     });
   }
 
+  /** Corazón del modal de detalle. */
   protected alternarFavorito() {
     const p = this.seleccionado();
-    if (!p) return;
-    const era = this.favoritos().has(p.id);
-    const llamada = era ? this.productos.quitarWishlist(p.id) : this.productos.anadirWishlist(p.id);
-    llamada.subscribe({
-      next: () => {
-        const nuevo = new Set(this.favoritos());
-        if (era) nuevo.delete(p.id); else nuevo.add(p.id);
-        this.favoritos.set(nuevo);
-        this.toast.ok(era ? 'Quitado de tu lista de deseos.' : 'Añadido a tu lista de deseos.');
-      },
+    if (p) this.alternarDe(p);
+  }
+
+  /** Corazón de una tarjeta de la rejilla (también lo usa el modal). */
+  protected alternarDe(p: Producto) {
+    const era = this.wishlist.esFavorito(p.id);
+    this.wishlist.alternar(p).subscribe({
+      next: () => this.toast.ok(era ? 'Quitado de tus favoritos.' : 'Añadido a tus favoritos.'),
       error: (e) => this.toast.error(mensajeDeError(e)),
     });
   }
+
   protected aplicarCupon() {
     const c = this.reserva();
     const codigo = this.cupon().trim();
@@ -276,5 +282,17 @@ export class Catalogo implements OnInit {
     this.cuponAplicado.set(true);
     this.procesando.set(false);
     this.toast.ok('Cupón aplicado.');
+  }
+
+  /** Si la URL trae ?producto=<id> (viene de Favoritos), abre directamente ese producto. */
+  private abrirDesdeUrl() {
+    const id = this.ruta.snapshot.queryParamMap.get('producto');
+    if (!id) return;
+    const p =
+      this.productos.catalogo().find((x) => x.id === id) ??
+      this.wishlist.productos().find((x) => x.id === id);
+    if (p) this.abrir(p);
+    // Limpia el parámetro para que al cerrar y recargar no se reabra solo.
+    this.router.navigate([], { queryParams: { producto: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 }

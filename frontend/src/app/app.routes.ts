@@ -5,6 +5,7 @@ import { Registro } from './componentes/registro/registro';
 import { Catalogo } from './componentes/catalogo/catalogo';
 import { Carrito } from './componentes/carrito/carrito';
 import { MisCompras } from './componentes/mis-compras/mis-compras';
+import { Favoritos } from './componentes/favoritos/favoritos';
 import { Perfil } from './componentes/perfil/perfil';
 import { Notificaciones } from './componentes/notificaciones/notificaciones';
 import { PanelVendedor } from './componentes/panel-vendedor/panel-vendedor';
@@ -17,6 +18,7 @@ export const routes: Routes = [
   { path: 'catalogo', component: Catalogo, canActivate: [authGuard], title: 'Catálogo · GamerZone' },
   { path: 'carrito', component: Carrito, canActivate: [rolGuard('COMPRADOR')], title: 'Carrito · GamerZone' },
   { path: 'mis-compras', component: MisCompras, canActivate: [rolGuard('COMPRADOR')], title: 'Mis compras · GamerZone' },
+  { path: 'favoritos', component: Favoritos, canActivate: [rolGuard('COMPRADOR')], title: 'Favoritos · GamerZone' },
   { path: 'perfil', component: Perfil, canActivate: [rolGuard('COMPRADOR')], title: 'Mi perfil · GamerZone' },
   { path: 'notificaciones', component: Notificaciones, canActivate: [rolGuard('COMPRADOR')], title: 'Notificaciones · GamerZone' },
   { path: 'vendedor', component: PanelVendedor, canActivate: [rolGuard('VENDEDOR')], title: 'Panel de vendedor · GamerZone' },
