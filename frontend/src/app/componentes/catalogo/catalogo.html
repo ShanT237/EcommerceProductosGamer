@@ -72,7 +72,8 @@
         } @else {
           <div class="rejilla" [class.cargando]="cargando()">
             @for (p of r.contenido; track p.id) {
-              <app-tarjeta-producto class="aparece" [producto]="p" (ver)="abrir($event)" />
+              <app-tarjeta-producto class="aparece" [producto]="p" [favorito]="wishlist.esFavorito(p.id)"
+                                    (ver)="abrir($event)" (alternar)="alternarDe($event)" />
             }
           </div>
 
