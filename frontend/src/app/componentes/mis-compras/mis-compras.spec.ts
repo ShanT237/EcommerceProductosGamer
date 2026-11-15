@@ -35,7 +35,12 @@ describe('MisCompras (pedidos)', () => {
     fixture = TestBed.createComponent(MisCompras);
     fixture.detectChanges();
     http.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${API_URL}/productos`)).flush({
-      contenido: [], pagina: 0, tamano: 100, totalElementos: 0, totalPaginas: 0,
+      contenido: lista.map((c, i) => ({
+        id: c.productoId, vendedorId: 'v1', nombre: `Producto ${i + 1}`,
+        descripcion: '', precio: 100, stock: 5, gama: 'MEDIA', exclusividad: 'NORMAL',
+        categoria: null,
+      })),
+      pagina: 0, tamano: 100, totalElementos: lista.length, totalPaginas: 1,
     });
     http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush(lista);
     http.expectOne({ method: 'GET', url: `${API_URL}/puntos/historial` }).flush([]);
@@ -66,6 +71,9 @@ describe('MisCompras (pedidos)', () => {
 
   it('confirmar una línea de un pedido usa PUT /pedidos/{id}/confirmar', async () => {
     abrir([compra('c1', 'ped1'), compra('c2', 'ped1')]);
+    expect(fixture.nativeElement.querySelectorAll('article.compra')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('2 producto(s)');
+    expect(fixture.nativeElement.textContent).toContain('Producto 1 + Producto 2');
 
     boton('Confirmar pago')!.click();
     await esperar();
@@ -86,6 +94,18 @@ describe('MisCompras (pedidos)', () => {
     responderRecarga();
   });
 
+  it('reembolsa todas las líneas del pedido con una sola acción', async () => {
+    abrir([compra('c1', 'ped1', { estado: 'COMPLETADA' }), compra('c2', 'ped1', { estado: 'COMPLETADA' })]);
+
+    boton('Reembolso')!.click();
+    await esperar();
+
+    http.expectOne({ method: 'PUT', url: `${API_URL}/pedidos/ped1/reembolso` }).flush({
+      pedidoId: 'ped1', compras: [], total: 200,
+    });
+    responderRecarga();
+  });
+
   it('una compra suelta (sin pedido) sigue usando los endpoints de compra', async () => {
     abrir([compra('c9', null)]);
 
@@ -94,6 +114,16 @@ describe('MisCompras (pedidos)', () => {
 
     http.expectOne({ method: 'PUT', url: `${API_URL}/compras/c9/confirmar` }).flush(compra('c9', null, { estado: 'COMPLETADA' }));
     responderRecarga();
+  });
+
+  it('muestraElNombreOriginalDelComboComoUnaSolaOperacion', () => {
+    abrir([
+      compra('c1', 'ped1', { comboId: 'combo1', comboNombre: 'Combo Gamer' }),
+      compra('c2', 'ped1', { comboId: 'combo1', comboNombre: 'Combo Gamer' }),
+    ]);
+
+    expect(fixture.nativeElement.querySelectorAll('article.compra')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Combo Gamer');
   });
 
   it('ninguna compra pendiente ofrece aplicar un cupón: el cupón se usa al crear el pedido', () => {
