@@ -1,6 +1,7 @@
 package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.usecase.ProgramarPreventaUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarPreventasUseCase;
 import com.uniquindio.backend.domain.entity.Preventa;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
@@ -20,11 +21,13 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
+import static com.uniquindio.backend.infrastructure.rest.SesionTest.comprador;
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +48,9 @@ class PreventaControllerTest {
     private ProgramarPreventaUseCase programarPreventaUseCase;
 
     @MockitoBean
+    private ConsultarPreventasUseCase consultarPreventasUseCase;
+
+    @MockitoBean
     private EmisorToken emisorToken;
 
     @BeforeEach
@@ -54,6 +60,27 @@ class PreventaControllerTest {
 
     private final UUID vendedorId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();
+
+    @Test
+    void listarDevuelve200ParaCompradorYVendedor() throws Exception {
+        when(consultarPreventasUseCase.ejecutar()).thenReturn(java.util.List.of(
+                Preventa.reconstruir(UUID.randomUUID(), productoId, LANZAMIENTO, "Edición coleccionista")));
+
+        mockMvc.perform(get("/api/preventas").with(comprador(UUID.randomUUID())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].productoId").value(productoId.toString()))
+                .andExpect(jsonPath("$[0].fechaLanzamiento").value("2026-12-01"));
+
+        mockMvc.perform(get("/api/preventas").with(vendedor(vendedorId)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void listarSinTokenRetorna401() throws Exception {
+        mockMvc.perform(get("/api/preventas"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
 
     private String cuerpo(String extra, String descripcion) {
         return """

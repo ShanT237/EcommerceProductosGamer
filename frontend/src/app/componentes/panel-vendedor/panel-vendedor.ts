@@ -20,6 +20,7 @@ import { FormularioPublicar } from '../formulario-publicar/formulario-publicar';
 import { CombosVendedor } from '../combos-vendedor/combos-vendedor';
 import { CuponesVendedor } from '../cupones-vendedor/cupones-vendedor';
 import { RegalosVendedor } from '../regalos-vendedor/regalos-vendedor';
+import { PreventasVendedor } from '../preventas-vendedor/preventas-vendedor';
 
 type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' | 'cupones' | 'regalos';
 
@@ -51,6 +52,7 @@ export class PanelVendedor implements OnInit {
     { id: 'combos', etiqueta: 'Combos' },
     { id: 'cupones', etiqueta: 'Cupones' },
     { id: 'regalos', etiqueta: 'Regalos' },
+    { id: 'preventas', etiqueta: 'Preventas' },
   ];
 
   // ---- resumen ----

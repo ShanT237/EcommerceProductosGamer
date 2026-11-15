@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.request.ProgramarPreventaRequest;
 import com.uniquindio.backend.application.dto.response.PreventaResponse;
+import com.uniquindio.backend.application.usecase.ConsultarPreventasUseCase;
 import com.uniquindio.backend.application.usecase.ProgramarPreventaUseCase;
 import com.uniquindio.backend.domain.entity.Preventa;
 import com.uniquindio.backend.infrastructure.rest.mapper.PreventaMapper;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,12 +30,23 @@ import java.util.UUID;
 public class PreventaController {
 
     private final ProgramarPreventaUseCase programarPreventaUseCase;
+    private final ConsultarPreventasUseCase consultarPreventasUseCase;
     private final PreventaMapper mapper;
 
     public PreventaController(ProgramarPreventaUseCase programarPreventaUseCase,
+                              ConsultarPreventasUseCase consultarPreventasUseCase,
                               PreventaMapper mapper) {
         this.programarPreventaUseCase = programarPreventaUseCase;
+        this.consultarPreventasUseCase = consultarPreventasUseCase;
         this.mapper = mapper;
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<java.util.List<PreventaResponse>> listar() {
+        return ResponseEntity.ok(consultarPreventasUseCase.ejecutar().stream()
+                .map(mapper::toResponse)
+                .toList());
     }
 
     // CU-37 Programar Preventa (fecha de lanzamiento futura, una por producto)

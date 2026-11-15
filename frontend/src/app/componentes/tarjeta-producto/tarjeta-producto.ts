@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, input, output } from '@angular/core';
-import { Producto } from '../../modelos/modelos';
+import { Preventa, Producto } from '../../modelos/modelos';
 import { fechaDia, precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
 
@@ -14,6 +14,7 @@ export class TarjetaProducto {
   producto = input.required<Producto>();
   /** `null` = sin corazón (p. ej. vista previa del vendedor); true/false = corazón lleno/vacío. */
   favorito = input<boolean | null>(null);
+  preventa = input<Preventa | null>(null);
   ver = output<Producto>();
   alternar = output<Producto>();
 
