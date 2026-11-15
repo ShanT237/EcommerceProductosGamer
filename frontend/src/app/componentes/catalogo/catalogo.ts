@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, debounceTime } from 'rxjs';
-import { Compra, Gama, Pagina, Producto } from '../../modelos/modelos';
+import { Gama, Pagina, Pedido, Producto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { CarritoService } from '../../servicios/carrito.service';
 import { CompraService } from '../../servicios/compra.service';
@@ -90,10 +90,9 @@ export class Catalogo implements OnInit {
   // ---- detalle / compra ----
   protected seleccionado = signal<Producto | null>(null);
   protected cantidad = signal(1);
-  protected reserva = signal<Compra | null>(null);
+  /** Compra directa = pedido de un solo ítem, reservado hasta que se paga o se cancela. */
+  protected reserva = signal<Pedido | null>(null);
   protected procesando = signal(false);
-  protected cupon = signal('');
-  protected cuponAplicado = signal(false);
   protected esComprador = computed(() => this.auth.rol() === 'COMPRADOR');
   protected total = computed(() => {
     const p = this.seleccionado();
@@ -178,16 +177,12 @@ export class Catalogo implements OnInit {
     this.seleccionado.set(p);
     this.cantidad.set(1);
     this.reserva.set(null);
-    this.cupon.set('');
-    this.cuponAplicado.set(false);
   }
 
   protected cerrar() {
     if (this.procesando()) return;
     this.seleccionado.set(null);
     this.reserva.set(null);
-    this.cupon.set('');
-    this.cuponAplicado.set(false);
   }
 
   protected cambiarCantidad(delta: number) {
@@ -207,11 +202,9 @@ export class Catalogo implements OnInit {
     const p = this.seleccionado();
     if (!p) return;
     this.procesando.set(true);
-    this.cupon.set('');
-    this.cuponAplicado.set(false);
-    this.compras.realizar(p.id, this.cantidad()).subscribe({
-      next: (c) => {
-        this.reserva.set(c);
+    this.compras.crearPedido([{ productoId: p.id, cantidad: this.cantidad() }]).subscribe({
+      next: (pedido) => {
+        this.reserva.set(pedido);
         this.procesando.set(false);
         this.toast.info('Compra reservada. Confirma el pago para completarla.');
       },
@@ -227,13 +220,13 @@ export class Catalogo implements OnInit {
     if (!c || this.procesando()) return;
     const acepto = await this.confirmacion.pedir({
       titulo: 'Confirmar pago',
-      mensaje: `Vas a pagar ${precio(c.subtotal)} por ${this.seleccionado()?.nombre ?? 'tu compra'} (${c.cantidad} u.). Es un pago simulado.`,
+      mensaje: `Vas a pagar ${precio(c.total)} por ${this.seleccionado()?.nombre ?? 'tu compra'} (${this.unidadesDe(c)} u.). Es un pago simulado.`,
       confirmar: 'Pagar',
       peligro: false,
     });
-    if (!acepto || this.reserva()?.id !== c.id) return;
+    if (!acepto || this.reserva()?.pedidoId !== c.pedidoId) return;
     this.procesando.set(true);
-    this.compras.confirmar(c.id).subscribe({
+    this.compras.confirmarPedido(c.pedidoId).subscribe({
       next: () => {
         this.procesando.set(false);
         this.toast.ok('¡Pago simulado exitoso! Tu compra está completada.');
@@ -258,14 +251,12 @@ export class Catalogo implements OnInit {
       confirmar: 'Cancelar reserva',
       cancelar: 'Volver',
     });
-    if (!acepto || this.reserva()?.id !== c.id) return;
+    if (!acepto || this.reserva()?.pedidoId !== c.pedidoId) return;
     this.procesando.set(true);
-    this.compras.cancelar(c.id).subscribe({
+    this.compras.cancelarPedido(c.pedidoId).subscribe({
       next: () => {
         this.procesando.set(false);
         this.reserva.set(null);
-        this.cupon.set('');
-        this.cuponAplicado.set(false);
         this.toast.info('Reserva cancelada.');
         this.cargar();
       },
@@ -274,6 +265,10 @@ export class Catalogo implements OnInit {
         this.toast.error(mensajeDeError(e));
       },
     });
+  }
+
+  protected unidadesDe(pedido: Pedido): number {
+    return pedido.compras.reduce((suma, c) => suma + c.cantidad, 0);
   }
 
   /** Corazón del modal de detalle. */
@@ -289,39 +284,6 @@ export class Catalogo implements OnInit {
       next: () => this.toast.ok(era ? 'Quitado de tus favoritos.' : 'Añadido a tus favoritos.'),
       error: (e) => this.toast.error(mensajeDeError(e)),
     });
-  }
-
-  protected aplicarCupon() {
-    const c = this.reserva();
-    const codigo = this.cupon().trim();
-    if (!c) return;
-    if (!codigo) return this.toast.error('Escribe el código del cupón.');
-
-    this.procesando.set(true);
-    this.compras.aplicarCupon(c.id, codigo).subscribe({
-      next: (actualizada) => {
-        if (actualizada && typeof actualizada.subtotal === 'number') {
-          this.terminarCupon(actualizada);
-        } else {
-          // Si el backend no devuelve la compra, se vuelve a consultar para ver el total con descuento.
-          this.compras.listar().subscribe({
-            next: (l) => this.terminarCupon(l.find((x) => x.id === c.id) ?? c),
-            error: () => this.terminarCupon(c),
-          });
-        }
-      },
-      error: (e) => {
-        this.procesando.set(false);
-        this.toast.error(mensajeDeError(e));
-      },
-    });
-  }
-
-  private terminarCupon(compra: Compra) {
-    this.reserva.set(compra);
-    this.cuponAplicado.set(true);
-    this.procesando.set(false);
-    this.toast.ok('Cupón aplicado.');
   }
 
   /** Si la URL trae ?producto=<id> (viene de Favoritos), abre directamente ese producto. */

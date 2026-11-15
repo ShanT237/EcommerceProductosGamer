@@ -1,4 +1,4 @@
-import {Component, inject, signal} from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CarritoService } from '../../servicios/carrito.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
@@ -21,29 +21,23 @@ export class Carrito {
   protected precio = precio;
   protected precioVigente = precioVigente;
   protected precioTachado = precioTachado;
-  protected cupon = signal('');
 
   protected async pagar() {
     if (this.carrito.pagando() || this.carrito.items().length === 0) return;
-    const cupon = this.cupon().trim().toUpperCase();
     const acepto = await this.confirmacion.pedir({
       titulo: 'Confirmar pago',
-      mensaje:
-        `Vas a pagar ${this.carrito.unidades()} unidad(es) por ${precio(this.carrito.subtotal())}` +
-        (cupon ? ` con el cupón ${cupon}` : '') +
-        '. Es un pago simulado.',
+      mensaje: `Vas a pagar ${this.carrito.unidades()} unidad(es) por ${precio(this.carrito.subtotal())}. Es un pago simulado.`,
       confirmar: 'Pagar',
       peligro: false,
     });
     if (!acepto) return;
-    this.carrito.pagar(cupon || undefined).subscribe((r) => {
-      if (!r.fallo) {
-        this.toast.ok(`¡Compra simulada exitosa! ${r.completadas.length} producto(s) pagado(s).`);
+    this.carrito.pagar().subscribe((r) => {
+      if (!r.error) {
+        this.toast.ok(`¡Compra simulada exitosa! ${r.compras.length} producto(s) pagado(s).`);
         this.router.navigateByUrl('/mis-compras');
         return;
       }
-      const anteriores = r.completadas.length > 0 ? ' Los pagos anteriores quedaron completados.' : '';
-      this.toast.error(`No se pudo comprar "${r.fallo.producto.nombre}": ${r.fallo.mensaje}.${anteriores}`);
+      this.toast.error(`No se pudo completar el pago: ${r.error}. No se cobró nada y tu carrito sigue igual.`);
     });
   }
 }

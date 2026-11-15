@@ -1,5 +1,5 @@
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import { EMPTY, Observable, catchError, concatMap, defer, finalize, from, map, of, switchMap, takeWhile, tap, toArray } from 'rxjs';
+import { EMPTY, Observable, catchError, defer, finalize, map, of, switchMap, tap } from 'rxjs';
 import { Compra, Producto } from '../modelos/modelos';
 import { mensajeDeError } from './api.util';
 import { AuthService } from './auth.service';
@@ -7,16 +7,12 @@ import { CompraService } from './compra.service';
 import { precioVigente } from './formato';
 
 export interface ItemCarrito { producto: Producto; cantidad: number }
-export interface FalloPago { producto: Producto; mensaje: string }
-export interface ResultadoPago { completadas: Compra[]; fallo: FalloPago | null }
-
-type IntentoOk = { ok: true; item: ItemCarrito; compra: Compra };
-type IntentoFallido = { ok: false; item: ItemCarrito; mensaje: string };
-type Intento = IntentoOk | IntentoFallido;
+/** `error` es `null` si el pago se completó; si no, trae el mensaje del backend y el carrito queda intacto. */
+export interface ResultadoPago { compras: Compra[]; error: string | null }
 
 /**
  * Carrito de compra simulado. Vive solo en el frontend (no persiste al recargar).
- * Pagar = crear y confirmar cada compra con los endpoints existentes, ítem por ítem y en orden.
+ * Pagar = crear un único pedido con todos los ítems y confirmarlo: todo o nada.
  */
 @Injectable({ providedIn: 'root' })
 export class CarritoService {
@@ -82,62 +78,36 @@ export class CarritoService {
   }
 
   /**
-   * Paga los ítems en orden y se detiene en el primer error. Los ítems pagados salen del carrito;
-   * el fallido y los pendientes se conservan. Si ya hay un pago en curso (o no hay ítems) no emite nada.
+   * Paga todo el carrito como un solo pedido (POST /pedidos y luego PUT /confirmar). Es todo o nada:
+   * si falla la creación o la confirmación el carrito queda intacto (y si falla confirmar se cancela el pedido
+   * para devolver el stock). Si ya hay un pago en curso (o no hay ítems) no emite nada.
    */
-  pagar(cupon?: string): Observable<ResultadoPago> {
+  pagar(): Observable<ResultadoPago> {
     return defer(() => {
-      const pendientes = this._items();
-      if (this._pagando() || pendientes.length === 0) return EMPTY;
+      const items = this._items();
+      if (this._pagando() || items.length === 0) return EMPTY;
 
       this._pagando.set(true);
-      return from(pendientes).pipe(
-        concatMap((item) => this.pagarItem(item, cupon)),
-        takeWhile((intento) => intento.ok, true),
-        toArray(),
-        tap((intentos) => {
-          const pagados = new Set(intentos.filter((i): i is IntentoOk => i.ok).map((i) => i.item.producto.id));
-          this._items.update((lista) => lista.filter((i) => !pagados.has(i.producto.id)));
+      const pedido$ = this.compras.crearPedido(items.map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad })));
+      return pedido$.pipe(
+        switchMap((pedido) =>
+          this.compras.confirmarPedido(pedido.pedidoId).pipe(
+            map((confirmado): ResultadoPago => ({ compras: confirmado.compras, error: null })),
+            // Si falla la confirmación se cancela el pedido para devolver el stock; se informa el error original.
+            catchError((e) =>
+              this.compras.cancelarPedido(pedido.pedidoId).pipe(
+                catchError(() => of(null)),
+                map((): ResultadoPago => ({ compras: [], error: mensajeDeError(e) })),
+              ),
+            ),
+          ),
+        ),
+        catchError((e) => of<ResultadoPago>({ compras: [], error: mensajeDeError(e) })),
+        tap((r) => {
+          if (!r.error) this._items.set([]);
         }),
-        map((intentos) => this.armarResultado(intentos)),
         finalize(() => this._pagando.set(false)),
       );
     });
-  }
-
-  /** Reserva (POST) y confirma (PUT). Si la confirmación falla, cancela la reserva para devolver el stock. */
-  private pagarItem(item: ItemCarrito, cupon?: string): Observable<Intento> {
-    const fallido = (e: unknown): IntentoFallido => ({ ok: false, item, mensaje: mensajeDeError(e) });
-
-    return this.compras.realizar(item.producto.id, item.cantidad).pipe(
-      switchMap((reserva) => {
-        // Con cupón: aplicarlo (la compra sigue PENDIENTE) y luego confirmar.
-        const paso$ = cupon
-          ? this.compras.aplicarCupon(reserva.id, cupon).pipe(switchMap(() => this.compras.confirmar(reserva.id)))
-          : this.compras.confirmar(reserva.id);
-
-        return paso$.pipe(
-          map((confirmada): Intento => ({ ok: true, item, compra: confirmada })),
-          // Si falla el cupón o la confirmación, se cancela la reserva para devolver el stock.
-          catchError((e) =>
-            this.compras.cancelar(reserva.id).pipe(
-              catchError(() => of(null)),
-              map((): Intento => fallido(e)),
-            ),
-          ),
-        );
-      }),
-      catchError((e) => of<Intento>(fallido(e))),
-    );
-  }
-
-  private armarResultado(intentos: Intento[]): ResultadoPago {
-    const completadas: Compra[] = [];
-    let fallo: FalloPago | null = null;
-    for (const intento of intentos) {
-      if (intento.ok) completadas.push(intento.compra);
-      else fallo = { producto: intento.item.producto, mensaje: intento.mensaje };
-    }
-    return { completadas, fallo };
   }
 }

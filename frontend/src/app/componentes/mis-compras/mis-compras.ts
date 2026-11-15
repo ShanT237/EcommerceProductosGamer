@@ -80,26 +80,37 @@ export class MisCompras implements OnInit {
     });
   }
 
+  /** Líneas del mismo pedido que `c` (o solo `c` si es una compra suelta). */
+  protected lineasDelPedido(c: Compra): Compra[] {
+    return c.pedidoId ? this.lista().filter((x) => x.pedidoId === c.pedidoId) : [c];
+  }
+
   protected async confirmar(c: Compra) {
-    const acepto = await this.confirmacion.pedir({
-      titulo: 'Confirmar pago',
-      mensaje: `Vas a pagar ${precio(c.subtotal)} por "${this.nombreDe(c.productoId)}" (${c.cantidad} u.). Es un pago simulado.`,
-      confirmar: 'Pagar',
-      peligro: false,
-    });
+    const pedidoId = c.pedidoId;
+    const lineas = this.lineasDelPedido(c);
+    const mensaje = pedidoId
+      ? `Vas a pagar ${precio(this.sumar(lineas))} por el pedido completo (${lineas.length} producto(s)). Es un pago simulado.`
+      : `Vas a pagar ${precio(c.subtotal)} por "${this.nombreDe(c.productoId)}" (${c.cantidad} u.). Es un pago simulado.`;
+    const acepto = await this.confirmacion.pedir({ titulo: 'Confirmar pago', mensaje, confirmar: 'Pagar', peligro: false });
     if (!acepto) return;
-    this.accion(c, this.compras.confirmar(c.id), 'Compra confirmada. ¡Disfrútala!');
+    if (pedidoId) this.accion(c, this.compras.confirmarPedido(pedidoId), 'Pedido confirmado. ¡Disfrútalo!');
+    else this.accion(c, this.compras.confirmar(c.id), 'Compra confirmada. ¡Disfrútala!');
   }
 
   protected async cancelar(c: Compra) {
-    const acepto = await this.confirmacion.pedir({
-      titulo: 'Cancelar compra',
-      mensaje: `¿Cancelar la compra de "${this.nombreDe(c.productoId)}" por ${precio(c.subtotal)}? Se liberará la reserva.`,
-      confirmar: 'Cancelar compra',
-      cancelar: 'Volver',
-    });
+    const pedidoId = c.pedidoId;
+    const lineas = this.lineasDelPedido(c);
+    const mensaje = pedidoId
+      ? `¿Cancelar el pedido completo (${lineas.length} producto(s)) por ${precio(this.sumar(lineas))}? Se liberará toda la reserva.`
+      : `¿Cancelar la compra de "${this.nombreDe(c.productoId)}" por ${precio(c.subtotal)}? Se liberará la reserva.`;
+    const acepto = await this.confirmacion.pedir({ titulo: 'Cancelar compra', mensaje, confirmar: 'Cancelar compra', cancelar: 'Volver' });
     if (!acepto) return;
-    this.accion(c, this.compras.cancelar(c.id), 'Compra cancelada.');
+    if (pedidoId) this.accion(c, this.compras.cancelarPedido(pedidoId), 'Pedido cancelado.');
+    else this.accion(c, this.compras.cancelar(c.id), 'Compra cancelada.');
+  }
+
+  private sumar(lineas: Compra[]): number {
+    return lineas.reduce((s, x) => s + x.subtotal, 0);
   }
 
   protected async reembolsar(c: Compra) {

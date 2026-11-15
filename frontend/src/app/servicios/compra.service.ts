@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { API_URL } from '../config';
-import { Compra, MovimientoPuntos } from '../modelos/modelos';
+import { Compra, MovimientoPuntos, Pedido } from '../modelos/modelos';
 
 @Injectable({ providedIn: 'root' })
 export class CompraService {
@@ -11,6 +11,11 @@ export class CompraService {
   realizar(productoId: string, cantidad: number) {
     return this.http.post<Compra>(`${API_URL}/compras`, { productoId, cantidad });
   }
+  crearPedido(items: Array<{ productoId: string; cantidad: number }>) {
+    return this.http.post<Pedido>(`${API_URL}/pedidos`, { items });
+  }
+  confirmarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/confirmar`, {}); }
+  cancelarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/cancelar`, {}); }
   confirmar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/confirmar`, {}); }
   cancelar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/cancelar`, {}); }
   reembolsar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/reembolso`, {}); }
