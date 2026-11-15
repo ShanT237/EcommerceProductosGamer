@@ -10,6 +10,9 @@
       @if (producto().porcentajePromocion) {
         <span class="etiqueta promo">Temporada -{{ producto().porcentajePromocion }}%</span>
       }
+      @if (preventa(); as p) {
+        <span class="etiqueta preventa">Preventa · lanzamiento {{ fechaDia(p.fechaLanzamiento) }}</span>
+      }
       @if (producto().exclusividad === 'EXCLUSIVO') {
         <span class="etiqueta excl">Exclusivo</span>
       }
