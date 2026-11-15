@@ -1,0 +1,86 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <div>
+      <h1 class="titulo-seccion">Mis <span class="degradado">regalos</span></h1>
+      <p class="muted">Por cada 5 compras completadas puedes elegir un regalo.</p>
+    </div>
+    @if (progreso(); as p) {
+      <div class="panel kpi"><strong>{{ p.regalosDisponibles }}</strong><span>Por elegir</span></div>
+    }
+  </header>
+
+  @if (error()) {
+    <div class="panel vacio">
+      <p>{{ error() }}</p>
+      <button type="button" class="btn btn-chico" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (cargando()) {
+    <div class="lista">
+      @for (i of [1, 2, 3]; track i) { <div class="esqueleto"></div> }
+    </div>
+  } @else {
+    @if (progreso(); as p) {
+      <section class="panel progreso aparece">
+        <p class="resumen">Llevas {{ p.comprasCompletadas }} compras completadas.</p>
+        <div class="barra" aria-hidden="true"><span [style.width.%]="avance()"></span></div>
+        <p class="muted">Te faltan {{ p.comprasParaSiguiente }} compra(s) para tu próximo regalo.</p>
+      </section>
+    }
+
+    <section class="dos">
+      <div class="columna">
+        <h3 class="subtitulo">Regalos disponibles</h3>
+        @if (disponibles().length === 0) {
+          <div class="panel vacio">
+            <p class="grande">◈</p>
+            <p>No hay regalos disponibles por ahora.</p>
+          </div>
+        } @else {
+          @for (r of disponibles(); track r.id) {
+            <article class="panel regalo aparece" [class.ocupada]="ocupada() === r.id">
+              <div class="datos">
+                <h4>{{ nombreDe(r) }}</h4>
+                <span class="etiqueta">{{ tipoDe(r) }}</span>
+              </div>
+              <button type="button" class="btn btn-neon btn-chico elegir"
+                      [disabled]="porElegir() <= 0 || ocupada() !== null" (click)="elegir(r)">
+                Elegir
+              </button>
+            </article>
+          }
+          @if (porElegir() <= 0) {
+            <p class="muted pequeno">Aún no tienes regalos por elegir: sigue comprando para desbloquear el siguiente.</p>
+          }
+        }
+      </div>
+
+      <div class="columna">
+        <h3 class="subtitulo">Mis regalos</h3>
+        @if (mios().length === 0) {
+          <div class="panel vacio">
+            <p class="grande">◈</p>
+            <p>Todavía no has elegido ningún regalo.</p>
+          </div>
+        } @else {
+          @for (r of mios(); track r.id) {
+            <article class="panel regalo aparece" [class.ocupada]="ocupada() === r.id">
+              <div class="datos">
+                <h4>{{ nombreDe(r) }}</h4>
+                <span class="etiqueta estado estado-{{ r.estado.toLowerCase() }}">{{ etiqueta(r.estado) }}</span>
+                @if (r.fechaEntrega) {
+                  <p class="muted pequeno">Entregado el {{ fechaHora(r.fechaEntrega) }}</p>
+                }
+              </div>
+              @if (r.estado === 'ENVIADO') {
+                <button type="button" class="btn btn-neon btn-chico confirmar"
+                        [disabled]="ocupada() !== null" (click)="confirmar(r)">
+                  Confirmar recepción
+                </button>
+              }
+            </article>
+          }
+        }
+      </div>
+    </section>
+  }
+</div>
