@@ -22,6 +22,8 @@ public class CompraPersistenceMapper {
         entity.setDescargado(compra.isDescargado());
         entity.setCuponAplicado(compra.isCuponAplicado());
         entity.setPedidoId(compra.getPedidoId());
+        entity.setComboId(compra.getComboId());
+        entity.setComboNombre(compra.getComboNombre());
         return entity;
     }
 
@@ -38,6 +40,8 @@ public class CompraPersistenceMapper {
                 entity.isPuntosAsignados(),
                 entity.isDescargado(),
                 entity.isCuponAplicado(),
-                entity.getPedidoId());
+                entity.getPedidoId(),
+                entity.getComboId(),
+                entity.getComboNombre());
     }
 }
