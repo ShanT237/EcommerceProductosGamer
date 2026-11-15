@@ -2,6 +2,7 @@ package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
@@ -27,6 +28,7 @@ class CancelarYReembolsarUseCaseTest {
     private CompraRepository compraRepository;
     private ProductoRepository productoRepository;
     private CancelarCompraUseCase cancelarUseCase;
+    private ConfirmarCompraUseCase confirmarUseCase;
     private SolicitarReembolsoUseCase reembolsoUseCase;
 
     private static final ZoneId ZONA = ZoneId.systemDefault();
@@ -38,6 +40,7 @@ class CancelarYReembolsarUseCaseTest {
         compraRepository = new CompraRepositoryEnMemoria();
         productoRepository = new ProductoRepositoryEnMemoria();
         cancelarUseCase = new CancelarCompraUseCase(compraRepository, productoRepository);
+        confirmarUseCase = new ConfirmarCompraUseCase(compraRepository);
         reembolsoUseCase = new SolicitarReembolsoUseCase(compraRepository, productoRepository, RELOJ);
     }
 
@@ -76,5 +79,45 @@ class CancelarYReembolsarUseCaseTest {
 
         assertEquals(EstadoCompra.REEMBOLSADA, compraReembolsada.getEstado());
         assertEquals(5, productoRepository.obtenerPorId(producto.getId()).get().getStock());
+    }
+
+    @Test
+    @DisplayName("Una compra que pertenece a un pedido no se confirma ni se cancela por separado (422) y nada cambia")
+    void compraDeUnPedidoSeRechazaConMensajeClaro() {
+        UUID usuarioId = UUID.randomUUID();
+        Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "RGB", 50.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        producto.reducirStock(1); // Queda 9
+        productoRepository.guardar(producto);
+        Compra linea = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), 1, AHORA.minusHours(1),
+                new Precio(50.0), UUID.randomUUID());
+        compraRepository.guardar(linea);
+
+        ReglaDominioException alConfirmar = assertThrows(ReglaDominioException.class,
+                () -> confirmarUseCase.ejecutar(linea.getId(), usuarioId));
+        ReglaDominioException alCancelar = assertThrows(ReglaDominioException.class,
+                () -> cancelarUseCase.ejecutar(linea.getId(), usuarioId));
+
+        assertTrue(alConfirmar.getMessage().contains("pedido"));
+        assertTrue(alCancelar.getMessage().contains("pedido"));
+        assertEquals(EstadoCompra.PENDIENTE, compraRepository.obtenerPorId(linea.getId()).get().getEstado());
+        assertEquals(9, productoRepository.obtenerPorId(producto.getId()).get().getStock());
+    }
+
+    @Test
+    @DisplayName("El reembolso por línea sigue permitido para una compra completada de un pedido")
+    void unaLineaDeUnPedidoCompletadaSePuedeReembolsar() {
+        UUID usuarioId = UUID.randomUUID();
+        Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "RGB", 50.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
+        producto.reducirStock(1); // Queda 9
+        productoRepository.guardar(producto);
+        Compra linea = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), 1, AHORA.minusHours(1),
+                new Precio(50.0), UUID.randomUUID());
+        linea.confirmar();
+        compraRepository.guardar(linea);
+
+        Compra reembolsada = reembolsoUseCase.ejecutar(linea.getId(), usuarioId);
+
+        assertEquals(EstadoCompra.REEMBOLSADA, reembolsada.getEstado());
+        assertEquals(10, productoRepository.obtenerPorId(producto.getId()).get().getStock());
     }
 }

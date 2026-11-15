@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "compras")
+@Table(name = "compras", indexes = @Index(name = "idx_compras_pedido_id", columnList = "pedido_id"))
 @Getter @Setter
 @NoArgsConstructor
 public class CompraEntity {
@@ -53,4 +54,8 @@ public class CompraEntity {
 
     @Column(name = "cupon_aplicado", nullable = false, columnDefinition = "boolean default false")
     private boolean cuponAplicado;
+
+    // Null cuando la compra no pertenece a un pedido (compra suelta o de combo)
+    @Column(name = "pedido_id")
+    private UUID pedidoId;
 }

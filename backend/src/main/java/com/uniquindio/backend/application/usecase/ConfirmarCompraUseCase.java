@@ -25,6 +25,7 @@ public class ConfirmarCompraUseCase {
         Compra compra = compraRepository.obtenerPorId(idCompra)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
         compra.asegurarPerteneceA(usuarioId);
+        compra.asegurarNoEsDeUnPedido();
 
         compra.confirmar();
 

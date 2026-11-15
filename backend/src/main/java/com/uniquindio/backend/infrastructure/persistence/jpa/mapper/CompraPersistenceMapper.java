@@ -21,6 +21,7 @@ public class CompraPersistenceMapper {
         entity.setPuntosAsignados(compra.isPuntosAsignados());
         entity.setDescargado(compra.isDescargado());
         entity.setCuponAplicado(compra.isCuponAplicado());
+        entity.setPedidoId(compra.getPedidoId());
         return entity;
     }
 
@@ -36,6 +37,7 @@ public class CompraPersistenceMapper {
                 entity.isResenada(),
                 entity.isPuntosAsignados(),
                 entity.isDescargado(),
-                entity.isCuponAplicado());
+                entity.isCuponAplicado(),
+                entity.getPedidoId());
     }
 }
