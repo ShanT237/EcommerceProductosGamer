@@ -40,6 +40,10 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `Compra.solicitarReembolso(...)` | PUT | `/api/compras/{id}/reembolso` | COMPRADOR | 200 OK |
 | `Compra.aplicarCupon(...)` | PUT | `/api/compras/{id}/cupon` | COMPRADOR | 200 OK |
 | Consultar historial de compras | GET | `/api/compras` | COMPRADOR | 200 OK |
+| Crear operación del carrito | POST | `/api/pedidos` | COMPRADOR | 201 Created |
+| Confirmar pedido o combo | PUT | `/api/pedidos/{id}/confirmar` | COMPRADOR | 200 OK |
+| Cancelar pedido o combo | PUT | `/api/pedidos/{id}/cancelar` | COMPRADOR | 200 OK |
+| Reembolsar pedido o combo completo | PUT | `/api/pedidos/{id}/reembolso` | COMPRADOR | 200 OK |
 | Comprar combo | POST | `/api/combos/{id}/comprar` | COMPRADOR | 201 Created |
 
 ## Combos, wishlist, reseñas y puntos
@@ -94,7 +98,8 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `POST /api/compras` | `productoId`, `cantidad` |
 | `POST /api/wishlists` | `productoId` |
 | `PUT /api/compras/{id}/cupon` | `codigo` |
-| `POST /api/combos/{id}/comprar` | `cantidad` |
+| `POST /api/pedidos` | `items` (`productoId`, `cantidad`) y `codigoCupon` opcional |
+| `POST /api/combos/{id}/comprar` | `cantidad` y `codigoCupon` opcional |
 | `PUT /api/regalos/{id}/asignar` | Sin cuerpo |
 | `PUT /api/regalos/{id}/enviar` | Sin cuerpo |
 | `PUT /api/regalos/{id}/entrega` | Sin cuerpo (solo el destinatario confirma) |
@@ -112,6 +117,8 @@ Cada operación del dominio y el endpoint REST que la expone.
   - Vendedor: `demo@gamerzone.com` / `GamerZone2026`.
 - **Swagger:** en `http://localhost:8080/swagger-ui.html`, ejecuta el login, copia el token y pégalo en el botón **Authorize** (sin el prefijo `Bearer`).
 - **Búsqueda paginada:** `GET /api/productos` solo devuelve productos visibles (no eliminados ni pausados). `texto` busca en nombre y descripción sin distinguir mayúsculas; `soloPreventa=true` devuelve los productos cuya preventa aún no ha llegado a su fecha de lanzamiento. La respuesta trae `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. Los filtros y la paginación se ejecutan en la base de datos (JPQL). Una página o un tamaño fuera de rango responde 422.
+- **Operaciones de compra:** las líneas de un pedido o combo comparten `pedidoId`; confirmación, cancelación y reembolso se realizan sobre todas las líneas. El historial muestra el pedido como `producto1 + producto2` y conserva el nombre del combo comprado.
+- **Cupón para combos:** se calcula sobre el precio unitario ya rebajado por el combo, no se combina con promociones de producto y consume un uso por combo.
 - **Ranking de más vendidos:** agrupa en la base de datos las unidades vendidas de compras `COMPLETADA` (`JOIN`, `GROUP BY` y `SUM`), ordena por unidades (desempate por nombre) e incluye la calificación promedio de cada producto. Sin `vendedorId` lista todo el marketplace; los productos sin ventas no aparecen.
 - **Errores** (cuerpo JSON `{timestamp, status, mensaje}`):
   | Código | Cuándo |
