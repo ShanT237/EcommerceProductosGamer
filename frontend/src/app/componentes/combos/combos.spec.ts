@@ -100,6 +100,29 @@ describe('Combos (pantalla)', () => {
     expect(toast.toasts().some((t) => t.tipo === 'ok')).toBe(true);
   });
 
+  it('permiteAplicarCuponAlPrecioDescontadoDelCombo', () => {
+    configurar('COMPRADOR');
+    abrir([combo()]);
+    const entrada = raiz().querySelector('.cupon input') as HTMLInputElement;
+    entrada.value = 'GAMER10';
+    entrada.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    boton('.cupon button')!.click();
+
+    http.expectOne({ method: 'GET', url: `${API_URL}/cupones/GAMER10` }).flush({
+      id: 'cu1', codigo: 'GAMER10', porcentaje: 10, vence: '2026-12-31',
+      usosMaximos: 10, usos: 0, vendedorId: 'v1',
+    });
+    fixture.detectChanges();
+
+    expect(raiz().textContent).toContain('Cupón GAMER10 aplicado');
+    expect(raiz().textContent).toContain('108.000');
+    boton('.comprar')!.click();
+    const req = http.expectOne(postComprar('c1'));
+    expect(req.request.body).toEqual({ cantidad: 1, codigoCupon: 'GAMER10' });
+    req.flush({ comboId: 'c1', pedidoId: 'ped1', compras: [{}, {}], total: 108000, cuponAplicado: true });
+  });
+
   it('laCantidadNoSuperaElStockDelProductoConMenosUnidades', () => {
     configurar('COMPRADOR');
     abrir([combo()]); // el Mouse solo tiene 3
