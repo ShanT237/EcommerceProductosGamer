@@ -10,6 +10,15 @@ import { mensajeDeError } from '../../servicios/api.util';
 import { fechaHora, precio } from '../../servicios/formato';
 
 type Dialogo = { tipo: 'resena' | 'vendedor'; compra: Compra };
+type OperacionCompra = {
+  id: string;
+  pedidoId: string | null;
+  comboId: string | null;
+  comboNombre: string | null;
+  lineas: Compra[];
+  estado: EstadoCompra;
+  fecha: string;
+};
 
 @Component({
   selector: 'app-mis-compras',
@@ -27,6 +36,7 @@ export class MisCompras implements OnInit {
   protected fechaHora = fechaHora;
 
   protected lista = signal<Compra[]>([]);
+  protected detallesAbiertos = signal<Record<string, boolean>>({});
   protected puntos = signal(0);
   protected cargando = signal(true);
   protected ocupada = signal<string | null>(null);
@@ -39,9 +49,26 @@ export class MisCompras implements OnInit {
   protected redimiendo = signal(false);
   protected puntosACanjear = signal<number | null>(null);
 
+  protected operaciones = computed(() => {
+    const grupos = new Map<string, Compra[]>();
+    for (const compra of this.lista()) {
+      const id = compra.pedidoId ?? compra.id;
+      grupos.set(id, [...(grupos.get(id) ?? []), compra]);
+    }
+    return [...grupos.entries()].map(([id, lineas]): OperacionCompra => ({
+      id,
+      pedidoId: lineas[0].pedidoId,
+      comboId: lineas[0].comboId ?? null,
+      comboNombre: lineas[0].comboNombre ?? null,
+      lineas,
+      estado: lineas[0].estado,
+      fecha: lineas[0].fecha,
+    }));
+  });
+
   protected visibles = computed(() =>
-    [...this.lista()]
-      .filter((c) => !this.filtro() || c.estado === this.filtro())
+    this.operaciones()
+      .filter((op) => !this.filtro() || op.estado === this.filtro())
       .sort((a, b) => b.fecha.localeCompare(a.fecha)),
   );
 
@@ -65,6 +92,23 @@ export class MisCompras implements OnInit {
 
   protected nombreDe(productoId: string): string {
     return this.productos.catalogo().find((p) => p.id === productoId)?.nombre ?? 'Producto';
+  }
+
+  protected nombreOperacion(op: OperacionCompra): string {
+    if (op.comboNombre) return op.comboNombre;
+    return op.lineas.map((linea) => this.nombreDe(linea.productoId)).join(' + ');
+  }
+
+  protected totalOperacion(op: OperacionCompra): number {
+    return this.sumar(op.lineas);
+  }
+
+  protected cantidadOperacion(op: OperacionCompra): number {
+    return op.lineas.reduce((total, linea) => total + linea.cantidad, 0);
+  }
+
+  protected alternarDetalles(id: string) {
+    this.detallesAbiertos.update((abiertos) => ({ ...abiertos, [id]: !abiertos[id] }));
   }
 
   protected recargar() {
@@ -118,14 +162,22 @@ export class MisCompras implements OnInit {
   }
 
   protected async reembolsar(c: Compra) {
+    const lineas = this.lineasDelPedido(c);
+    const total = this.sumar(lineas);
     const acepto = await this.confirmacion.pedir({
       titulo: 'Solicitar reembolso',
-      mensaje: `¿Solicitar el reembolso de ${precio(c.subtotal)} por "${this.nombreDe(c.productoId)}"? Esta acción no se puede deshacer.`,
+      mensaje: c.pedidoId
+        ? `¿Solicitar el reembolso del pedido completo por ${precio(total)} (${lineas.length} producto(s))? Esta acción no se puede deshacer.`
+        : `¿Solicitar el reembolso de ${precio(c.subtotal)} por "${this.nombreDe(c.productoId)}"? Esta acción no se puede deshacer.`,
       confirmar: 'Solicitar reembolso',
       cancelar: 'Volver',
     });
     if (!acepto) return;
-    this.accion(c, this.compras.reembolsar(c.id), 'Reembolso solicitado correctamente.');
+    if (c.pedidoId) {
+      this.accion(c, this.compras.reembolsarPedido(c.pedidoId), 'Reembolso del pedido solicitado correctamente.');
+    } else {
+      this.accion(c, this.compras.reembolsar(c.id), 'Reembolso solicitado correctamente.');
+    }
   }
 
   protected abrirDialogo(tipo: Dialogo['tipo'], compra: Compra) {

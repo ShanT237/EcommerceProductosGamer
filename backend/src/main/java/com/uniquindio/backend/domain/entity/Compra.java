@@ -19,8 +19,8 @@ import java.util.UUID;
  *  - Regla 2: un comprador no puede calificar un producto sin haberlo comprado.
  *  - Regla 6: los puntos solo se asignan después de realizar una reseña.
  *  - Reembolso: solo dentro de un plazo definido y antes de haber descargado el archivo.
- *  - Pedido: las compras creadas desde el carrito comparten un pedidoId (null si la compra
- *    es suelta). Un pedido se confirma o se cancela completo, nunca línea por línea.
+ *  - Operación: las líneas de un pedido o combo comparten pedidoId; sus acciones de pago
+ *    y reembolso se ejecutan como un todo. comboId y comboNombre identifican el origen.
  */
 @Getter
 public class Compra {
@@ -36,13 +36,16 @@ public class Compra {
     private boolean puntosAsignados;
     private boolean descargado;
     private boolean cuponAplicado;
-    private final UUID pedidoId;   // null cuando la compra no pertenece a un pedido
+    private final UUID pedidoId;
+    private final UUID comboId;
+    private final String comboNombre;
 
     public static final Duration PLAZO_REEMBOLSO = Duration.ofHours(48);
     private static final int PUNTOS_POR_RESENA = 10;
 
     private Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad,
-                   LocalDateTime fecha, Precio precioUnitario, UUID pedidoId) {
+                   LocalDateTime fecha, Precio precioUnitario, UUID pedidoId,
+                   UUID comboId, String comboNombre) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.productoId = productoId;
@@ -54,6 +57,8 @@ public class Compra {
         this.puntosAsignados = false;
         this.descargado = false;
         this.pedidoId = pedidoId;
+        this.comboId = comboId;
+        this.comboNombre = comboNombre;
     }
 
     public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
@@ -67,6 +72,13 @@ public class Compra {
      */
     public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
                                   LocalDateTime fecha, Precio precioUnitario, UUID pedidoId) {
+        return realizar(id, usuarioId, productoId, cantidad, fecha, precioUnitario,
+                pedidoId, null, null);
+    }
+
+    public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                  LocalDateTime fecha, Precio precioUnitario, UUID pedidoId,
+                                  UUID comboId, String comboNombre) {
         Objects.requireNonNull(id, "El id de la compra es obligatorio");
         Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
         Objects.requireNonNull(productoId, "El id del producto es obligatorio");
@@ -75,7 +87,14 @@ public class Compra {
         if (cantidad <= 0) {
             throw new ReglaDominioException("La cantidad de la compra debe ser positiva");
         }
-        return new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario, pedidoId);
+        if ((comboId == null) != (comboNombre == null)) {
+            throw new ReglaDominioException("El combo de la compra debe incluir su id y nombre");
+        }
+        if (comboId != null && pedidoId == null) {
+            throw new ReglaDominioException("La compra de un combo debe pertenecer a un pedido");
+        }
+        return new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario,
+                pedidoId, comboId, comboNombre);
     }
 
     /**
@@ -101,7 +120,17 @@ public class Compra {
                                      LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
                                      boolean resenada, boolean puntosAsignados, boolean descargado,
                                      boolean cuponAplicado, UUID pedidoId) {
-        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario, pedidoId);
+        return reconstruir(id, usuarioId, productoId, cantidad, fecha, precioUnitario, estado,
+                resenada, puntosAsignados, descargado, cuponAplicado, pedidoId, null, null);
+    }
+
+    public static Compra reconstruir(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                     LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
+                                     boolean resenada, boolean puntosAsignados, boolean descargado,
+                                     boolean cuponAplicado, UUID pedidoId, UUID comboId,
+                                     String comboNombre) {
+        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario,
+                pedidoId, comboId, comboNombre);
         compra.estado = estado;
         compra.resenada = resenada;
         compra.puntosAsignados = puntosAsignados;
@@ -143,7 +172,7 @@ public class Compra {
     public void asegurarNoEsDeUnPedido() {
         if (perteneceAUnPedido()) {
             throw new ReglaDominioException(
-                    "La compra pertenece a un pedido: confirma o cancela el pedido completo");
+                    "La compra pertenece a un pedido o combo: confirma, cancela o reembolsa la operación completa");
         }
     }
 
@@ -209,6 +238,11 @@ public class Compra {
      * y antes de haber descargado el archivo.
      */
     public void solicitarReembolso(LocalDateTime ahora) {
+        validarSolicitudReembolso(ahora);
+        this.estado = EstadoCompra.REEMBOLSADA;
+    }
+
+    public void validarSolicitudReembolso(LocalDateTime ahora) {
         Objects.requireNonNull(ahora, "La fecha de solicitud es obligatoria");
 
         verificarTransicion(EstadoCompra.REEMBOLSADA);   // primero valida, después cambia
@@ -221,7 +255,6 @@ public class Compra {
         if (ahora.isAfter(fecha.plus(PLAZO_REEMBOLSO))) {
             throw new ReglaDominioException("El plazo para solicitar el reembolso ha expirado");
         }
-        this.estado = EstadoCompra.REEMBOLSADA;
     }
 
     /**

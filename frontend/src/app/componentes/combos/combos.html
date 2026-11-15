@@ -36,7 +36,7 @@
 
           <div class="precios">
             <s class="precio-original">{{ precio(c.precioSinDescuento) }}</s>
-            <strong class="precio">{{ precio(c.precioConDescuento) }}</strong>
+            <strong class="precio">{{ precio(precioConCupon(c)) }}</strong>
             <small class="ahorro">Ahorras {{ precio(ahorro(c)) }} por unidad</small>
           </div>
 
@@ -44,6 +44,22 @@
             @if (limite(c) <= 0) {
               <p class="rojo">Agotado: algún producto del combo no tiene stock.</p>
             } @else {
+              <div class="cupon">
+                @if (cuponAplicado(c); as cupon) {
+                  <p class="muted">Cupón {{ cupon.codigo }} aplicado (−{{ cupon.porcentaje }}%).</p>
+                  <button type="button" class="btn btn-chico" (click)="quitarCupon(c)">Quitar cupón</button>
+                } @else {
+                  <label [for]="'cupon-' + c.id">Cupón (opcional)</label>
+                  <div class="campo-cupon">
+                    <input class="entrada" [id]="'cupon-' + c.id" [name]="'cupon-' + c.id"
+                           [ngModel]="codigoCupon(c)" (ngModelChange)="cambiarCodigoCupon(c, $event)"
+                           placeholder="Código del cupón">
+                    <button type="button" class="btn btn-chico" [disabled]="validandoCupon() === c.id"
+                            (click)="aplicarCupon(c)">{{ validandoCupon() === c.id ? 'Validando…' : 'Aplicar' }}</button>
+                  </div>
+                  @if (erroresCupon()[c.id]) { <p class="rojo">{{ erroresCupon()[c.id] }}</p> }
+                }
+              </div>
               <div class="compra">
                 <div class="cantidad">
                   <button type="button" class="btn btn-chico menos" aria-label="Menos unidades"

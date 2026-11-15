@@ -15,7 +15,9 @@ public record RealizarCompraResponse(
         double subtotal,
         LocalDateTime fecha,
         EstadoCompra estado,
-        UUID pedidoId          // null si la compra no pertenece a un pedido
+        UUID pedidoId,
+        UUID comboId,
+        String comboNombre
 ) {
     public static RealizarCompraResponse desde(Compra compra) {
         return new RealizarCompraResponse(
@@ -27,7 +29,9 @@ public record RealizarCompraResponse(
                 compra.getSubtotal().valor(),
                 compra.getFecha(),
                 compra.getEstado(),
-                compra.getPedidoId()
+                compra.getPedidoId(),
+                compra.getComboId(),
+                compra.getComboNombre()
         );
     }
 }

@@ -171,6 +171,10 @@ El recorrido completo (publicar, comprar con carrito, errores de negocio y de se
 | `PUT /api/compras/{id}/cancelar` | `COMPRADOR` | Cancela la compra |
 | `PUT /api/compras/{id}/reembolso` | `COMPRADOR` | Solicita reembolso (48 h, sin descarga) |
 | `PUT /api/compras/{id}/cupon` | `COMPRADOR` | Aplica un cupón |
+| `POST /api/pedidos` | `COMPRADOR` | Crea una operación para todo el carrito (cupón opcional) |
+| `PUT /api/pedidos/{id}/confirmar` | `COMPRADOR` | Confirma el pedido completo |
+| `PUT /api/pedidos/{id}/cancelar` | `COMPRADOR` | Cancela el pedido completo y restituye todo el stock |
+| `PUT /api/pedidos/{id}/reembolso` | `COMPRADOR` | Reembolsa el pedido completo |
 | `POST /api/resenas` | `COMPRADOR` | Reseña una compra completada |
 | `POST /api/valoraciones-vendedor` | `COMPRADOR` | Valora al vendedor |
 | `POST /api/wishlists` · `DELETE /api/wishlists/{productoId}` | `COMPRADOR` | Añade o quita de la wishlist |
@@ -258,8 +262,10 @@ Categorías habilitadas en el catálogo:
 - Un vendedor dado de baja no puede publicar y sus productos no se pueden comprar.
 - Un producto pausado o eliminado no se puede comprar; solo el vendedor dueño modifica, edita, pausa o programa promociones de su producto.
 - Una `Promocion` tiene vigencia (fechas inclusive), no se solapa con otra del mismo producto y no cambia el precio base.
-- Un cupón es válido hasta su fecha de vencimiento y mientras tenga usos; se aplica una sola vez, solo a compras `PENDIENTE` (el precio se congela al confirmar).
-- Comprar un combo valida todos sus productos antes de descontar stock: si uno falla, no se modifica ninguno.
+- Un cupón es válido hasta su fecha de vencimiento y mientras tenga usos; se aplica una sola vez al pedido o combo, solo a compras `PENDIENTE` (el precio se congela al confirmar).
+- En combos, el cupón se aplica después del descuento del combo y no se acumula con promociones individuales; los cupones de vendedor solo aplican a combos de ese vendedor.
+- Comprar un combo valida todos sus productos antes de descontar stock y crea una única operación con nombre e historial propios; confirmar, cancelar o reembolsar afecta todas sus líneas.
+- “Mis compras” presenta cada pedido o combo como una operación; al expandirla muestra sus productos, mientras el pago, la cancelación y el reembolso se hacen sobre el grupo completo.
 - Una `MetaRecompensa` exige un umbral de compras positivo y se desactiva una sola vez (nunca se borra).
 - El vendedor se valora una vez por compra completada. La comisión del marketplace es 5% de los ingresos completados.
 - Las contraseñas (de compradores y vendedores) exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (BCrypt). La sesión usa JWT HS256 con el rol en el token (`COMPRADOR` o `VENDEDOR`) y `/api/**` exige token salvo `/api/auth/**` y los `POST` de registro.
@@ -292,8 +298,8 @@ Categorías habilitadas en el catálogo:
 | `CU-09` | **Confirmar Compra** | ✅ Implementado | Comprador / Sistema | Valida el pago y pasa la orden a `COMPLETADA` (`ConfirmarCompraUseCase`). |
 | `CU-12` | **Cancelar Compra** | ✅ Implementado | Comprador | Pasa la orden a `CANCELADA` y devuelve automáticamente el stock retenido al producto (`CancelarCompraUseCase`). |
 | `CU-13` | **Solicitar Reembolso** | ✅ Implementado | Comprador | Solicita reembolso dentro de 48 horas, sin descarga y sin puntos asignados; pasa a `REEMBOLSADA` y restituye el stock (`SolicitarReembolsoUseCase`). |
-| `CU-16` | **Comprar Combo** | ✅ Implementado | Comprador | Permite adquirir un combo verificando stock de todos sus integrantes. (`ComprarComboUseCase`). |
-| `CU-17` | **Aplicar Cupón de Descuento** | ✅ Implementado | Comprador | Aplica un código promocional al total del pago previo al checkout. (`AplicarCuponUseCase`). |
+| `CU-16` | **Comprar Combo** | ✅ Implementado | Comprador | Reserva todos los productos como una sola operación, con descuento de combo y cupón opcional; cancelar, confirmar y reembolsar actúan sobre el combo completo (`ComprarComboUseCase`). |
+| `CU-17` | **Aplicar Cupón de Descuento** | ✅ Implementado | Comprador | Aplica un código al pedido del carrito o combo; en combos se descuenta sobre el precio ya rebajado y no se acumula con promociones de producto. Consume un uso por operación (`CrearPedidoUseCase`, `ComprarComboUseCase`). |
 
 ### 📦 Módulo 2: Productos y Catálogo
 | Código | Caso de Uso | Estado Código | Actor | Descripción |

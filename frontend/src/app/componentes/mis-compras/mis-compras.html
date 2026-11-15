@@ -5,7 +5,7 @@
       <p class="muted">Historial, reembolsos y reseñas en un solo lugar.</p>
     </div>
     <div class="kpis">
-      <div class="panel kpi"><strong>{{ lista().length }}</strong><span>Compras</span></div>
+      <div class="panel kpi"><strong>{{ operaciones().length }}</strong><span>Operaciones</span></div>
       <div class="panel kpi"><strong>{{ precio(gastado()) }}</strong><span>Gastado</span></div>
       <div class="panel kpi puntos">
         <strong>{{ puntos() }}</strong><span>Puntos</span>
@@ -32,33 +32,54 @@
     </div>
   } @else {
     <div class="lista">
-      @for (c of visibles(); track c.id) {
+      @for (op of visibles(); track op.id) {
+        @let c = op.lineas[0];
         <article class="panel compra aparece" [class.ocupada]="ocupada() === c.id">
           <div class="datos">
-            <h3>{{ nombreDe(c.productoId) }}</h3>
-            <p class="muted">{{ fechaHora(c.fecha) }} · {{ c.cantidad }} × {{ precio(c.precioUnitario) }}</p>
-            @if (c.pedidoId && c.estado === 'PENDIENTE') {
-              <p class="muted">Parte de un pedido: se paga y se cancela completo.</p>
+            <h3>{{ nombreOperacion(op) }}</h3>
+            <p class="muted">{{ fechaHora(op.fecha) }} · {{ op.lineas.length }} producto(s) · {{ cantidadOperacion(op) }} unidad(es)</p>
+            @if (op.pedidoId) {
+              <p class="muted">{{ op.comboId ? 'Combo' : 'Pedido' }} · operación completa</p>
             }
           </div>
           <div class="monto">
-            <strong>{{ precio(c.subtotal) }}</strong>
-            <span class="estado estado-{{ c.estado }}">{{ c.estado }}</span>
+            <strong>{{ precio(totalOperacion(op)) }}</strong>
+            <span class="estado estado-{{ op.estado }}">{{ op.estado }}</span>
           </div>
           <div class="botones">
-            @switch (c.estado) {
+            <button class="btn btn-chico" type="button" (click)="alternarDetalles(op.id)">
+              {{ detallesAbiertos()[op.id] ? 'Ocultar productos' : 'Ver productos' }}
+            </button>
+            @switch (op.estado) {
               @case ('PENDIENTE') {
                 <button class="btn btn-neon btn-chico" (click)="confirmar(c)">Confirmar pago</button>
                 <button class="btn btn-chico btn-peligro" (click)="cancelar(c)">Cancelar</button>
               }
               @case ('COMPLETADA') {
-                <button class="btn btn-chico" (click)="abrirDialogo('resena', c)">★ Reseñar</button>
-                <button class="btn btn-chico" (click)="abrirDialogo('vendedor', c)">Valorar vendedor</button>
                 <button class="btn btn-chico btn-peligro" (click)="reembolsar(c)">Reembolso</button>
               }
               @default { <span class="muted">Sin acciones disponibles</span> }
             }
           </div>
+          @if (detallesAbiertos()[op.id]) {
+            <div class="detalle-operacion">
+              @for (linea of op.lineas; track linea.id) {
+                <div class="linea-producto">
+                  <div>
+                    <strong>{{ nombreDe(linea.productoId) }}</strong>
+                    <p class="muted">{{ linea.cantidad }} × {{ precio(linea.precioUnitario) }}</p>
+                  </div>
+                  <div class="detalle-linea-acciones">
+                    <strong>{{ precio(linea.subtotal) }}</strong>
+                    @if (linea.estado === 'COMPLETADA') {
+                      <button class="btn btn-chico" (click)="abrirDialogo('resena', linea)">★ Reseñar</button>
+                      <button class="btn btn-chico" (click)="abrirDialogo('vendedor', linea)">Valorar vendedor</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
         </article>
       }
     </div>

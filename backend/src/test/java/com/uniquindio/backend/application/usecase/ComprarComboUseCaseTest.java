@@ -28,6 +28,7 @@ class ComprarComboUseCaseTest {
     private UsuarioRepositoryEnMemoria usuarioRepository;
     private VendedorRepositoryEnMemoria vendedorRepository;
     private PreventaRepositoryEnMemoria preventaRepository;
+    private CuponRepositoryEnMemoria cuponRepository;
     private ComboRepositoryEnMemoria comboRepository;
     private ComprarComboUseCase useCase;
     private UUID usuarioId;
@@ -43,11 +44,12 @@ class ComprarComboUseCaseTest {
         usuarioRepository = new UsuarioRepositoryEnMemoria();
         vendedorRepository = new VendedorRepositoryEnMemoria();
         preventaRepository = new PreventaRepositoryEnMemoria();
+        cuponRepository = new CuponRepositoryEnMemoria();
         comboRepository = new ComboRepositoryEnMemoria();
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(HOY.atTime(10, 0).atZone(zona).toInstant(), zona);
         useCase = new ComprarComboUseCase(comboRepository, productoRepository, compraRepository,
-                usuarioRepository, vendedorRepository, preventaRepository, reloj);
+                usuarioRepository, vendedorRepository, preventaRepository, cuponRepository, reloj);
 
         vendedor = Vendedor.registrar(UUID.randomUUID(), "GamerZone", "v@g.com", TipoVendedor.EMPRESA, "900");
         vendedorRepository.guardar(vendedor);
@@ -79,11 +81,63 @@ class ComprarComboUseCaseTest {
 
         assertEquals(2, compras.size());
         assertTrue(compras.stream().allMatch(c -> c.getEstado() == EstadoCompra.PENDIENTE));
+        assertTrue(compras.stream().allMatch(c -> c.getPedidoId().equals(compras.get(0).getPedidoId())));
+        assertTrue(compras.stream().allMatch(c -> combo.getId().equals(c.getComboId())));
+        assertTrue(compras.stream().allMatch(c -> combo.getNombre().equals(c.getComboNombre())));
         assertEquals(80, compras.get(0).getPrecioUnitario().valor(), 0.001);
         assertEquals(40, compras.get(1).getPrecioUnitario().valor(), 0.001);
         assertEquals(3, teclado.getStock());
         assertEquals(3, mouse.getStock());
         assertEquals(2, compraRepository.obtenerPorUsuarioId(usuarioId).size());
+    }
+
+    @Test
+    void confirmaYReembolsaElComboComoUnaSolaOperacion() {
+        List<Compra> compras = useCase.ejecutar(usuarioId, combo.getId(), 1);
+        UUID pedidoId = compras.get(0).getPedidoId();
+
+        assertThrows(ReglaDominioException.class,
+                () -> new ConfirmarCompraUseCase(compraRepository).ejecutar(compras.get(0).getId(), usuarioId));
+        assertThrows(ReglaDominioException.class,
+                () -> new CancelarCompraUseCase(compraRepository, productoRepository)
+                        .ejecutar(compras.get(0).getId(), usuarioId));
+        List<Compra> confirmadas = new ConfirmarPedidoUseCase(compraRepository).ejecutar(pedidoId, usuarioId);
+        assertTrue(confirmadas.stream().allMatch(c -> c.getEstado() == EstadoCompra.COMPLETADA));
+
+        List<Compra> reembolsadas = new SolicitarReembolsoPedidoUseCase(compraRepository, productoRepository,
+                Clock.fixed(HOY.plusDays(1).atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant(),
+                        ZoneId.systemDefault()))
+                .ejecutar(pedidoId, usuarioId);
+        assertTrue(reembolsadas.stream().allMatch(c -> c.getEstado() == EstadoCompra.REEMBOLSADA));
+        assertEquals(5, teclado.getStock());
+        assertEquals(5, mouse.getStock());
+    }
+
+    @Test
+    void cancelarComboRestituyeElStockDeTodosLosProductos() {
+        List<Compra> compras = useCase.ejecutar(usuarioId, combo.getId(), 1);
+
+        List<Compra> canceladas = new CancelarPedidoUseCase(compraRepository, productoRepository)
+                .ejecutar(compras.get(0).getPedidoId(), usuarioId);
+
+        assertTrue(canceladas.stream().allMatch(c -> c.getEstado() == EstadoCompra.CANCELADA));
+        assertEquals(5, teclado.getStock());
+        assertEquals(5, mouse.getStock());
+    }
+
+    @Test
+    void aplicaUnCuponSobreElPrecioDelComboYConsumeUnUso() {
+        var cupon = com.uniquindio.backend.domain.entity.Cupon.crear(UUID.randomUUID(), "combo10", 10,
+                HOY.plusDays(5), 3);
+        cuponRepository.guardar(cupon);
+
+        List<Compra> compras = useCase.ejecutar(usuarioId, combo.getId(), 1, "combo10");
+
+        assertEquals(72, compras.get(0).getPrecioUnitario().valor(), 0.001);
+        assertEquals(36, compras.get(1).getPrecioUnitario().valor(), 0.001);
+        assertTrue(compras.stream().allMatch(Compra::isCuponAplicado));
+        assertEquals(1, cupon.getUsos());
+        assertTrue(cuponRepository.fueUsadoPor(cupon.getId(), usuarioId));
     }
 
     @Test

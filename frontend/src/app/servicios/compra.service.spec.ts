@@ -67,4 +67,10 @@ describe('CompraService (pedidos)', () => {
 
     http.expectOne({ method: 'PUT', url: `${API_URL}/pedidos/ped1/cancelar` }).flush(PEDIDO);
   });
+
+  it('reembolsarPedido hace PUT /pedidos/{id}/reembolso', () => {
+    servicio.reembolsarPedido('ped1').subscribe();
+
+    http.expectOne({ method: 'PUT', url: `${API_URL}/pedidos/ped1/reembolso` }).flush(PEDIDO);
+  });
 });

@@ -55,7 +55,13 @@ public class CompraEntity {
     @Column(name = "cupon_aplicado", nullable = false, columnDefinition = "boolean default false")
     private boolean cuponAplicado;
 
-    // Null cuando la compra no pertenece a un pedido (compra suelta o de combo)
+    // Null cuando es una compra individual, no de carrito ni de combo.
     @Column(name = "pedido_id")
     private UUID pedidoId;
+
+    @Column(name = "combo_id")
+    private UUID comboId;
+
+    @Column(name = "combo_nombre")
+    private String comboNombre;
 }
