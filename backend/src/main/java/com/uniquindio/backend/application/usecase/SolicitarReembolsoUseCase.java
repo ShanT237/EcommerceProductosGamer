@@ -31,6 +31,7 @@ public class SolicitarReembolsoUseCase {
         Compra compra = compraRepository.obtenerPorId(compraId)
                 .orElseThrow(() -> new ReglaDominioException("La compra no existe"));
         compra.asegurarPerteneceA(usuarioId);
+        compra.asegurarNoEsDeUnPedido();
 
         Producto producto = productoRepository.obtenerPorId(compra.getProductoId())
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
