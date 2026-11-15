@@ -13,19 +13,25 @@ import java.util.UUID;
  *  - Identidad: id único; el código se normaliza a mayúsculas.
  *  - Descuento porcentual (mayor a 0 y menor a 100), vigente hasta una fecha inclusive,
  *    con un máximo de usos.
+ *  - Dueño opcional: con vendedorId el descuento solo aplica a productos de ese vendedor;
+ *    con vendedorId null es un cupón global (aplica a cualquier producto).
+ *  - Un cupón consume un uso por pedido (no uno por línea) y cada comprador puede usarlo una sola
+ *    vez; esa regla vive en CrearPedidoUseCase porque depende del historial del comprador.
  */
 @Getter
 public class Cupon {
 
     private final UUID id;
+    private final UUID vendedorId;   // null = cupón global
     private final String codigo;
     private final double porcentaje;
     private final LocalDate vence;
     private final int usosMaximos;
     private int usos;
 
-    private Cupon(UUID id, String codigo, double porcentaje, LocalDate vence, int usosMaximos) {
+    private Cupon(UUID id, UUID vendedorId, String codigo, double porcentaje, LocalDate vence, int usosMaximos) {
         this.id = id;
+        this.vendedorId = vendedorId;
         this.codigo = codigo;
         this.porcentaje = porcentaje;
         this.vence = vence;
@@ -33,7 +39,14 @@ public class Cupon {
         this.usos = 0;
     }
 
+    /** Cupón global (sin dueño). */
     public static Cupon crear(UUID id, String codigo, double porcentaje, LocalDate vence, int usosMaximos) {
+        return crear(id, null, codigo, porcentaje, vence, usosMaximos);
+    }
+
+    /** Cupón de un vendedor; con vendedorId null equivale a un cupón global. */
+    public static Cupon crear(UUID id, UUID vendedorId, String codigo, double porcentaje,
+                              LocalDate vence, int usosMaximos) {
         Objects.requireNonNull(id, "El id del cupón es obligatorio");
         Objects.requireNonNull(vence, "La fecha de vencimiento es obligatoria");
         if (codigo == null || codigo.isBlank()) {
@@ -45,7 +58,7 @@ public class Cupon {
         if (usosMaximos <= 0) {
             throw new ReglaDominioException("Los usos máximos deben ser positivos");
         }
-        return new Cupon(id, codigo.trim().toUpperCase(), porcentaje, vence, usosMaximos);
+        return new Cupon(id, vendedorId, codigo.trim().toUpperCase(), porcentaje, vence, usosMaximos);
     }
 
     /**
@@ -53,8 +66,8 @@ public class Cupon {
      * NO valida ni normaliza el código: eso ya ocurrió en crear(...).
      */
     public static Cupon reconstruir(UUID id, String codigo, double porcentaje, LocalDate vence,
-                                    int usosMaximos, int usos) {
-        Cupon cupon = new Cupon(id, codigo, porcentaje, vence, usosMaximos);
+                                    int usosMaximos, int usos, UUID vendedorId) {
+        Cupon cupon = new Cupon(id, vendedorId, codigo, porcentaje, vence, usosMaximos);
         cupon.usos = usos;
         return cupon;
     }
@@ -73,6 +86,15 @@ public class Cupon {
             throw new ReglaDominioException("El cupón ya no tiene usos disponibles");
         }
         this.usos++;
+    }
+
+    public int usosDisponibles() {
+        return usosMaximos - usos;
+    }
+
+    /** Un cupón global aplica a todo producto; uno con dueño, solo a los productos de ese vendedor. */
+    public boolean aplicaA(UUID vendedorDelProducto) {
+        return vendedorId == null || vendedorId.equals(vendedorDelProducto);
     }
 
     public Precio aplicarA(Precio precio) {

@@ -9,9 +9,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -402,5 +404,140 @@ class FlujoCompletoIntegracionTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"items\": [] }"))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ------------------------------------------------------------------ Cupones
+
+    /** Usos consumidos hasta ahora de un cupón, leídos con la vista previa del comprador. */
+    private int usosDelCupon(String tokenComprador, String codigo) throws Exception {
+        String json = mockMvc.perform(get("/api/cupones/{codigo}", codigo)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(json, "$.usos");
+    }
+
+    @Test
+    @DisplayName("Regla real: un pedido de 2 ítems con VERANO26 consume un solo uso del cupón")
+    void pedidoConVERANO26ConsumeUnSoloUso() throws Exception {
+        // Arrange: el cupón global del data.sql (15 %) y dos productos del vendedor
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String teclado = publicarProducto(tokenVendedor, "Teclado-cupon-" + UUID.randomUUID(), 150000, 10);
+        String mouse = publicarProducto(tokenVendedor, "Mouse-cupon-" + UUID.randomUUID(), 80000, 10);
+        // Los usos se leen con otro comprador (Ana): para José la vista previa ya dirá "ya lo usaste"
+        String tokenAna = iniciarSesion(ANA_CORREO, ANA_CLAVE);
+        int usosAntes = usosDelCupon(tokenAna, "VERANO26");
+
+        // Act: un solo pedido con dos líneas y el cupón
+        mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "verano26",
+                                  "items": [
+                                    { "productoId": "%s", "cantidad": 2 },
+                                    { "productoId": "%s", "cantidad": 1 }
+                                ] }
+                                """.formatted(teclado, mouse)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cuponAplicado").value(true))
+                .andExpect(jsonPath("$.compras[0].precioUnitario").value(127500.0))   // 150000 - 15 %
+                .andExpect(jsonPath("$.compras[1].precioUnitario").value(68000.0))    //  80000 - 15 %
+                .andExpect(jsonPath("$.total").value(323000.0));
+
+        // Assert: el cupón, leído de la base, subió exactamente un uso (no uno por línea)
+        assertEquals(usosAntes + 1, usosDelCupon(tokenAna, "VERANO26"));
+    }
+
+    @Test
+    @DisplayName("Flujo real: el vendedor crea su cupón, el comprador lo usa una sola vez y un segundo intento responde 422")
+    void vendedorCreaCuponYElCompradorLoUsaEnUnPedido() throws Exception {
+        // Arrange
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String codigo = "TIENDA" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        String cuponJson = """
+                { "codigo": "%s", "porcentaje": 20, "vence": "%s", "usosMaximos": 3 }
+                """.formatted(codigo.toLowerCase(), LocalDate.now().plusDays(30));
+
+        // Act 1: el vendedor crea el cupón (el código se normaliza a mayúsculas y queda a su nombre)
+        mockMvc.perform(post("/api/cupones")
+                        .header("Authorization", "Bearer " + tokenVendedor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuponJson))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.codigo").value(codigo))
+                .andExpect(jsonPath("$.usos").value(0))
+                .andExpect(jsonPath("$.vendedorId").isNotEmpty());
+
+        // Act 2: el mismo código otra vez responde 409
+        mockMvc.perform(post("/api/cupones")
+                        .header("Authorization", "Bearer " + tokenVendedor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuponJson))
+                .andExpect(status().isConflict());
+
+        // Act 3: el comprador lo previsualiza y lo usa en un pedido de dos líneas
+        assertEquals(0, usosDelCupon(tokenComprador, codigo));
+        String teclado = publicarProducto(tokenVendedor, "Teclado-propio-" + UUID.randomUUID(), 100000, 10);
+        String mouse = publicarProducto(tokenVendedor, "Mouse-propio-" + UUID.randomUUID(), 50000, 10);
+        mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "%s",
+                                  "items": [
+                                    { "productoId": "%s", "cantidad": 1 },
+                                    { "productoId": "%s", "cantidad": 1 }
+                                ] }
+                                """.formatted(codigo, teclado, mouse)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cuponAplicado").value(true))
+                .andExpect(jsonPath("$.total").value(120000.0));   // (100000 + 50000) - 20 %
+
+        // Act 4: el mismo comprador no puede usar el cupón otra vez (ni en vista previa ni en un pedido)
+        mockMvc.perform(get("/api/cupones/{codigo}", codigo)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isUnprocessableContent());
+        mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "%s",
+                                  "items": [ { "productoId": "%s", "cantidad": 1 } ] }
+                                """.formatted(codigo, teclado)))
+                .andExpect(status().isUnprocessableContent());
+
+        // Assert: el vendedor ve su cupón con un solo uso (el intento rechazado no consumió nada)
+        mockMvc.perform(get("/api/cupones")
+                        .header("Authorization", "Bearer " + tokenVendedor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.codigo == '%s')].usos".formatted(codigo)).value(1));
+    }
+
+    @Test
+    @DisplayName("Regla real: un cupón inexistente responde 404 y el stock no cambia")
+    void cuponInexistenteRetorna404YNoDescuentaStock() throws Exception {
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String nombre = "Teclado-sin-cupon-" + UUID.randomUUID();
+        String producto = publicarProducto(tokenVendedor, nombre, 150000, 10);
+
+        mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "NOEXISTE",
+                                  "items": [ { "productoId": "%s", "cantidad": 2 } ] }
+                                """.formatted(producto)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/productos")
+                        .param("texto", nombre)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].stock").value(10));
     }
 }

@@ -34,4 +34,8 @@ public class CuponEntity {
 
     @Column(nullable = false)
     private int usos;
+
+    // null = cupón global (sin dueño)
+    @Column(name = "vendedor_id")
+    private UUID vendedorId;
 }

@@ -1,10 +1,12 @@
 package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Compra;
+import com.uniquindio.backend.domain.entity.Cupon;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
+import com.uniquindio.backend.domain.repository.CuponRepository;
 import com.uniquindio.backend.domain.repository.PreventaRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.PromocionRepository;
@@ -20,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +32,9 @@ import java.util.UUID;
  * reglas que RealizarCompraUseCase (producto comprable, preventa, vendedor activo, exclusivo,
  * promoción vigente), pero valida TODAS las líneas antes de descontar stock: si una sola
  * falla, no se modifica ningún producto ni se guarda ninguna compra.
+ * Cupón opcional: se valida una vez, se aplica solo a las líneas de productos a los que aplica
+ * (todos si es global; los de su vendedor si tiene dueño) y consume UN solo uso por pedido,
+ * sin importar cuántas líneas tenga. Cada comprador puede usar un mismo cupón una sola vez.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,10 +46,11 @@ public class CrearPedidoUseCase {
     private final VendedorRepository vendedorRepository;
     private final PreventaRepository preventaRepository;
     private final PromocionRepository promocionRepository;
+    private final CuponRepository cuponRepository;
     private final Clock clock;
 
     @Transactional
-    public List<Compra> ejecutar(UUID usuarioId, List<ItemPedido> items) {
+    public List<Compra> ejecutar(UUID usuarioId, List<ItemPedido> items, String codigoCupon) {
         validarItems(items);
         LocalDateTime ahora = LocalDateTime.now(clock);
 
@@ -52,12 +59,16 @@ public class CrearPedidoUseCase {
         usuario.asegurarActivo();
 
         // 1) Validar todo SIN modificar nada
+        Cupon cupon = obtenerCuponValido(codigoCupon, usuarioId, ahora);
         List<Producto> productos = new ArrayList<>();
         for (ItemPedido item : items) {
             Producto producto = productoRepository.obtenerPorId(item.productoId())
                     .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
             validarLinea(producto, usuarioId, item.cantidad(), ahora);
             productos.add(producto);
+        }
+        if (cupon != null && productos.stream().noneMatch(p -> cupon.aplicaA(p.getVendedorId()))) {
+            throw new ReglaDominioException("El cupón no aplica a ningún producto del pedido");
         }
 
         // 2) Ya es seguro: descontar stock y armar las compras del pedido
@@ -67,14 +78,39 @@ public class CrearPedidoUseCase {
             ItemPedido item = items.get(i);
             Producto producto = productos.get(i);
             producto.reducirStock(item.cantidad());
-            compras.add(Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(),
-                    item.cantidad(), ahora, precioUnitario(producto, ahora), pedidoId));
+            Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(),
+                    item.cantidad(), ahora, precioUnitario(producto, ahora), pedidoId);
+            if (cupon != null && cupon.aplicaA(producto.getVendedorId())) {
+                compra.aplicarCupon(cupon);
+            }
+            compras.add(compra);
+        }
+        if (cupon != null) {
+            cupon.registrarUso();   // un solo uso por pedido, no uno por línea
         }
 
         // 3) Persistir (la transacción garantiza todo o nada)
         productos.forEach(productoRepository::guardar);
         compras.forEach(compraRepository::guardar);
+        if (cupon != null) {
+            cuponRepository.guardar(cupon);
+            cuponRepository.registrarUsoDe(cupon.getId(), usuarioId);
+        }
         return compras;
+    }
+
+    /** Sin código no hay cupón; con código debe existir, poder usarse hoy y no haber sido usado ya por el comprador. */
+    private Cupon obtenerCuponValido(String codigoCupon, UUID usuarioId, LocalDateTime ahora) {
+        if (codigoCupon == null || codigoCupon.isBlank()) {
+            return null;
+        }
+        Cupon cupon = cuponRepository.obtenerPorCodigo(codigoCupon)
+                .orElseThrow(() -> new NoSuchElementException("El cupón no existe"));
+        cupon.validarUso(ahora.toLocalDate());
+        if (cuponRepository.fueUsadoPor(cupon.getId(), usuarioId)) {
+            throw new ReglaDominioException("Ya usaste este cupón: solo se puede usar una vez por comprador");
+        }
+        return cupon;
     }
 
     private void validarItems(List<ItemPedido> items) {

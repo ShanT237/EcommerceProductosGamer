@@ -44,7 +44,8 @@ public class PedidoController {
         this.cancelarPedidoUseCase = cancelarPedidoUseCase;
     }
 
-    // Crear pedido: una compra PENDIENTE por línea, con stock descontado de todas o de ninguna
+    // Crear pedido: una compra PENDIENTE por línea, con stock descontado de todas o de ninguna.
+    // Con codigoCupon, el cupón se valida una vez y consume un solo uso para todo el pedido.
     @PostMapping
     public ResponseEntity<PedidoResponse> crear(
             @AuthenticationPrincipal UUID usuarioId,
@@ -52,7 +53,7 @@ public class PedidoController {
         List<ItemPedido> items = request.items().stream()
                 .map(item -> new ItemPedido(item.productoId(), item.cantidad()))
                 .toList();
-        List<Compra> compras = crearPedidoUseCase.ejecutar(usuarioId, items);
+        List<Compra> compras = crearPedidoUseCase.ejecutar(usuarioId, items, request.codigoCupon());
         PedidoResponse response = PedidoResponse.desde(compras);
 
         URI location = ServletUriComponentsBuilder
