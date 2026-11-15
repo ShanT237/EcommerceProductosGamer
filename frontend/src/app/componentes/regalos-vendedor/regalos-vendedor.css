@@ -1,0 +1,18 @@
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+.formulario { padding: 30px; display: flex; flex-direction: column; gap: 18px; }
+.formulario h3, .subtitulo { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+
+.por-enviar { display: flex; flex-direction: column; gap: 14px; }
+.regalo { padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; transition: opacity 0.2s; }
+.regalo.ocupada { opacity: 0.5; pointer-events: none; }
+.datos { display: flex; flex-direction: column; gap: 6px; }
+.datos h4 { font-family: var(--fuente-titulo); font-size: 18px; letter-spacing: 0.06em; color: var(--cian); }
+.pequeno { font-size: 15px; }
+
+.vacio .grande { font-size: 48px; color: var(--cian); text-shadow: var(--brillo-cian); }
+
+@media (max-width: 960px) {
+  .dos { grid-template-columns: 1fr; }
+}
