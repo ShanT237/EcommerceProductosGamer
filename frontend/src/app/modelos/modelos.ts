@@ -70,8 +70,12 @@ export interface Compra {
   subtotal: number;
   fecha: string;
   estado: EstadoCompra;
-  /** Pedido al que pertenece la línea; `null` si es una compra suelta (p. ej. un combo). */
+  /** Pedido al que pertenece la línea; `null` si es una compra individual. */
   pedidoId: string | null;
+  /** Combo de origen, si la línea se compró como parte de un combo. */
+  comboId?: string | null;
+  /** Nombre guardado al momento de comprar, aunque luego se elimine o cambie el combo. */
+  comboNombre?: string | null;
 }
 
 /** Respuesta de `POST /api/pedidos` y de `PUT /api/pedidos/{id}/confirmar|cancelar`: una compra por producto. */
@@ -202,11 +206,13 @@ export interface ModificarCombo {
   descuento: number;
 }
 
-/** Respuesta de `POST /api/combos/{id}/comprar`: una compra PENDIENTE por producto del combo. */
+/** Respuesta de `POST /api/combos/{id}/comprar`: líneas de un único pedido del combo. */
 export interface ResultadoCompraCombo {
   comboId: string;
+  pedidoId: string;
   compras: Compra[];
   total: number;
+  cuponAplicado?: boolean;
 }
 
 /** Cupón de descuento (`/api/cupones`). `vendedorId` es `null` si es global; si tiene dueño solo descuenta sus productos. */
