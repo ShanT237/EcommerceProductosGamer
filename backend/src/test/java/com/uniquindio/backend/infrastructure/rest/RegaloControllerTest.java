@@ -1,7 +1,13 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.dto.response.ProgresoRegalosResponse;
 import com.uniquindio.backend.application.usecase.AsignarRegaloPorMetaUseCase;
 import com.uniquindio.backend.application.usecase.ConfirmarEntregaRegaloUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarMisRegalosUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarProgresoRegalosUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarRegalosDisponiblesUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarRegalosPorEnviarUseCase;
+import com.uniquindio.backend.application.usecase.CrearRegaloUseCase;
 import com.uniquindio.backend.application.usecase.EnviarRegaloUseCase;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
@@ -19,12 +25,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +55,21 @@ class RegaloControllerTest {
 
     @MockitoBean
     private ConfirmarEntregaRegaloUseCase confirmarEntregaRegaloUseCase;
+
+    @MockitoBean
+    private CrearRegaloUseCase crearRegaloUseCase;
+
+    @MockitoBean
+    private ConsultarRegalosDisponiblesUseCase consultarRegalosDisponiblesUseCase;
+
+    @MockitoBean
+    private ConsultarMisRegalosUseCase consultarMisRegalosUseCase;
+
+    @MockitoBean
+    private ConsultarRegalosPorEnviarUseCase consultarRegalosPorEnviarUseCase;
+
+    @MockitoBean
+    private ConsultarProgresoRegalosUseCase consultarProgresoRegalosUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -115,12 +140,15 @@ class RegaloControllerTest {
     void enviarDevuelveElRegaloEnviado() throws Exception {
         Regalo enviado = regaloElegido();
         enviado.enviar();
-        when(enviarRegaloUseCase.ejecutar(regaloId)).thenReturn(enviado);
+        UUID vendedorId = UUID.randomUUID();
+        when(enviarRegaloUseCase.ejecutar(regaloId, vendedorId)).thenReturn(enviado);
 
         mockMvc.perform(put("/api/regalos/{id}/enviar", regaloId)
-                        .with(vendedor(UUID.randomUUID())))
+                        .with(vendedor(vendedorId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("ENVIADO"));
+
+        Mockito.verify(enviarRegaloUseCase).ejecutar(regaloId, vendedorId);
     }
 
     @Test
@@ -158,6 +186,115 @@ class RegaloControllerTest {
                 .andExpect(status().isUnprocessableContent());              // 422
 
         Mockito.verify(confirmarEntregaRegaloUseCase, Mockito.never()).ejecutar(regaloId, destinatario);
+    }
+
+    // ===================== crear =====================
+
+    @Test
+    void crearUsaElVendedorDelTokenYDevuelve201() throws Exception {
+        UUID vendedorId = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+        when(crearRegaloUseCase.ejecutar(Mockito.any(UUID.class), Mockito.eq(vendedorId),
+                Mockito.eq(productoId), Mockito.isNull()))
+                .thenReturn(Regalo.crear(regaloId, productoId, null));
+
+        mockMvc.perform(post("/api/regalos")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"productoId\": \"%s\" }".formatted(productoId)))
+                .andExpect(status().isCreated())                    // 201
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.estado").value("DISPONIBLE"))
+                .andExpect(jsonPath("$.idProducto").value(productoId.toString()));
+    }
+
+    @Test
+    void crearConProductoYComboRetorna422() throws Exception {
+        when(crearRegaloUseCase.ejecutar(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenThrow(new ReglaDominioException(
+                        "Un regalo debe estar asociado a un producto o a un combo, pero no a ambos"));
+
+        mockMvc.perform(post("/api/regalos")
+                        .with(vendedor(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"productoId\": \"%s\", \"comboId\": \"%s\" }"
+                                .formatted(UUID.randomUUID(), UUID.randomUUID())))
+                .andExpect(status().isUnprocessableContent());      // 422
+    }
+
+    @Test
+    void compradorNoPuedeCrearRetorna403() throws Exception {
+        mockMvc.perform(post("/api/regalos")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"productoId\": \"%s\" }".formatted(UUID.randomUUID())))
+                .andExpect(status().isForbidden());                 // 403
+
+        Mockito.verifyNoInteractions(crearRegaloUseCase);
+    }
+
+    // ===================== consultas =====================
+
+    @Test
+    void disponiblesDevuelveLaListaParaElComprador() throws Exception {
+        when(consultarRegalosDisponiblesUseCase.ejecutar())
+                .thenReturn(List.of(Regalo.crear(regaloId, UUID.randomUUID(), null)));
+
+        mockMvc.perform(get("/api/regalos/disponibles").with(comprador(usuarioId)))
+                .andExpect(status().isOk())                         // 200
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].estado").value("DISPONIBLE"));
+    }
+
+    @Test
+    void miosUsaElUsuarioDelToken() throws Exception {
+        when(consultarMisRegalosUseCase.ejecutar(usuarioId)).thenReturn(List.of(regaloElegido()));
+
+        mockMvc.perform(get("/api/regalos/mios").with(comprador(usuarioId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].idUsuario").value(usuarioId.toString()));
+
+        Mockito.verify(consultarMisRegalosUseCase).ejecutar(usuarioId);
+    }
+
+    @Test
+    void progresoUsaElUsuarioDelToken() throws Exception {
+        when(consultarProgresoRegalosUseCase.ejecutar(usuarioId))
+                .thenReturn(new ProgresoRegalosResponse(7, 5, 0, 1, 3));
+
+        mockMvc.perform(get("/api/regalos/progreso").with(comprador(usuarioId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comprasCompletadas").value(7))
+                .andExpect(jsonPath("$.regalosDisponibles").value(1))
+                .andExpect(jsonPath("$.comprasParaSiguiente").value(3));
+    }
+
+    @Test
+    void porEnviarUsaElVendedorDelToken() throws Exception {
+        UUID vendedorId = UUID.randomUUID();
+        when(consultarRegalosPorEnviarUseCase.ejecutar(vendedorId)).thenReturn(List.of(regaloElegido()));
+
+        mockMvc.perform(get("/api/regalos/por-enviar").with(vendedor(vendedorId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].estado").value("ELEGIDO"));
+
+        Mockito.verify(consultarRegalosPorEnviarUseCase).ejecutar(vendedorId);
+    }
+
+    @Test
+    void compradorNoPuedeVerLosRegalosPorEnviarRetorna403() throws Exception {
+        mockMvc.perform(get("/api/regalos/por-enviar").with(comprador(usuarioId)))
+                .andExpect(status().isForbidden());
+
+        Mockito.verifyNoInteractions(consultarRegalosPorEnviarUseCase);
+    }
+
+    @Test
+    void vendedorNoPuedeVerLosRegalosDisponiblesRetorna403() throws Exception {
+        mockMvc.perform(get("/api/regalos/disponibles").with(vendedor(UUID.randomUUID())))
+                .andExpect(status().isForbidden());
+
+        Mockito.verifyNoInteractions(consultarRegalosDisponiblesUseCase);
     }
 
     // ===================== sin token =====================
