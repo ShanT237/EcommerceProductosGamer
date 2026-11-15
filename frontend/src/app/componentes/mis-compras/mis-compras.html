@@ -49,9 +49,6 @@
             @switch (c.estado) {
               @case ('PENDIENTE') {
                 <button class="btn btn-neon btn-chico" (click)="confirmar(c)">Confirmar pago</button>
-                @if (!c.pedidoId) {
-                  <button class="btn btn-chico" (click)="abrirDialogo('cupon', c)">Cupón</button>
-                }
                 <button class="btn btn-chico btn-peligro" (click)="cancelar(c)">Cancelar</button>
               }
               @case ('COMPLETADA') {
@@ -75,28 +72,20 @@
         @switch (d.tipo) {
           @case ('resena') { Reseña del producto }
           @case ('vendedor') { Valorar al vendedor }
-          @default { Aplicar cupón }
         }
       </h2>
       <p class="muted">{{ nombreDe(d.compra.productoId) }}</p>
 
-      @if (d.tipo === 'cupon') {
-        <div class="campo">
-          <label for="cupon">Código del cupón</label>
-          <input id="cupon" name="cupon" class="entrada" placeholder="VERANO26" [(ngModel)]="cupon">
-        </div>
-      } @else {
-        <div class="estrellas" role="radiogroup" aria-label="Calificación">
-          @for (n of [1, 2, 3, 4, 5]; track n) {
-            <button type="button" class="estrella" [class.on]="n <= estrellas()" (click)="estrellas.set(n)" [attr.aria-label]="n + ' estrellas'">★</button>
-          }
-        </div>
-        <div class="campo">
-          <label for="coment">Comentario</label>
-          <textarea id="coment" name="coment" class="entrada" maxlength="500" [(ngModel)]="comentario"
-                    [placeholder]="d.tipo === 'resena' ? 'Cuéntanos qué te pareció…' : 'Opcional'"></textarea>
-        </div>
-      }
+      <div class="estrellas" role="radiogroup" aria-label="Calificación">
+        @for (n of [1, 2, 3, 4, 5]; track n) {
+          <button type="button" class="estrella" [class.on]="n <= estrellas()" (click)="estrellas.set(n)" [attr.aria-label]="n + ' estrellas'">★</button>
+        }
+      </div>
+      <div class="campo">
+        <label for="coment">Comentario</label>
+        <textarea id="coment" name="coment" class="entrada" maxlength="500" [(ngModel)]="comentario"
+                  [placeholder]="d.tipo === 'resena' ? 'Cuéntanos qué te pareció…' : 'Opcional'"></textarea>
+      </div>
 
       <div class="acciones">
         <button class="btn btn-neon" type="submit" [disabled]="ocupada() !== null">Enviar</button>

@@ -15,6 +15,7 @@ public class CuponPersistenceMapper {
         entity.setVence(cupon.getVence());
         entity.setUsosMaximos(cupon.getUsosMaximos());
         entity.setUsos(cupon.getUsos());
+        entity.setVendedorId(cupon.getVendedorId());
         return entity;
     }
 
@@ -25,6 +26,7 @@ public class CuponPersistenceMapper {
                 entity.getPorcentaje(),
                 entity.getVence(),
                 entity.getUsosMaximos(),
-                entity.getUsos());
+                entity.getUsos(),
+                entity.getVendedorId());
     }
 }

@@ -79,6 +79,8 @@ export interface Pedido {
   pedidoId: string;
   compras: Compra[];
   total: number;
+  /** `true` si alguna línea recibió el descuento de un cupón (el total ya lo incluye). */
+  cuponAplicado?: boolean;
 }
 
 export interface MovimientoPuntos {
@@ -205,4 +207,24 @@ export interface ResultadoCompraCombo {
   comboId: string;
   compras: Compra[];
   total: number;
+}
+
+/** Cupón de descuento (`/api/cupones`). `vendedorId` es `null` si es global; si tiene dueño solo descuenta sus productos. */
+export interface Cupon {
+  id: string;
+  codigo: string;
+  /** Porcentaje de descuento (mayor a 0 y menor que 100). */
+  porcentaje: number;
+  /** Último día de uso (AAAA-MM-DD, inclusive). */
+  vence: string;
+  usosMaximos: number;
+  usos: number;
+  vendedorId: string | null;
+}
+
+export interface NuevoCupon {
+  codigo: string;
+  porcentaje: number;
+  vence: string;
+  usosMaximos: number;
 }

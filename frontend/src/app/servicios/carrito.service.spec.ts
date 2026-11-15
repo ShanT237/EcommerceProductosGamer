@@ -151,6 +151,52 @@ describe('CarritoService', () => {
       http.expectOne(putPedido('ped1', 'confirmar')).flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
     });
 
+    it('pagarConCuponEnviaCodigoCuponUnaSolaVezEnElPost', () => {
+      carrito.agregar(producto({ id: 'a' }), 2);
+      carrito.agregar(producto({ id: 'b' }), 1);
+
+      carrito.pagar('VERANO26').subscribe();
+
+      // Un único POST con el cupón (consume un uso por pedido, no uno por ítem).
+      const post = http.expectOne(postPedido());
+      expect(post.request.body).toEqual({
+        items: [
+          { productoId: 'a', cantidad: 2 },
+          { productoId: 'b', cantidad: 1 },
+        ],
+        codigoCupon: 'VERANO26',
+      });
+      post.flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
+      // La confirmación no vuelve a llevar el cupón.
+      const confirmar = http.expectOne(putPedido('ped1', 'confirmar'));
+      expect(confirmar.request.body).toEqual({});
+      confirmar.flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
+    });
+
+    it('pagarSinCuponNoEnviaElCampo', () => {
+      carrito.agregar(producto({ id: 'a' }));
+
+      carrito.pagar().subscribe();
+
+      const post = http.expectOne(postPedido());
+      expect('codigoCupon' in post.request.body).toBe(false);
+      post.flush(pedido([compra('cA', 'a')]));
+      http.expectOne(putPedido('ped1', 'confirmar')).flush(pedido([compra('cA', 'a')]));
+    });
+
+    it('si falla el pago con cupón el carrito queda intacto y se informa el mensaje del backend', () => {
+      carrito.agregar(producto({ id: 'a' }));
+
+      const resultados: ResultadoPago[] = [];
+      carrito.pagar('VENCIDO10').subscribe((r) => resultados.push(r));
+
+      http.expectOne(postPedido()).flush({ mensaje: 'El cupón está vencido' }, { status: 422, statusText: 'Unprocessable Content' });
+
+      expect(resultados[0].error).toBe('El cupón está vencido');
+      expect(carrito.items().length).toBe(1);
+      expect(carrito.pagando()).toBe(false);
+    });
+
     it('confirma el pedido después de crearlo y vacía el carrito', () => {
       carrito.agregar(producto({ id: 'a' }), 2);
       carrito.agregar(producto({ id: 'b' }), 1);

@@ -33,6 +33,29 @@ describe('CompraService (pedidos)', () => {
     expect(recibido).toEqual(PEDIDO);
   });
 
+  it('crearPedido con cupón envía codigoCupon recortado en el mismo POST', () => {
+    const items = [{ productoId: 'a', cantidad: 1 }];
+    servicio.crearPedido(items, '  VERANO26 ').subscribe();
+
+    const req = http.expectOne({ method: 'POST', url: `${API_URL}/pedidos` });
+    expect(req.request.body).toEqual({ items, codigoCupon: 'VERANO26' });
+    req.flush(PEDIDO);
+  });
+
+  it('crearPedido sin cupón o con el código en blanco no envía el campo', () => {
+    const items = [{ productoId: 'a', cantidad: 1 }];
+    servicio.crearPedido(items, '   ').subscribe();
+    servicio.crearPedido(items, undefined).subscribe();
+
+    const reqs = http.match({ method: 'POST', url: `${API_URL}/pedidos` });
+    expect(reqs.length).toBe(2);
+    reqs.forEach((r) => {
+      expect(r.request.body).toEqual({ items });
+      expect('codigoCupon' in r.request.body).toBe(false);
+      r.flush(PEDIDO);
+    });
+  });
+
   it('confirmarPedido hace PUT /pedidos/{id}/confirmar', () => {
     servicio.confirmarPedido('ped1').subscribe();
 

@@ -1,5 +1,5 @@
 import { Producto } from '../modelos/modelos';
-import { descuentoTotal, estadoPromocion, fechaDia, precioTachado, precioVigente } from './formato';
+import { descuentoTotal, estadoPromocion, fechaCompleta, fechaDia, precioTachado, precioVigente } from './formato';
 
 function producto(extra: Partial<Producto> = {}): Producto {
   return {
@@ -37,6 +37,13 @@ describe('formato (precio vigente)', () => {
     const texto = fechaDia('2026-11-30');
     expect(texto).toMatch(/30/);
     expect(texto).toMatch(/nov/i);
+  });
+
+  it('fechaCompletaIncluyeElAnioSinCorrerLaFecha', () => {
+    const texto = fechaCompleta('2026-11-30');
+    expect(texto).toMatch(/30/);
+    expect(texto).toMatch(/nov/i);
+    expect(texto).toMatch(/2026/);
   });
 });
 

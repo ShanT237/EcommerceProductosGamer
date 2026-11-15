@@ -7,7 +7,6 @@ import com.uniquindio.backend.application.usecase.SolicitarReembolsoUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import com.uniquindio.backend.infrastructure.rest.mapper.CompraMapper;
-import com.uniquindio.backend.application.usecase.AplicarCuponUseCase;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.uniquindio.backend.domain.service.EmisorToken;
@@ -63,9 +62,6 @@ class CompraControllerTest {
 
     @MockitoBean
     private SolicitarReembolsoUseCase solicitarReembolsoUseCase;
-
-    @MockitoBean
-    private AplicarCuponUseCase aplicarCuponUseCase;
 
     @MockitoBean
     private CompraMapper mapper;

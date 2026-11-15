@@ -90,6 +90,8 @@ export class Catalogo implements OnInit {
   // ---- detalle / compra ----
   protected seleccionado = signal<Producto | null>(null);
   protected cantidad = signal(1);
+  /** Cupón opcional de la compra directa: viaja en el POST del pedido (se consume al reservar). */
+  protected codigoCupon = signal('');
   /** Compra directa = pedido de un solo ítem, reservado hasta que se paga o se cancela. */
   protected reserva = signal<Pedido | null>(null);
   protected procesando = signal(false);
@@ -176,6 +178,7 @@ export class Catalogo implements OnInit {
   protected abrir(p: Producto) {
     this.seleccionado.set(p);
     this.cantidad.set(1);
+    this.codigoCupon.set('');
     this.reserva.set(null);
   }
 
@@ -202,9 +205,10 @@ export class Catalogo implements OnInit {
     const p = this.seleccionado();
     if (!p) return;
     this.procesando.set(true);
-    this.compras.crearPedido([{ productoId: p.id, cantidad: this.cantidad() }]).subscribe({
+    this.compras.crearPedido([{ productoId: p.id, cantidad: this.cantidad() }], this.codigoCupon()).subscribe({
       next: (pedido) => {
         this.reserva.set(pedido);
+        this.codigoCupon.set(''); // ya se consumió con el pedido: no se reenvía si se cancela y se vuelve a reservar
         this.procesando.set(false);
         this.toast.info('Compra reservada. Confirma el pago para completarla.');
       },

@@ -11,17 +11,16 @@ export class CompraService {
   realizar(productoId: string, cantidad: number) {
     return this.http.post<Compra>(`${API_URL}/compras`, { productoId, cantidad });
   }
-  crearPedido(items: Array<{ productoId: string; cantidad: number }>) {
-    return this.http.post<Pedido>(`${API_URL}/pedidos`, { items });
+  /** POST /pedidos. El cupón es opcional y consume un solo uso por pedido; sin código el campo no se envía. */
+  crearPedido(items: Array<{ productoId: string; cantidad: number }>, codigoCupon?: string) {
+    const cupon = codigoCupon?.trim();
+    return this.http.post<Pedido>(`${API_URL}/pedidos`, cupon ? { items, codigoCupon: cupon } : { items });
   }
   confirmarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/confirmar`, {}); }
   cancelarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/cancelar`, {}); }
   confirmar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/confirmar`, {}); }
   cancelar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/cancelar`, {}); }
   reembolsar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/reembolso`, {}); }
-  aplicarCupon(id: string, codigo: string) {
-    return this.http.put<Compra>(`${API_URL}/compras/${id}/cupon`, { codigo });
-  }
   resenar(idCompra: string, valorCalificacion: number, comentario: string) {
     return this.http.post(`${API_URL}/resenas`, { idCompra, valorCalificacion, comentario });
   }

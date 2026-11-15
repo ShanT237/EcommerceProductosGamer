@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class CuponPersistenceMapperTest {
 
@@ -29,5 +30,20 @@ class CuponPersistenceMapperTest {
         assertEquals(LocalDate.of(2026, 12, 31), reconstruido.getVence());
         assertEquals(3, reconstruido.getUsosMaximos());
         assertEquals(1, reconstruido.getUsos());
+        assertNull(reconstruido.getVendedorId());   // cupón global
+    }
+
+    @Test
+    @DisplayName("Cupon con dueño: toEntity → toDomain conserva el vendedorId")
+    void conservaElDuenoDelCupon() {
+        UUID vendedorId = UUID.randomUUID();
+        Cupon original = Cupon.crear(UUID.randomUUID(), vendedorId, "tienda10", 10, LocalDate.of(2026, 12, 31), 5);
+
+        CuponEntity entity = mapper.toEntity(original);
+        Cupon reconstruido = mapper.toDomain(entity);
+
+        assertEquals(vendedorId, entity.getVendedorId());
+        assertEquals(vendedorId, reconstruido.getVendedorId());
+        assertEquals("TIENDA10", reconstruido.getCodigo());
     }
 }

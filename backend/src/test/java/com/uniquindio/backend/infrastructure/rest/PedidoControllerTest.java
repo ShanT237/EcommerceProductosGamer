@@ -5,6 +5,7 @@ import com.uniquindio.backend.application.usecase.ConfirmarPedidoUseCase;
 import com.uniquindio.backend.application.usecase.CrearPedidoUseCase;
 import com.uniquindio.backend.application.usecase.ItemPedido;
 import com.uniquindio.backend.domain.entity.Compra;
+import com.uniquindio.backend.domain.entity.Cupon;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Precio;
@@ -21,6 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -92,7 +94,7 @@ class PedidoControllerTest {
 
     @Test
     void crearUsaElUsuarioDelToken() throws Exception {
-        when(crearPedidoUseCase.ejecutar(any(), any())).thenReturn(lineasSimuladas());
+        when(crearPedidoUseCase.ejecutar(any(), any(), any())).thenReturn(lineasSimuladas());
 
         mockMvc.perform(post("/api/pedidos")
                         .with(comprador(usuarioId))
@@ -104,10 +106,11 @@ class PedidoControllerTest {
                 .andExpect(jsonPath("$.compras.length()").value(2))
                 .andExpect(jsonPath("$.compras[0].estado").value("PENDIENTE"))
                 .andExpect(jsonPath("$.compras[0].pedidoId").value(pedidoId.toString()))
-                .andExpect(jsonPath("$.total").value(250000.0));
+                .andExpect(jsonPath("$.total").value(250000.0))
+                .andExpect(jsonPath("$.cuponAplicado").value(false));
 
         Mockito.verify(crearPedidoUseCase).ejecutar(usuarioId,
-                List.of(new ItemPedido(teclado, 2), new ItemPedido(mouse, 1)));
+                List.of(new ItemPedido(teclado, 2), new ItemPedido(mouse, 1)), null);
     }
 
     @Test
@@ -166,7 +169,7 @@ class PedidoControllerTest {
 
     @Test
     void unaReglaDeDominioVioladaRetorna422() throws Exception {
-        when(crearPedidoUseCase.ejecutar(any(), any()))
+        when(crearPedidoUseCase.ejecutar(any(), any(), any()))
                 .thenThrow(new ReglaDominioException("No hay suficiente stock disponible"));
 
         mockMvc.perform(post("/api/pedidos")
@@ -175,6 +178,73 @@ class PedidoControllerTest {
                         .content(pedidoJson()))
                 .andExpect(status().isUnprocessableContent())            // 422
                 .andExpect(jsonPath("$.mensaje").value("No hay suficiente stock disponible"));
+    }
+
+    @Test
+    void crearConCodigoCuponLoPasaAlCasoDeUsoYMarcaCuponAplicado() throws Exception {
+        Cupon cupon = Cupon.crear(UUID.randomUUID(), "GAMER10", 10, LocalDate.of(2026, 12, 31), 5);
+        List<Compra> lineas = lineasSimuladas();
+        lineas.get(0).aplicarCupon(cupon);
+        when(crearPedidoUseCase.ejecutar(any(), any(), any())).thenReturn(lineas);
+
+        mockMvc.perform(post("/api/pedidos")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "GAMER10",
+                                  "items": [ { "productoId": "%s", "cantidad": 2 } ] }
+                                """.formatted(teclado)))
+                .andExpect(status().isCreated())                         // 201
+                .andExpect(jsonPath("$.cuponAplicado").value(true))
+                .andExpect(jsonPath("$.total").value(230000.0));         // 2 x 90000 + 1 x 50000
+
+        Mockito.verify(crearPedidoUseCase).ejecutar(usuarioId,
+                List.of(new ItemPedido(teclado, 2)), "GAMER10");
+    }
+
+    @Test
+    void crearConCodigoCuponDemasiadoLargoRetorna400() throws Exception {
+        mockMvc.perform(post("/api/pedidos")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "%s",
+                                  "items": [ { "productoId": "%s", "cantidad": 1 } ] }
+                                """.formatted("X".repeat(51), teclado)))
+                .andExpect(status().isBadRequest());                     // 400
+
+        Mockito.verifyNoInteractions(crearPedidoUseCase);
+    }
+
+    @Test
+    void unCuponInexistenteRetorna404() throws Exception {
+        when(crearPedidoUseCase.ejecutar(any(), any(), any()))
+                .thenThrow(new NoSuchElementException("El cupón no existe"));
+
+        mockMvc.perform(post("/api/pedidos")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "NOEXISTE",
+                                  "items": [ { "productoId": "%s", "cantidad": 1 } ] }
+                                """.formatted(teclado)))
+                .andExpect(status().isNotFound());                       // 404
+    }
+
+    @Test
+    void unCuponVencidoOAgotadoRetorna422() throws Exception {
+        when(crearPedidoUseCase.ejecutar(any(), any(), any()))
+                .thenThrow(new ReglaDominioException("El cupón está vencido"));
+
+        mockMvc.perform(post("/api/pedidos")
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "codigoCupon": "VIEJO",
+                                  "items": [ { "productoId": "%s", "cantidad": 1 } ] }
+                                """.formatted(teclado)))
+                .andExpect(status().isUnprocessableContent())            // 422
+                .andExpect(jsonPath("$.mensaje").value("El cupón está vencido"));
     }
 
     @Test

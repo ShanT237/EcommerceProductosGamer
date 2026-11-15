@@ -50,4 +50,43 @@ class CuponTest {
         assertThrows(ReglaDominioException.class, () -> c.validarUso(VENCE.minusDays(1)));
         assertEquals(1, c.getUsos());
     }
+
+    @Test
+    void elCuponSinDuenoEsGlobalYAplicaATodosLosVendedores() {
+        Cupon global = cupon(5);
+
+        assertNull(global.getVendedorId());
+        assertTrue(global.aplicaA(UUID.randomUUID()));
+    }
+
+    @Test
+    void aplicaASoloALosProductosDeSuDuenoOATodosSiEsGlobal() {
+        UUID dueno = UUID.randomUUID();
+        Cupon propio = Cupon.crear(UUID.randomUUID(), dueno, "tienda10", 10, VENCE, 5);
+
+        assertEquals(dueno, propio.getVendedorId());
+        assertEquals("TIENDA10", propio.getCodigo());
+        assertTrue(propio.aplicaA(dueno));
+        assertFalse(propio.aplicaA(UUID.randomUUID()));
+        assertTrue(cupon(5).aplicaA(dueno));
+    }
+
+    @Test
+    void usosDisponiblesDescuentaCadaUsoRegistrado() {
+        Cupon c = cupon(3);
+        assertEquals(3, c.usosDisponibles());
+
+        c.registrarUso();
+
+        assertEquals(2, c.usosDisponibles());
+    }
+
+    @Test
+    void registrarUsoSinUsosDisponiblesLanzaReglaDominio() {
+        Cupon c = cupon(1);
+        c.registrarUso();
+
+        assertThrows(ReglaDominioException.class, c::registrarUso);
+        assertEquals(1, c.getUsos());
+    }
 }
