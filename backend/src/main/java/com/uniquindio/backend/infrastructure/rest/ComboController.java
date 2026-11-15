@@ -144,7 +144,8 @@ public class ComboController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UUID usuarioId,
             @Valid @RequestBody ComprarComboRequest request) {
-        List<Compra> compras = comprarComboUseCase.ejecutar(usuarioId, id, request.cantidad());
+        List<Compra> compras = comprarComboUseCase.ejecutar(
+                usuarioId, id, request.cantidad(), request.codigoCupon());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(mapper.toComprarResponse(id, compras)); // 201 Created
     }
