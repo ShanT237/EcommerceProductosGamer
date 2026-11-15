@@ -4,6 +4,8 @@ import com.uniquindio.backend.domain.entity.Preventa;
 import com.uniquindio.backend.domain.repository.PreventaRepository;
 
 import java.util.HashMap;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +19,13 @@ public class PreventaRepositoryEnMemoria implements PreventaRepository {
         return preventas.values().stream()
                 .filter(p -> p.getProductoId().equals(productoId))
                 .findFirst();
+    }
+
+    @Override
+    public List<Preventa> obtenerFuturas(LocalDate hoy) {
+        return preventas.values().stream()
+                .filter(preventa -> preventa.getFechaLanzamiento().isAfter(hoy))
+                .toList();
     }
 
     @Override
