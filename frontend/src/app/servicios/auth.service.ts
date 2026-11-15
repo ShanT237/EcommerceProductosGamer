@@ -7,6 +7,7 @@ import { Rol, Sesion, TipoVendedor } from '../modelos/modelos';
 import { ToastService } from './toast.service';
 
 const CLAVE = 'gamerzone.token';
+const INTERVALO_VERIFICACION_MS = 3000;
 
 function decodificar(token: string | null): Sesion | null {
   if (!token) return null;
@@ -32,6 +33,33 @@ export class AuthService {
   readonly autenticado = computed(() => this.sesion() !== null);
   readonly rol = computed(() => this.sesion()?.rol ?? null);
   readonly nombre = computed(() => (this.sesion()?.correo ?? '').split('@')[0]);
+
+  constructor() {
+    if (typeof window === 'undefined') return;
+    // Borrar el token a mano (DevTools) en esta pestaña no avisa a Angular: se revisa de forma activa.
+    window.addEventListener('storage', () => this.verificarSesion()); // cambios desde otra pestaña
+    window.addEventListener('focus', () => this.verificarSesion());
+    document.addEventListener('visibilitychange', () => this.verificarSesion());
+    setInterval(() => this.verificarSesion(), INTERVALO_VERIFICACION_MS); // también detecta el vencimiento
+  }
+
+  /**
+   * Comprueba que el token guardado siga existiendo, sea el mismo y no haya vencido.
+   * Si no, cierra la sesión (aviso + login) y devuelve false. Sin sesión iniciada no hace nada.
+   */
+  verificarSesion(): boolean {
+    const enMemoria = this._token();
+    if (!enMemoria) return true;
+    let guardado: string | null;
+    try {
+      guardado = localStorage.getItem(CLAVE);
+    } catch {
+      guardado = enMemoria; // sin almacenamiento: solo se valida el vencimiento
+    }
+    if (guardado === enMemoria && decodificar(enMemoria)) return true;
+    this.cerrarSesion(true);
+    return false;
+  }
 
   private leer(): string | null {
     try {
@@ -66,7 +94,7 @@ export class AuthService {
 
   cerrarSesion(expirada = false) {
     this.guardar(null);
-    if (expirada) this.toast.info('Tu sesión expiró. Vuelve a ingresar.');
+    if (expirada) this.toast.info('Tu sesión terminó o expiró. Vuelve a ingresar.');
     this.router.navigate(['/login']);
   }
 }
