@@ -5,7 +5,7 @@ import com.uniquindio.backend.domain.entity.Compra;
 import java.util.List;
 import java.util.UUID;
 
-// Usado en: POST /api/pedidos, PUT /api/pedidos/{id}/confirmar y PUT /api/pedidos/{id}/cancelar
+// Usado en: POST /api/pedidos y sus acciones de confirmar, cancelar o reembolsar
 // Una compra por cada línea del pedido; el total es la suma de los subtotales
 // (ya con el descuento del cupón en las líneas a las que aplicó).
 public record PedidoResponse(
