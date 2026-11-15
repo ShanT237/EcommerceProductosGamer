@@ -9,8 +9,10 @@ import java.util.UUID;
 // Una compra PENDIENTE por cada producto del combo, con el descuento del combo ya aplicado.
 public record ComprarComboResponse(
         UUID comboId,
+        UUID pedidoId,
         List<RealizarCompraResponse> compras,
-        double total
+        double total,
+        boolean cuponAplicado
 ) {
     public static ComprarComboResponse desde(UUID comboId, List<Compra> compras) {
         List<RealizarCompraResponse> detalle = compras.stream()
@@ -19,6 +21,8 @@ public record ComprarComboResponse(
         double total = compras.stream()
                 .mapToDouble(c -> c.getSubtotal().valor())
                 .sum();
-        return new ComprarComboResponse(comboId, detalle, total);
+        UUID pedidoId = compras.isEmpty() ? null : compras.get(0).getPedidoId();
+        boolean cuponAplicado = compras.stream().anyMatch(Compra::isCuponAplicado);
+        return new ComprarComboResponse(comboId, pedidoId, detalle, total, cuponAplicado);
     }
 }
