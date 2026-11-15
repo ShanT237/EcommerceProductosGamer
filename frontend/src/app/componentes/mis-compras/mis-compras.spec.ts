@@ -90,12 +90,9 @@ describe('MisCompras (pedidos)', () => {
     http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush([]);
   });
 
-  it('las líneas de un pedido no ofrecen aplicar cupón por separado', () => {
+  it('ninguna compra pendiente ofrece aplicar un cupón: el cupón se usa al crear el pedido', () => {
     abrir([compra('c1', 'ped1'), compra('c9', null)]);
 
-    const botonesCupon = [...(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)].filter(
-      (b) => b.textContent?.trim() === 'Cupón',
-    );
-    expect(botonesCupon.length).toBe(1); // solo la compra suelta
+    expect(boton('Cupón')).toBeUndefined();
   });
 });

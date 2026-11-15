@@ -1,0 +1,25 @@
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+.formulario { padding: 30px; display: flex; flex-direction: column; gap: 18px; }
+.formulario h3, .subtitulo { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+
+.mios { display: flex; flex-direction: column; gap: 14px; }
+.cupon { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.encabezado { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.encabezado h4 { font-family: var(--fuente-titulo); font-size: 18px; letter-spacing: 0.08em; color: var(--cian); }
+.pequeno { font-size: 15px; }
+
+.estado { text-transform: capitalize; }
+.estado-vigente { color: var(--lima); background: rgba(163, 255, 107, 0.1); }
+.estado-vencido { color: var(--rojo); background: rgba(255, 77, 109, 0.1); }
+.estado-agotado { color: var(--ambar); background: rgba(255, 176, 32, 0.12); }
+
+.barra { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.barra span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cian), var(--magenta)); }
+
+.vacio .grande { font-size: 48px; color: var(--cian); text-shadow: var(--brillo-cian); }
+
+@media (max-width: 960px) {
+  .dos { grid-template-columns: 1fr; }
+}

@@ -81,14 +81,15 @@ export class CarritoService {
    * Paga todo el carrito como un solo pedido (POST /pedidos y luego PUT /confirmar). Es todo o nada:
    * si falla la creación o la confirmación el carrito queda intacto (y si falla confirmar se cancela el pedido
    * para devolver el stock). Si ya hay un pago en curso (o no hay ítems) no emite nada.
+   * Con `cupon` el código viaja una sola vez, en el POST del pedido (el PUT de confirmar no lo lleva).
    */
-  pagar(): Observable<ResultadoPago> {
+  pagar(cupon?: string): Observable<ResultadoPago> {
     return defer(() => {
       const items = this._items();
       if (this._pagando() || items.length === 0) return EMPTY;
 
       this._pagando.set(true);
-      const pedido$ = this.compras.crearPedido(items.map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad })));
+      const pedido$ = this.compras.crearPedido(items.map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad })), cupon);
       return pedido$.pipe(
         switchMap((pedido) =>
           this.compras.confirmarPedido(pedido.pedidoId).pipe(

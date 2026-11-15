@@ -142,6 +142,7 @@
           <div class="resumen-pago">
             <p>Reserva creada · {{ unidadesDe(c) }} × {{ precio(c.compras[0].precioUnitario) }}</p>
             <strong>Total: {{ precio(c.total) }}</strong>
+            @if (c.cuponAplicado) { <p class="promo-fin">Cupón aplicado: el total ya incluye el descuento.</p> }
           </div>
           <div class="acciones">
             <button class="btn btn-neon" [disabled]="procesando()" (click)="pagar()">{{ procesando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>
@@ -155,6 +156,12 @@
               <button class="btn btn-chico" (click)="cambiarCantidad(1)" [disabled]="cantidad() >= p.stock">+</button>
             </div>
             <span class="muted">Total: <strong class="total">{{ precio(total()) }}</strong></span>
+          </div>
+          <div class="campo">
+            <label for="cupon-catalogo">Cupón (opcional)</label>
+            <input id="cupon-catalogo" class="entrada" maxlength="50" autocomplete="off" placeholder="VERANO26"
+                   [(ngModel)]="codigoCupon" [disabled]="procesando()">
+            <p class="nota">Se aplica al reservar y gasta un uso. Si tiene dueño, solo descuenta los productos de ese vendedor.</p>
           </div>
           <div class="acciones">
             <button class="btn btn-neon" [disabled]="procesando() || p.stock <= 0" (click)="reservar()">{{ procesando() ? 'Reservando…' : 'Comprar' }}</button>

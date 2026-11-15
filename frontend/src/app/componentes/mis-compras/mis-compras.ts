@@ -9,7 +9,7 @@ import { ToastService } from '../../servicios/toast.service';
 import { mensajeDeError } from '../../servicios/api.util';
 import { fechaHora, precio } from '../../servicios/formato';
 
-type Dialogo = { tipo: 'resena' | 'vendedor' | 'cupon'; compra: Compra };
+type Dialogo = { tipo: 'resena' | 'vendedor'; compra: Compra };
 
 @Component({
   selector: 'app-mis-compras',
@@ -36,7 +36,6 @@ export class MisCompras implements OnInit {
   protected dialogo = signal<Dialogo | null>(null);
   protected estrellas = signal(5);
   protected comentario = signal('');
-  protected cupon = signal('');
   protected redimiendo = signal(false);
   protected puntosACanjear = signal<number | null>(null);
 
@@ -127,7 +126,6 @@ export class MisCompras implements OnInit {
   protected abrirDialogo(tipo: Dialogo['tipo'], compra: Compra) {
     this.estrellas.set(5);
     this.comentario.set('');
-    this.cupon.set('');
     this.dialogo.set({ tipo, compra });
   }
 
@@ -162,11 +160,8 @@ export class MisCompras implements OnInit {
     if (d.tipo === 'resena') {
       if (!this.comentario().trim()) return this.toast.error('Escribe un comentario para tu reseña.');
       this.accion(d.compra, this.compras.resenar(d.compra.id, this.estrellas(), this.comentario().trim()), 'Reseña publicada. ¡Gracias!');
-    } else if (d.tipo === 'vendedor') {
-      this.accion(d.compra, this.compras.valorarVendedor(d.compra.id, this.estrellas(), this.comentario().trim()), 'Valoración enviada al vendedor.');
     } else {
-      if (!this.cupon().trim()) return this.toast.error('Escribe el código del cupón.');
-      this.accion(d.compra, this.compras.aplicarCupon(d.compra.id, this.cupon().trim()), 'Cupón aplicado.');
+      this.accion(d.compra, this.compras.valorarVendedor(d.compra.id, this.estrellas(), this.comentario().trim()), 'Valoración enviada al vendedor.');
     }
   }
 }

@@ -1,20 +1,25 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CarritoService } from '../../servicios/carrito.service';
+import { Cupon } from '../../modelos/modelos';
+import { mensajeDeError } from '../../servicios/api.util';
+import { CarritoService, ItemCarrito } from '../../servicios/carrito.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
+import { CuponService } from '../../servicios/cupon.service';
 import { precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ToastService } from '../../servicios/toast.service';
 import { ArteProducto } from '../arte-producto/arte-producto';
 
-/** Pantalla `/carrito`: revisa los productos y ejecuta el pago simulado. */
+/** Pantalla `/carrito`: revisa los productos, aplica un cupón (vista previa) y ejecuta el pago simulado. */
 @Component({
   selector: 'app-carrito',
-  imports: [RouterLink, ArteProducto],
+  imports: [FormsModule, RouterLink, ArteProducto],
   templateUrl: './carrito.html',
   styleUrl: './carrito.css',
 })
 export class Carrito {
   protected carrito = inject(CarritoService);
+  private cupones = inject(CuponService);
   private toast = inject(ToastService);
   private confirmacion = inject(ConfirmacionService);
   private router = inject(Router);
@@ -22,18 +27,78 @@ export class Carrito {
   protected precioVigente = precioVigente;
   protected precioTachado = precioTachado;
 
+  // ---- cupón: "Aplicar" solo consulta (vista previa); el uso se gasta al crear el pedido al pagar ----
+  protected codigoCupon = signal('');
+  protected cupon = signal<Cupon | null>(null);
+  protected errorCupon = signal('');
+  protected consultandoCupon = signal(false);
+
+  /** Un cupón global descuenta todo el carrito; uno con dueño, solo los productos de ese vendedor. */
+  private aplicaA(c: Cupon, i: ItemCarrito): boolean {
+    return !c.vendedorId || i.producto.vendedorId === c.vendedorId;
+  }
+
+  /** Descuento estimado (el backend calcula el definitivo al crear el pedido). */
+  protected descuento = computed(() => {
+    const c = this.cupon();
+    if (!c) return 0;
+    const base = this.carrito
+      .items()
+      .filter((i) => this.aplicaA(c, i))
+      .reduce((suma, i) => suma + precioVigente(i.producto) * i.cantidad, 0);
+    return Math.round((base * c.porcentaje) / 100);
+  });
+  protected total = computed(() => this.carrito.subtotal() - this.descuento());
+  /** El cupón ya no descuenta ningún producto del carrito (p. ej. se quitó lo del vendedor dueño): no se envía al pagar. */
+  protected cuponSinEfecto = computed(() => {
+    const c = this.cupon();
+    return !!c && !this.carrito.items().some((i) => this.aplicaA(c, i));
+  });
+
+  protected aplicarCupon() {
+    const codigo = this.codigoCupon().trim();
+    this.errorCupon.set('');
+    if (!codigo) return this.errorCupon.set('Escribe el código del cupón.');
+    if (this.consultandoCupon() || this.carrito.pagando()) return;
+
+    this.consultandoCupon.set(true);
+    this.cupones.consultar(codigo).subscribe({
+      next: (c) => {
+        this.consultandoCupon.set(false);
+        if (!this.carrito.items().some((i) => this.aplicaA(c, i))) {
+          this.errorCupon.set('Ese cupón no aplica a ningún producto de tu carrito: es de otro vendedor.');
+          return;
+        }
+        this.cupon.set(c);
+      },
+      error: (e) => {
+        this.consultandoCupon.set(false);
+        this.errorCupon.set(mensajeDeError(e));
+      },
+    });
+  }
+
+  protected quitarCupon() {
+    this.cupon.set(null);
+    this.codigoCupon.set('');
+    this.errorCupon.set('');
+  }
+
   protected async pagar() {
     if (this.carrito.pagando() || this.carrito.items().length === 0) return;
+    const cupon = this.cupon();
+    const codigo = cupon && !this.cuponSinEfecto() ? cupon.codigo : undefined;
     const acepto = await this.confirmacion.pedir({
       titulo: 'Confirmar pago',
-      mensaje: `Vas a pagar ${this.carrito.unidades()} unidad(es) por ${precio(this.carrito.subtotal())}. Es un pago simulado.`,
+      mensaje: `Vas a pagar ${this.carrito.unidades()} unidad(es) por ${precio(this.total())}${codigo ? ` (con el cupón ${codigo})` : ''}. Es un pago simulado.`,
       confirmar: 'Pagar',
       peligro: false,
     });
     if (!acepto) return;
-    this.carrito.pagar().subscribe((r) => {
+    this.carrito.pagar(codigo).subscribe((r) => {
       if (!r.error) {
         this.toast.ok(`¡Compra simulada exitosa! ${r.compras.length} producto(s) pagado(s).`);
+        this.quitarCupon();
         this.router.navigateByUrl('/mis-compras');
         return;
       }

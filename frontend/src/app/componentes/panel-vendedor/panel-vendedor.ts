@@ -18,12 +18,13 @@ import { descuentoTotal, estadoPromocion, precio, precioTachado, precioVigente }
 import { ArteProducto } from '../arte-producto/arte-producto';
 import { FormularioPublicar } from '../formulario-publicar/formulario-publicar';
 import { CombosVendedor } from '../combos-vendedor/combos-vendedor';
+import { CuponesVendedor } from '../cupones-vendedor/cupones-vendedor';
 
-type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos';
+type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' | 'cupones';
 
 @Component({
   selector: 'app-panel-vendedor',
-  imports: [FormsModule, ArteProducto, FormularioPublicar, CombosVendedor],
+  imports: [FormsModule, ArteProducto, FormularioPublicar, CombosVendedor, CuponesVendedor],
   templateUrl: './panel-vendedor.html',
   styleUrl: './panel-vendedor.css',
   host: { '(document:keydown.escape)': 'cerrarEdicion()' },
@@ -47,6 +48,7 @@ export class PanelVendedor implements OnInit {
     { id: 'promociones', etiqueta: 'Promociones' },
     { id: 'publicar', etiqueta: 'Publicar' },
     { id: 'combos', etiqueta: 'Combos' },
+    { id: 'cupones', etiqueta: 'Cupones' },
   ];
 
   // ---- resumen ----

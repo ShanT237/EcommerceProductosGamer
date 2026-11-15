@@ -107,6 +107,24 @@ describe('PanelVendedor (descuento inmediato)', () => {
     http.verify();
   });
 
+  it('laPestanaCuponesMuestraLosCuponesDelVendedor', () => {
+    fixture = TestBed.createComponent(PanelVendedor);
+    fixture.detectChanges();
+    responderCarga([]);
+
+    const pestanas = Array.from(raiz().querySelectorAll('.pestanas button')) as HTMLButtonElement[];
+    pestanas.find((b) => b.textContent?.trim() === 'Cupones')!.click();
+    fixture.detectChanges();
+
+    http.expectOne({ method: 'GET', url: `${API_URL}/cupones` }).flush([
+      { id: 'c1', codigo: 'GAMER10', porcentaje: 10, vence: '2099-12-31', usosMaximos: 5, usos: 1, vendedorId: 'v1' },
+    ]);
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('app-cupones-vendedor')).not.toBeNull();
+    expect(raiz().querySelector('.cupon h4')?.textContent).toContain('GAMER10');
+  });
+
   it('muestraElPrecioOriginalElPorcentajeYElBotonQuitarEnMisProductos', () => {
     abrirMisProductos([conDescuento()]);
 
