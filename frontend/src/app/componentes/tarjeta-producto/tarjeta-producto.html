@@ -4,11 +4,20 @@
     <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" />
     <div class="etiquetas">
       <span class="etiqueta gama-{{ producto().gama }}">{{ producto().gama }}</span>
+      @if (producto().porcentajeDescuento) {
+        <span class="etiqueta descuento">Oferta -{{ producto().porcentajeDescuento }}%</span>
+      }
+      @if (producto().porcentajePromocion) {
+        <span class="etiqueta promo">Temporada -{{ producto().porcentajePromocion }}%</span>
+      }
       @if (producto().exclusividad === 'EXCLUSIVO') {
         <span class="etiqueta excl">Exclusivo</span>
       }
       @if (producto().porcentajeDescuento) {
         <span class="etiqueta descuento">-{{ producto().porcentajeDescuento }}%</span>
+      }
+      @if (producto().porcentajePromocion) {
+        <span class="etiqueta promo">Promo -{{ producto().porcentajePromocion }}%</span>
       }
     </div>
     @if (favorito() !== null) {
@@ -23,10 +32,13 @@
     <p class="desc card-text mb-0">{{ producto().descripcion }}</p>
     <div class="pie">
       <div class="precios">
-        @if (producto().precioOriginal; as original) {
+        @if (precioTachado(producto()); as original) {
           <s class="precio-original">{{ precio(original) }}</s>
         }
-        <strong class="precio">{{ precio(producto().precio) }}</strong>
+        <strong class="precio">{{ precio(precioVigente(producto())) }}</strong>
+        @if (producto().promocionHasta; as hasta) {
+          <small class="promo-fin">Hasta el {{ fechaDia(hasta) }}</small>
+        }
       </div>
       @if (producto().stock <= 0) {
         <span class="stock agotado">Agotado</span>

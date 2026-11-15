@@ -7,7 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,8 +34,40 @@ public class PromocionRepositoryJpa implements PromocionRepository {
     }
 
     @Override
+    public Map<UUID, Promocion> obtenerVigentesPorProductoIds(Collection<UUID> productoIds, LocalDate fecha) {
+        if (productoIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Promocion> vigentes = new HashMap<>();
+        dataRepository.findVigentesDe(productoIds, fecha).stream()
+                .map(mapper::toDomain)
+                .forEach(promocion -> vigentes.putIfAbsent(promocion.getProductoId(), promocion));
+        return vigentes;
+    }
+
+    @Override
     public List<Promocion> obtenerPorProductoId(UUID productoId) {
         return dataRepository.findByProductoId(productoId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<Promocion> obtenerPorId(UUID id) {
+        return dataRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public void eliminar(UUID id) {
+        dataRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Promocion> obtenerPorProductoIds(Collection<UUID> productoIds) {
+        if (productoIds.isEmpty()) {
+            return List.of();
+        }
+        return dataRepository.findByProductoIdIn(productoIds).stream()
                 .map(mapper::toDomain)
                 .toList();
     }

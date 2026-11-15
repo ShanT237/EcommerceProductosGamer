@@ -80,17 +80,27 @@
                   </div>
                 </div>
                 <div class="cifras">
-                  @if (p.precioOriginal; as original) {
+                  @if (precioTachado(p); as original) {
                     <span class="precio-original">{{ precio(original) }}</span>
                   }
-                  <strong class="precio">{{ precio(p.precio) }}</strong>
+                  <strong class="precio">{{ precio(precioVigente(p)) }}</strong>
                   @if (p.porcentajeDescuento) {
-                    <span class="etiqueta descuento">-{{ p.porcentajeDescuento }}%</span>
+                    <span class="etiqueta descuento">Oferta -{{ p.porcentajeDescuento }}%</span>
+                  }
+                  @if (p.porcentajePromocion) {
+                    <span class="etiqueta promo">Temporada -{{ p.porcentajePromocion }}%</span>
+                  }
+                  @if (p.porcentajeDescuento && p.porcentajePromocion) {
+                    <small class="desglose">Acumuladas: -{{ descuentoTotal(p) }}% en total</small>
                   }
                   <span class="muted" [class.rojo]="p.stock <= 0">{{ p.stock }} en stock</span>
                   @if (p.precioOriginal) {
                     <button type="button" class="btn btn-chico quitar-descuento"
-                            [disabled]="quitandoDesc() === p.id" (click)="quitarDescuento(p)">Quitar descuento</button>
+                            [disabled]="quitandoDesc() === p.id" (click)="quitarDescuento(p)">Quitar oferta</button>
+                  }
+                  @if (promocionAplicada(p); as pr) {
+                    <button type="button" class="btn btn-chico quitar-promocion"
+                            [disabled]="quitandoPromo() === pr.id" (click)="quitarPromocion(pr)">Quitar temporada</button>
                   }
                 </div>
                 <div class="botones">
@@ -109,15 +119,16 @@
     @case ('promociones') {
       <section class="dos aparece">
         <form class="panel formulario" (ngSubmit)="crearPromocion()">
-          <h3>Promoción de temporada</h3>
-          <p class="muted">El descuento rige entre las fechas que elijas.</p>
+          <h3>{{ promoEditandoId() ? 'Editar promoción de temporada' : 'Promoción de temporada' }}</h3>
+          <p class="muted">Rige entre las fechas que elijas. No cambia el precio base del producto.</p>
           <div class="campo">
             <label for="pp">Producto</label>
-            <select id="pp" name="pp" class="entrada" [(ngModel)]="promoProducto">
+            <select id="pp" name="pp" class="entrada" [(ngModel)]="promoProducto" [disabled]="!!promoEditandoId()">
               <option value="">Elige un producto…</option>
               @for (p of misProductos(); track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
             </select>
           </div>
+          @if (avisoPromo()) { <p class="aviso">{{ avisoPromo() }}</p> }
           <div class="campo">
             <label for="ppc">Descuento (%)</label>
             <input id="ppc" name="ppc" class="entrada" type="number" min="1" max="99" [(ngModel)]="promoPorcentaje">
@@ -133,12 +144,38 @@
             </div>
           </div>
           @if (errorPromo()) { <p class="error">{{ errorPromo() }}</p> }
-          <button class="btn btn-neon" type="submit" [disabled]="guardandoPromo()">{{ guardandoPromo() ? 'Guardando…' : 'Configurar promoción' }}</button>
+          <div class="botones">
+            <button class="btn btn-neon" type="submit" [disabled]="guardandoPromo()">
+              {{ guardandoPromo() ? 'Guardando…' : (promoEditandoId() ? 'Guardar cambios' : 'Configurar promoción') }}
+            </button>
+            @if (promoEditandoId()) {
+              <button type="button" class="btn" (click)="cancelarEdicionPromo()">Cancelar</button>
+            }
+          </div>
+
+          @if (promociones().length > 0) {
+            <div class="activos">
+              <h4>Promociones de temporada</h4>
+              @for (pr of promociones(); track pr.id) {
+                <div class="activo">
+          <span>
+            {{ pr.productoNombre }} · -{{ pr.porcentaje }}% · {{ pr.desde }} → {{ pr.hasta }}
+            <span class="estado {{ estadoPromo(pr.desde, pr.hasta) }}">{{ estadoPromo(pr.desde, pr.hasta) }}</span>
+          </span>
+                  <span class="acciones">
+            <button type="button" class="btn btn-chico" (click)="editarPromocion(pr)">Editar</button>
+            <button type="button" class="btn btn-chico btn-peligro"
+                    [disabled]="quitandoPromo() === pr.id" (click)="quitarPromocion(pr)">Quitar</button>
+          </span>
+                </div>
+              }
+            </div>
+          }
         </form>
 
         <form class="panel formulario" (ngSubmit)="aplicarDescuento()">
-          <h3>Descuento inmediato</h3>
-          <p class="muted">Baja el precio del producto desde ya. Los compradores lo ven reflejado en el catálogo.</p>
+          <h3>Oferta inmediata</h3>
+          <p class="muted">Baja el precio del producto desde ya (cambia el precio base). Los compradores lo ven en el catálogo.</p>
           <div class="campo">
             <label for="dp">Producto</label>
             <select id="dp" name="dp" class="entrada" [(ngModel)]="descProducto">
@@ -152,9 +189,9 @@
             <label for="dpc">Descuento (%)</label>
             <input id="dpc" name="dpc" class="entrada" type="number" min="1" max="99" [(ngModel)]="descPorcentaje">
           </div>
+          @if (avisoDescuento()) { <p class="aviso">{{ avisoDescuento() }}</p> }
           @if (errorDesc()) { <p class="error">{{ errorDesc() }}</p> }
           <button class="btn btn-neon" type="submit" [disabled]="aplicandoDesc()">{{ aplicandoDesc() ? 'Aplicando…' : 'Aplicar descuento' }}</button>
-
           @if (conDescuento().length > 0) {
             <div class="activos">
               <h4>Descuentos activos</h4>

@@ -27,6 +27,12 @@ export interface Producto {
   precioOriginal?: number | null;
   /** Porcentaje del descuento activo; `null` o ausente si no hay. */
   porcentajeDescuento?: number | null;
+  /** Precio que se cobrará con la promoción de temporada vigente hoy; `null` o ausente si no hay. */
+  precioPromocional?: number | null;
+  /** Porcentaje de la promoción de temporada vigente. */
+  porcentajePromocion?: number | null;
+  /** Último día de la promoción (AAAA-MM-DD, inclusive). */
+  promocionHasta?: string | null;
 }
 
 /** Respuesta de `POST /api/descuentos` y `DELETE /api/descuentos/{productoId}`. */
@@ -130,4 +136,13 @@ export interface ErrorApi {
   status?: number;
   mensaje?: string;
   errores?: Record<string, string> | string[];
+}
+
+export interface PromocionTemporada {
+  id: string;
+  productoId: string;
+  productoNombre: string;
+  porcentaje: number;
+  desde: string; // ISO yyyy-MM-dd
+  hasta: string;
 }

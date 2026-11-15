@@ -76,4 +76,47 @@ class PromocionTest {
         assertDoesNotThrow(() -> consecutiva.asegurarSinSolapamiento(List.of(existente)));
         assertEquals(90.0, existente.aplicarA(new Precio(100.0)).valor(), 0.001);
     }
+
+    @Test
+    void reprogramarConservaIdYProductoYCambiaLosValores() {
+        UUID id = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+        Promocion original = Promocion.programar(id, productoId, 10, DESDE, HASTA);
+
+        Promocion nueva = original.reprogramar(25, DESDE.plusDays(2), HASTA.plusDays(3));
+
+        assertEquals(id, nueva.getId());
+        assertEquals(productoId, nueva.getProductoId());
+        assertEquals(25, nueva.getPorcentaje());
+        assertEquals(DESDE.plusDays(2), nueva.getDesde());
+        assertEquals(HASTA.plusDays(3), nueva.getHasta());
+        assertEquals(10, original.getPorcentaje()); // la original no cambia
+    }
+
+    @Test
+    void reprogramarValidaIgualQueProgramar() {
+        Promocion p = Promocion.programar(UUID.randomUUID(), UUID.randomUUID(), 10, DESDE, HASTA);
+
+        assertThrows(ReglaDominioException.class, () -> p.reprogramar(0, DESDE, HASTA));
+        assertThrows(ReglaDominioException.class, () -> p.reprogramar(100, DESDE, HASTA));
+        assertThrows(ReglaDominioException.class, () -> p.reprogramar(10, HASTA, DESDE));
+    }
+
+    @Test
+    void asegurarSinSolapamientoIgnoraLaPropiaPromocion() {
+        Promocion p = Promocion.programar(UUID.randomUUID(), UUID.randomUUID(), 10, DESDE, HASTA);
+        Promocion editada = p.reprogramar(30, DESDE, HASTA); // mismo id, mismo rango
+
+        assertDoesNotThrow(() -> editada.asegurarSinSolapamiento(List.of(p)));
+    }
+
+    @Test
+    void asegurarSinSolapamientoSigueDetectandoOtrasPromociones() {
+        UUID productoId = UUID.randomUUID();
+        Promocion p = Promocion.programar(UUID.randomUUID(), productoId, 10, DESDE, HASTA);
+        Promocion otra = Promocion.programar(UUID.randomUUID(), productoId, 20, HASTA.plusDays(1), HASTA.plusDays(9));
+        Promocion editada = p.reprogramar(10, DESDE, HASTA.plusDays(1)); // pisa a `otra`
+
+        assertThrows(ConflictoException.class, () -> editada.asegurarSinSolapamiento(List.of(p, otra)));
+    }
 }

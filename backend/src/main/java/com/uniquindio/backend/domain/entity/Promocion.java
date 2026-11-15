@@ -64,9 +64,17 @@ public class Promocion {
         return !otraDesde.isAfter(hasta) && !otraHasta.isBefore(desde);
     }
 
+    /** Devuelve la misma promoción (mismo id y producto) con nuevos valores, validados como al programar. */
+    public Promocion reprogramar(double nuevoPorcentaje, LocalDate nuevaDesde, LocalDate nuevaHasta) {
+        return programar(id, productoId, nuevoPorcentaje, nuevaDesde, nuevaHasta);
+    }
+
     public void asegurarSinSolapamiento(Iterable<Promocion> existentes) {
         Objects.requireNonNull(existentes, "Las promociones existentes son obligatorias");
         for (Promocion existente : existentes) {
+            if (id.equals(existente.id)) {
+                continue; // al modificar, no se compara contra sí misma
+            }
             if (productoId.equals(existente.productoId)
                     && seSolapaCon(existente.desde, existente.hasta)) {
                 throw new ConflictoException("El producto ya tiene una promoción en ese rango de fechas");

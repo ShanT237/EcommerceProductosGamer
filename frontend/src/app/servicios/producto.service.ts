@@ -2,7 +2,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { API_URL } from '../config';
-import { FiltroCatalogo, NuevoProducto, Pagina, Producto, ProductoDescuento } from '../modelos/modelos';
+import {
+  FiltroCatalogo,
+  NuevoProducto,
+  Pagina,
+  Producto,
+  ProductoDescuento,
+  PromocionTemporada
+} from '../modelos/modelos';
 
 @Injectable({ providedIn: 'root' })
 export class ProductoService {
@@ -57,5 +64,17 @@ export class ProductoService {
   /** Retira el descuento inmediato: el producto vuelve a su precio anterior. */
   quitarDescuento(productoId: string) {
     return this.http.delete<ProductoDescuento>(`${API_URL}/descuentos/${productoId}`);
+  }
+
+  listarPromociones() {
+    return this.http.get<PromocionTemporada[]>(`${API_URL}/promociones`);
+  }
+
+  modificarPromocion(id: string, porcentaje: number, desde: string, hasta: string) {
+    return this.http.put(`${API_URL}/promociones/${id}`, { porcentaje, desde, hasta });
+  }
+
+  quitarPromocion(id: string) {
+    return this.http.delete<void>(`${API_URL}/promociones/${id}`);
   }
 }

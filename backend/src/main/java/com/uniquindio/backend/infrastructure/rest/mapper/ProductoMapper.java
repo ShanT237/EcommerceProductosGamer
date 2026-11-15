@@ -2,7 +2,11 @@ package com.uniquindio.backend.infrastructure.rest.mapper;
 
 import com.uniquindio.backend.application.dto.response.*;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.entity.Promocion;
+import com.uniquindio.backend.domain.valueobject.Precio;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 
 @Component
 public class ProductoMapper {
@@ -48,6 +52,23 @@ public class ProductoMapper {
     }
 
     public BuscarProductoResponse toBuscarResponse(Producto producto) {
+        return toBuscarResponse(producto, null);
+    }
+
+    /**
+     * @param promocion promoción de temporada vigente hoy del producto, o {@code null} si no tiene.
+     *                  Se aplica sobre el precio actual (ya con el descuento inmediato, si lo hay),
+     *                  igual que al comprar.
+     */
+    public BuscarProductoResponse toBuscarResponse(Producto producto, Promocion promocion) {
+        Double precioPromocional = null;
+        Double porcentajePromocion = null;
+        LocalDate promocionHasta = null;
+        if (promocion != null) {
+            precioPromocional = promocion.aplicarA(new Precio(producto.getPrecio())).valor();
+            porcentajePromocion = promocion.getPorcentaje();
+            promocionHasta = promocion.getHasta();
+        }
         return new BuscarProductoResponse(
                 producto.getId(),
                 producto.getVendedorId(),
@@ -59,7 +80,10 @@ public class ProductoMapper {
                 producto.getExclusividad(),
                 producto.getCategoria(),
                 producto.getPrecioOriginal(),
-                producto.getPorcentajeDescuento()
+                producto.getPorcentajeDescuento(),
+                precioPromocional,
+                porcentajePromocion,
+                promocionHasta
         );
     }
 
