@@ -2,9 +2,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { API_URL } from '../../config';
 import { Combo, Producto, Sesion } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
 import { CombosVendedor } from './combos-vendedor';
@@ -29,11 +31,17 @@ function combo(productos: Array<{ id: string; nombre: string }>): Combo {
   };
 }
 
+/** Deja correr las promesas pendientes (la confirmación se resuelve de forma asíncrona). */
+const esperar = () => new Promise<void>((r) => setTimeout(r));
+
 /** Signals protegidos del componente que las pruebas fijan directamente. */
 type Interno = {
   nombre: WritableSignal<string>;
   descripcion: WritableSignal<string>;
   descuento: WritableSignal<number | null>;
+  editNombre: WritableSignal<string>;
+  editDescripcion: WritableSignal<string>;
+  editDescuento: WritableSignal<number | null>;
 };
 
 describe('CombosVendedor', () => {
@@ -195,5 +203,117 @@ describe('CombosVendedor', () => {
     abrir([]);
 
     expect(raiz().querySelector('.mios .vacio')?.textContent).toContain('Aún no has creado combos');
+  });
+
+  const dosProductos = () => combo([{ id: 'p1', nombre: 'Teclado' }, { id: 'p2', nombre: 'Mouse' }]);
+  const clic = (selector: string) => (raiz().querySelector(selector) as HTMLButtonElement).click();
+
+  it('editarMuestraElFormularioConLosDatosActuales', () => {
+    abrir([dosProductos()]);
+
+    clic('button.editar');
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('.edicion')).not.toBeNull();
+    expect(interno().editNombre()).toBe('Combo Gamer');
+    expect(interno().editDescuento()).toBe(15);
+  });
+
+  it('guardarLaEdicionHacePutYRecargaLosCombos', () => {
+    abrir([dosProductos()]);
+    clic('button.editar');
+    fixture.detectChanges();
+    interno().editNombre.set('Combo Pro');
+    interno().editDescuento.set(25);
+
+    clic('button.guardar-edicion');
+    const put = http.expectOne({ method: 'PUT', url: `${API_URL}/combos/c1` });
+    expect(put.request.body).toEqual({ nombre: 'Combo Pro', descripcion: 'Setup completo', descuento: 25 });
+    put.flush({});
+    http.expectOne(getMios()).flush([{ ...dosProductos(), nombre: 'Combo Pro', descuento: 25 }]);
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('.mios')?.textContent).toContain('Combo Pro');
+    expect(raiz().querySelector('.edicion')).toBeNull();
+    expect(toast.toasts().some((t) => t.tipo === 'ok')).toBe(true);
+  });
+
+  it('unaEdicionInvalidaNoEnviaPeticion', () => {
+    abrir([dosProductos()]);
+    clic('button.editar');
+    fixture.detectChanges();
+    interno().editNombre.set('   ');
+
+    clic('button.guardar-edicion');
+    fixture.detectChanges();
+
+    http.expectNone({ method: 'PUT', url: `${API_URL}/combos/c1` });
+    expect(raiz().querySelector('.edicion .error')?.textContent).toContain('El nombre es obligatorio');
+  });
+
+  it('unErrorDelBackendAlModificarSeMuestraEnLaEdicion', () => {
+    abrir([dosProductos()]);
+    clic('button.editar');
+    fixture.detectChanges();
+
+    clic('button.guardar-edicion');
+    http.expectOne({ method: 'PUT', url: `${API_URL}/combos/c1` }).flush(
+      { mensaje: 'El combo no pertenece al vendedor' },
+      { status: 422, statusText: 'Unprocessable Content' },
+    );
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('.edicion .error')?.textContent).toContain('no pertenece al vendedor');
+  });
+
+  it('cancelarLaEdicionNoEnviaPeticion', () => {
+    abrir([dosProductos()]);
+    clic('button.editar');
+    fixture.detectChanges();
+
+    clic('button.cancelar-edicion');
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('.edicion')).toBeNull();
+  });
+
+  it('eliminarConfirmadoHaceDeleteYRecargaLaLista', async () => {
+    abrir([dosProductos()]);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
+
+    clic('button.eliminar-combo');
+    await esperar();
+    http.expectOne({ method: 'DELETE', url: `${API_URL}/combos/c1` }).flush(null);
+    http.expectOne(getMios()).flush([]);
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('.mios .vacio')?.textContent).toContain('Aún no has creado combos');
+    expect(toast.toasts().some((t) => t.tipo === 'ok')).toBe(true);
+  });
+
+  it('eliminarCanceladoNoEnviaPeticion', async () => {
+    abrir([dosProductos()]);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(false);
+
+    clic('button.eliminar-combo');
+    await esperar();
+
+    http.expectNone({ method: 'DELETE', url: `${API_URL}/combos/c1` });
+  });
+
+  it('eliminarConRegalosPendientesMuestraElMensajeDelBackend', async () => {
+    abrir([dosProductos()]);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
+
+    clic('button.eliminar-combo');
+    await esperar();
+    http.expectOne({ method: 'DELETE', url: `${API_URL}/combos/c1` }).flush(
+      { mensaje: 'No se puede eliminar el combo: tiene regalos pendientes de entrega' },
+      { status: 422, statusText: 'Unprocessable Content' },
+    );
+    fixture.detectChanges();
+
+    expect(toast.toasts().find((t) => t.tipo === 'error')?.texto).toContain('regalos pendientes');
+    expect(raiz().querySelectorAll('.mios .combo').length).toBe(1);
   });
 });

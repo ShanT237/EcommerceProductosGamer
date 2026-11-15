@@ -25,3 +25,6 @@
 @media (max-width: 960px) {
   .dos { grid-template-columns: 1fr; }
 }
+
+.edicion { display: flex; flex-direction: column; gap: 12px; }
+.acciones { display: flex; gap: 8px; }

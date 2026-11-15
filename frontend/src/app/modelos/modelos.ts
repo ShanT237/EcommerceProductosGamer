@@ -185,6 +185,12 @@ export interface NuevoCombo {
   productoIds: string[];
 }
 
+export interface ModificarCombo {
+  nombre: string;
+  descripcion: string;
+  descuento: number;
+}
+
 /** Respuesta de `POST /api/combos/{id}/comprar`: una compra PENDIENTE por producto del combo. */
 export interface ResultadoCompraCombo {
   comboId: string;

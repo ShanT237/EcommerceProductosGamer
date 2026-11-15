@@ -52,13 +52,43 @@
     } @else {
       @for (c of combos(); track c.id) {
         <article class="panel combo">
-          <div class="encabezado">
-            <div>
-              <h4>{{ c.nombre }}</h4>
-              <p class="muted">{{ c.descripcion }}</p>
+          @if (editando()?.id === c.id) {
+            <div class="edicion">
+              <div class="campo">
+                <label [attr.for]="'ce-nombre-' + c.id">Nombre</label>
+                <input [id]="'ce-nombre-' + c.id" class="entrada" maxlength="100" [(ngModel)]="editNombre">
+              </div>
+              <div class="campo">
+                <label [attr.for]="'ce-desc-' + c.id">Descripción</label>
+                <textarea [id]="'ce-desc-' + c.id" class="entrada" maxlength="500" [(ngModel)]="editDescripcion"></textarea>
+              </div>
+              <div class="campo">
+                <label [attr.for]="'ce-dto-' + c.id">Descuento (%)</label>
+                <input [id]="'ce-dto-' + c.id" class="entrada" type="number" min="0" max="99" [(ngModel)]="editDescuento">
+              </div>
+              @if (errorEdicion()) { <p class="error" role="alert">{{ errorEdicion() }}</p> }
+              <div class="acciones">
+                <button type="button" class="btn btn-chico guardar-edicion" [disabled]="guardando()"
+                        (click)="guardarEdicion()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button>
+                <button type="button" class="btn btn-chico cancelar-edicion" [disabled]="guardando()"
+                        (click)="cancelarEdicion()">Cancelar</button>
+              </div>
             </div>
-            <span class="etiqueta descuento">-{{ c.descuento }}%</span>
-          </div>
+          } @else {
+            <div class="encabezado">
+              <div>
+                <h4>{{ c.nombre }}</h4>
+                <p class="muted">{{ c.descripcion }}</p>
+              </div>
+              <span class="etiqueta descuento">-{{ c.descuento }}%</span>
+            </div>
+            <div class="acciones">
+              <button type="button" class="btn btn-chico editar" [attr.aria-label]="'Editar ' + c.nombre"
+                      [disabled]="ocupado() === c.id" (click)="editar(c)">Editar</button>
+              <button type="button" class="btn btn-chico btn-peligro eliminar-combo" [attr.aria-label]="'Eliminar ' + c.nombre"
+                      [disabled]="ocupado() === c.id" (click)="eliminar(c)">Eliminar</button>
+            </div>
+          }
 
           <ul class="productos">
             @for (p of c.productos; track p.id) {

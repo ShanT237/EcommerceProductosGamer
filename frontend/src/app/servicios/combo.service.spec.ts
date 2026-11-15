@@ -60,4 +60,20 @@ describe('ComboService', () => {
     expect(req.request.body).toEqual({ cantidad: 3 });
     req.flush({ comboId: 'c1', compras: [], total: 0 });
   });
+
+  it('modificarHacePutConLosDatosSinProductos', () => {
+    const cuerpo = { nombre: 'Combo Pro', descripcion: 'Desc', descuento: 25 };
+    servicio.modificar('c1', cuerpo).subscribe();
+    const req = http.expectOne(`${API_URL}/combos/c1`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual(cuerpo);
+    req.flush({});
+  });
+
+  it('eliminarHaceDeleteConElIdEnLaUrl', () => {
+    servicio.eliminar('c1').subscribe();
+    const req = http.expectOne(`${API_URL}/combos/c1`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+  });
 });
