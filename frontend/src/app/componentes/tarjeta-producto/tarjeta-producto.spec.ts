@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Producto } from '../../modelos/modelos';
+import { Preventa, Producto } from '../../modelos/modelos';
 import { TarjetaProducto } from './tarjeta-producto';
 
 
@@ -89,5 +89,22 @@ describe('TarjetaProducto (descuento)', () => {
     mostrar(producto());
 
     expect(raiz().querySelector('.etiqueta.descuento')).toBeNull();
+  });
+
+  it('muestraLaInsigniaDePreventaConLaFechaDeLanzamiento', () => {
+    mostrar(producto());
+    fixture.componentRef.setInput('preventa', {
+      id: 'pr1', productoId: 'p1', fechaLanzamiento: '2026-12-01', descripcion: 'Edición especial',
+    } satisfies Preventa);
+    fixture.detectChanges();
+
+    expect(raiz().querySelector('.etiqueta.preventa')?.textContent).toContain('Preventa');
+    expect(raiz().querySelector('.etiqueta.preventa')?.textContent).toMatch(/1 de dic/i);
+  });
+
+  it('sinPreventaNoMuestraLaInsignia', () => {
+    mostrar(producto());
+
+    expect(raiz().querySelector('.etiqueta.preventa')).toBeNull();
   });
 });
