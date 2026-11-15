@@ -42,6 +42,12 @@ describe('MisCompras (pedidos)', () => {
     fixture.detectChanges();
   }
 
+  /** Tras cada acción la pantalla recarga las compras y el historial de puntos. */
+  function responderRecarga() {
+    http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush([]);
+    http.expectOne({ method: 'GET', url: `${API_URL}/puntos/historial` }).flush([]);
+  }
+
   const boton = (texto: string) =>
     [...(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)].find((b) =>
       b.textContent?.trim() === texto,
@@ -67,7 +73,7 @@ describe('MisCompras (pedidos)', () => {
     http.expectOne({ method: 'PUT', url: `${API_URL}/pedidos/ped1/confirmar` }).flush({ pedidoId: 'ped1', compras: [], total: 200 });
     // El mensaje habla del pedido completo (2 productos, 200), no de la línea suelta.
     expect(pedir.mock.calls[0][0].mensaje).toContain('pedido completo (2 producto(s))');
-    http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush([]);
+    responderRecarga();
   });
 
   it('cancelar una línea de un pedido usa PUT /pedidos/{id}/cancelar', async () => {
@@ -77,7 +83,7 @@ describe('MisCompras (pedidos)', () => {
     await esperar();
 
     http.expectOne({ method: 'PUT', url: `${API_URL}/pedidos/ped1/cancelar` }).flush({ pedidoId: 'ped1', compras: [], total: 200 });
-    http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush([]);
+    responderRecarga();
   });
 
   it('una compra suelta (sin pedido) sigue usando los endpoints de compra', async () => {
@@ -87,7 +93,7 @@ describe('MisCompras (pedidos)', () => {
     await esperar();
 
     http.expectOne({ method: 'PUT', url: `${API_URL}/compras/c9/confirmar` }).flush(compra('c9', null, { estado: 'COMPLETADA' }));
-    http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush([]);
+    responderRecarga();
   });
 
   it('ninguna compra pendiente ofrece aplicar un cupón: el cupón se usa al crear el pedido', () => {
