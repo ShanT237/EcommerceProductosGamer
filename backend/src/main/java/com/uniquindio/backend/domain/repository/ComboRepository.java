@@ -15,4 +15,7 @@ public interface ComboRepository {
 
     /** Combos del vendedor indicado. */
     List<Combo> obtenerPorVendedorId(UUID vendedorId);
+
+    /** Elimina el combo y sus productos asociados. No falla si no existe. */
+    void eliminar(UUID id);
 }

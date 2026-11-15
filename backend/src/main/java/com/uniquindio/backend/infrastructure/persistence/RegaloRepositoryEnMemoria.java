@@ -30,4 +30,10 @@ public class RegaloRepositoryEnMemoria implements RegaloRepository {
                         && r.getEstado() != EstadoRegalo.CANCELADO)
                 .count();
     }
+
+    @Override
+    public boolean existePendienteDelCombo(UUID comboId) {
+        return regalos.values().stream()
+                .anyMatch(r -> comboId.equals(r.getIdCombo()) && !r.getEstado().esFinal());
+    }
 }

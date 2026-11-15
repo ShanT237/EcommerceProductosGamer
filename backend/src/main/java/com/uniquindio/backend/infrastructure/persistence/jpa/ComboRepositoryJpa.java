@@ -36,4 +36,9 @@ public class ComboRepositoryJpa implements ComboRepository {
     public List<Combo> obtenerPorVendedorId(UUID vendedorId) {
         return dataRepository.findByVendedorId(vendedorId).stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public void eliminar(UUID id) {
+        dataRepository.deleteById(id);
+    }
 }

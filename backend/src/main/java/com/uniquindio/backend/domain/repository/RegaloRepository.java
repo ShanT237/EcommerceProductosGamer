@@ -17,4 +17,7 @@ public interface RegaloRepository {
     void guardar(Regalo regalo);
 
     long contarAsignadosA(UUID usuarioId);
+
+    /** true si hay algún regalo del combo que no esté en estado final (ENTREGADO o CANCELADO). */
+    boolean existePendienteDelCombo(UUID comboId);
 }

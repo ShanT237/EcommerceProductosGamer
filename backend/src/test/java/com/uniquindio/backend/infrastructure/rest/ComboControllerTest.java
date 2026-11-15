@@ -4,6 +4,8 @@ import com.uniquindio.backend.application.usecase.ComboConProductos;
 import com.uniquindio.backend.application.usecase.ComprarComboUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarCombosUseCase;
 import com.uniquindio.backend.application.usecase.CrearComboUseCase;
+import com.uniquindio.backend.application.usecase.EliminarComboUseCase;
+import com.uniquindio.backend.application.usecase.ModificarComboUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductosComboUseCase;
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Compra;
@@ -65,6 +67,11 @@ class ComboControllerTest {
     @MockitoBean
     private ConsultarCombosUseCase consultarCombosUseCase;
 
+    @MockitoBean
+    private ModificarComboUseCase modificarComboUseCase;
+
+    @MockitoBean
+    private EliminarComboUseCase eliminarComboUseCase;
     @MockitoBean
     private EmisorToken emisorToken;
 
@@ -279,6 +286,68 @@ class ComboControllerTest {
     @Test
     void miosSinTokenRetorna401() throws Exception {
         mockMvc.perform(get("/api/combos/mios"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private String cuerpoModificar(double descuento) {
+        return """
+            { "nombre": "Combo Pro", "descripcion": "Setup pro", "descuento": %s }
+            """.formatted(descuento);
+    }
+
+    @Test
+    void modificarUsaElVendedorDelToken() throws Exception {
+        when(modificarComboUseCase.ejecutar(comboId, vendedorId, "Combo Pro", "Setup pro", 20.0))
+                .thenReturn(combo());
+
+        mockMvc.perform(put("/api/combos/{id}", comboId)
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar(20)))
+                .andExpect(status().isOk());                      // 200
+
+        Mockito.verify(modificarComboUseCase).ejecutar(comboId, vendedorId, "Combo Pro", "Setup pro", 20.0);
+    }
+
+    @Test
+    void modificarConDescuentoInvalidoRetorna400() throws Exception {
+        mockMvc.perform(put("/api/combos/{id}", comboId)
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar(100)))
+                .andExpect(status().isBadRequest());              // 400
+
+        Mockito.verifyNoInteractions(modificarComboUseCase);
+    }
+
+    @Test
+    void eliminarUsaElVendedorDelTokenYRetorna204() throws Exception {
+        mockMvc.perform(delete("/api/combos/{id}", comboId).with(vendedor(vendedorId)))
+                .andExpect(status().isNoContent());               // 204
+
+        Mockito.verify(eliminarComboUseCase).ejecutar(comboId, vendedorId);
+    }
+
+    @Test
+    void unCompradorNoPuedeModificarNiEliminarRetorna403() throws Exception {
+        mockMvc.perform(put("/api/combos/{id}", comboId)
+                        .with(comprador(usuarioId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar(20)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/combos/{id}", comboId).with(comprador(usuarioId)))
+                .andExpect(status().isForbidden());
+
+        Mockito.verifyNoInteractions(modificarComboUseCase, eliminarComboUseCase);
+    }
+
+    @Test
+    void modificarYEliminarSinTokenRetornan401() throws Exception {
+        mockMvc.perform(put("/api/combos/{id}", comboId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar(20)))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/combos/{id}", comboId))
                 .andExpect(status().isUnauthorized());
     }
 }

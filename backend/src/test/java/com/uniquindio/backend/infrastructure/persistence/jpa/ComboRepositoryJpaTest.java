@@ -69,4 +69,20 @@ class ComboRepositoryJpaTest {
     void vendedorSinCombosDevuelveListaVacia() {
         assertTrue(comboRepository.obtenerPorVendedorId(UUID.randomUUID()).isEmpty());
     }
+
+    @Test
+    void eliminarBorraElComboYNoAfectaALosDemas() {
+        UUID vendedor = UUID.randomUUID();
+        Combo borrado = guardar(vendedor, "Borrado");
+        Combo queda = guardar(vendedor, "Queda");
+        entityManager.flush();
+        entityManager.clear();
+
+        comboRepository.eliminar(borrado.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertTrue(comboRepository.obtenerPorId(borrado.getId()).isEmpty());
+        assertEquals(Set.of(queda.getId()), ids(comboRepository.obtenerPorVendedorId(vendedor)));
+    }
 }

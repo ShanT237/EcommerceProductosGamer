@@ -34,4 +34,9 @@ public class ComboRepositoryEnMemoria implements ComboRepository {
                 .filter(c -> c.getVendedorId().equals(vendedorId))
                 .toList();
     }
+
+    @Override
+    public void eliminar(UUID id) {
+        combos.remove(id);
+    }
 }
