@@ -17,6 +17,11 @@
 .precio { font-family: var(--fuente-titulo); font-size: 22px; color: var(--cian); text-shadow: var(--brillo-cian); }
 .ahorro { color: var(--lima); font-size: 15px; }
 
+.cupon { display: flex; flex-direction: column; gap: 6px; }
+.campo-cupon { display: flex; gap: 8px; }
+.campo-cupon .entrada { min-width: 0; flex: 1; }
+.cupon .rojo { margin: 0; }
+
 .compra { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; }
 .cantidad { display: flex; align-items: center; gap: 12px; font-family: var(--fuente-titulo); font-size: 18px; }
 .rojo { color: var(--rojo); font-weight: 700; margin-top: auto; }
