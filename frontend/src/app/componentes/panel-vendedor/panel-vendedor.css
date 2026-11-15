@@ -59,3 +59,12 @@
   .cifras { align-items: flex-start; grid-column: 1 / -1; }
   .botones { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }
 }
+
+.aviso { font-size: 15px; color: var(--lima); background: rgba(163, 255, 107, 0.08);
+  border: 1px solid rgba(163, 255, 107, 0.3); padding: 10px 14px; border-radius: 10px; }
+.desglose { font-size: 14px; color: var(--texto-2); }
+.acciones { display: flex; gap: 8px; }
+.estado { margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.estado.vigente { color: var(--lima); background: rgba(163, 255, 107, 0.12); }
+.estado.programada { color: var(--cian); background: rgba(0, 229, 255, 0.1); }
+.estado.vencida { color: var(--texto-2); background: rgba(255, 255, 255, 0.06); }

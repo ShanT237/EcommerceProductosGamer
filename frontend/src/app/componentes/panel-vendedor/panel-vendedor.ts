@@ -1,12 +1,19 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MetricasResenas, Producto, ProductoStockBajo, ProductoVendido, ReporteVentas } from '../../modelos/modelos';
+import {
+  MetricasResenas,
+  Producto,
+  ProductoStockBajo,
+  ProductoVendido,
+  PromocionTemporada,
+  ReporteVentas
+} from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ReporteService } from '../../servicios/reporte.service';
 import { ToastService } from '../../servicios/toast.service';
 import { mensajeDeError } from '../../servicios/api.util';
-import { precio } from '../../servicios/formato';
+import { descuentoTotal, estadoPromocion, precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
 import { FormularioPublicar } from '../formulario-publicar/formulario-publicar';
 
@@ -25,6 +32,10 @@ export class PanelVendedor implements OnInit {
   private reportes = inject(ReporteService);
   private toast = inject(ToastService);
   protected precio = precio;
+  protected precioVigente = precioVigente;
+  protected precioTachado = precioTachado;
+  protected descuentoTotal = descuentoTotal;
+  protected estadoPromo = estadoPromocion;
 
   protected pestana = signal<Pestana>('resumen');
   protected pestanas: Array<{ id: Pestana; etiqueta: string }> = [
@@ -39,6 +50,9 @@ export class PanelVendedor implements OnInit {
   protected resenas = signal<MetricasResenas | null>(null);
   protected masVendidos = signal<ProductoVendido[]>([]);
   protected stockBajo = signal<ProductoStockBajo[]>([]);
+  protected promociones = signal<PromocionTemporada[]>([]);
+  protected promoEditandoId = signal<string | null>(null);
+  protected quitandoPromo = signal<string | null>(null);
   protected maxUnidades = computed(() => Math.max(1, ...this.masVendidos().map((p) => p.unidades)));
   protected barrasResenas = computed(() => {
     const r = this.resenas();
@@ -72,9 +86,34 @@ export class PanelVendedor implements OnInit {
   /** Id del producto cuyo descuento se está quitando (evita dobles clics). */
   protected quitandoDesc = signal<string | null>(null);
 
+  protected avisoPromo = computed(() => {
+    const p = this.misProductos().find((x) => x.id === this.promoProducto());
+    return p?.precioOriginal
+      ? `Este producto ya tiene una oferta inmediata (hoy cuesta ${precio(p.precio)}). La promoción de temporada se aplica encima de ese precio.`
+      : '';
+  });
+
+  protected avisoDescuento = computed(() => {
+    const id = this.descProducto();
+    const activa = this.promociones().find(
+      (pr) => pr.productoId === id && estadoPromocion(pr.desde, pr.hasta) !== 'vencida',
+    );
+    return activa
+      ? `Este producto tiene una promoción de temporada de -${activa.porcentaje}% (${activa.desde} a ${activa.hasta}). Las dos se acumulan en cadena.`
+      : '';
+  });
+
   ngOnInit() {
     this.cargarCatalogo();
     this.cargarResumen();
+    this.cargarPromociones();
+  }
+
+  protected cargarPromociones() {
+    this.productos.listarPromociones().subscribe({
+      next: (l) => this.promociones.set(l),
+      error: (e) => this.toast.error(mensajeDeError(e)),
+    });
   }
 
   protected cargarCatalogo() {
@@ -158,15 +197,54 @@ export class PanelVendedor implements OnInit {
     if (!this.promoDesde() || !this.promoHasta()) return this.errorPromo.set('Elige las fechas de inicio y de fin.');
     if (this.promoHasta() < this.promoDesde()) return this.errorPromo.set('La fecha de fin no puede ser anterior a la de inicio.');
 
+    const editandoId = this.promoEditandoId();
+    const peticion = editandoId
+      ? this.productos.modificarPromocion(editandoId, pct, this.promoDesde(), this.promoHasta())
+      : this.productos.configurarPromocion(this.promoProducto(), pct, this.promoDesde(), this.promoHasta());
+
     this.guardandoPromo.set(true);
-    this.productos.configurarPromocion(this.promoProducto(), pct, this.promoDesde(), this.promoHasta()).subscribe({
+    peticion.subscribe({
       next: () => {
         this.guardandoPromo.set(false);
-        this.toast.ok('Promoción de temporada configurada.');
+        this.toast.ok(editandoId ? 'Promoción actualizada.' : 'Promoción de temporada configurada.');
         this.promoPorcentaje.set(null); this.promoDesde.set(''); this.promoHasta.set('');
+        this.promoEditandoId.set(null);
+        this.cargarPromociones();
         this.cargarCatalogo();
       },
       error: (e) => { this.guardandoPromo.set(false); this.errorPromo.set(mensajeDeError(e)); },
+    });
+  }
+
+  protected editarPromocion(pr: PromocionTemporada) {
+    this.errorPromo.set('');
+    this.promoEditandoId.set(pr.id);
+    this.promoProducto.set(pr.productoId);
+    this.promoPorcentaje.set(pr.porcentaje);
+    this.promoDesde.set(pr.desde);
+    this.promoHasta.set(pr.hasta);
+  }
+
+  protected cancelarEdicionPromo() {
+    this.promoEditandoId.set(null);
+    this.promoProducto.set('');
+    this.promoPorcentaje.set(null); this.promoDesde.set(''); this.promoHasta.set('');
+    this.errorPromo.set('');
+  }
+
+  protected quitarPromocion(pr: PromocionTemporada) {
+    if (this.quitandoPromo()) return;
+    if (!confirm(`¿Quitar la promoción de -${pr.porcentaje}% de "${pr.productoNombre}"?`)) return;
+    this.quitandoPromo.set(pr.id);
+    this.productos.quitarPromocion(pr.id).subscribe({
+      next: () => {
+        this.quitandoPromo.set(null);
+        if (this.promoEditandoId() === pr.id) this.cancelarEdicionPromo();
+        this.toast.ok(`Promoción retirada de "${pr.productoNombre}".`);
+        this.cargarPromociones();
+        this.cargarCatalogo();
+      },
+      error: (e) => { this.quitandoPromo.set(null); this.toast.error(mensajeDeError(e)); },
     });
   }
 

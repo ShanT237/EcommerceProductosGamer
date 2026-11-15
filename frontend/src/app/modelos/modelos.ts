@@ -137,3 +137,12 @@ export interface ErrorApi {
   mensaje?: string;
   errores?: Record<string, string> | string[];
 }
+
+export interface PromocionTemporada {
+  id: string;
+  productoId: string;
+  productoNombre: string;
+  porcentaje: number;
+  desde: string; // ISO yyyy-MM-dd
+  hasta: string;
+}
