@@ -89,6 +89,24 @@ class CompraRepositoryJpaTest {
     }
 
     @Test
+    void conservaElIdYNombreDelComboAlLeerLaCompra() {
+        UUID usuarioId = UUID.randomUUID();
+        UUID pedidoId = UUID.randomUUID();
+        UUID comboId = UUID.randomUUID();
+        Compra combo = Compra.realizar(UUID.randomUUID(), usuarioId, UUID.randomUUID(), 1, AHORA,
+                new Precio(100), pedidoId, comboId, "Combo Gamer");
+        compraRepository.guardar(combo);
+        entityManager.flush();
+        entityManager.clear();
+
+        Compra leida = compraRepository.obtenerPorId(combo.getId()).orElseThrow();
+
+        assertEquals(pedidoId, leida.getPedidoId());
+        assertEquals(comboId, leida.getComboId());
+        assertEquals("Combo Gamer", leida.getComboNombre());
+    }
+
+    @Test
     void laConfirmacionDeLasLineasQuedaPersistida() {
         UUID usuarioId = UUID.randomUUID();
         UUID pedidoId = UUID.randomUUID();
