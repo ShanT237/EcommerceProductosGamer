@@ -29,6 +29,16 @@ public class RegaloRepositoryJpa implements RegaloRepository {
     }
 
     @Override
+    public List<Regalo> obtenerPorEstado(EstadoRegalo estado) {
+        return dataRepository.findByEstado(estado).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public List<Regalo> obtenerPorUsuarioId(UUID usuarioId) {
+        return dataRepository.findByIdUsuario(usuarioId).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     public long contarAsignadosA(UUID usuarioId) {
         return dataRepository.countByIdUsuarioAndEstadoNot(usuarioId, EstadoRegalo.CANCELADO);
     }
