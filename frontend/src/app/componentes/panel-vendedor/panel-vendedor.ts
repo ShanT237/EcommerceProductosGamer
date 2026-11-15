@@ -22,11 +22,19 @@ import { CuponesVendedor } from '../cupones-vendedor/cupones-vendedor';
 import { RegalosVendedor } from '../regalos-vendedor/regalos-vendedor';
 import { PreventasVendedor } from '../preventas-vendedor/preventas-vendedor';
 
-type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' | 'cupones' | 'regalos';
+type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' | 'cupones' | 'regalos' | 'preventas';
 
 @Component({
   selector: 'app-panel-vendedor',
-  imports: [FormsModule, ArteProducto, FormularioPublicar, CombosVendedor, CuponesVendedor, RegalosVendedor],
+  imports: [
+    FormsModule,
+    ArteProducto,
+    FormularioPublicar,
+    CombosVendedor,
+    CuponesVendedor,
+    RegalosVendedor,
+    PreventasVendedor
+  ],
   templateUrl: './panel-vendedor.html',
   styleUrl: './panel-vendedor.css',
   host: { '(document:keydown.escape)': 'cerrarEdicion()' },
