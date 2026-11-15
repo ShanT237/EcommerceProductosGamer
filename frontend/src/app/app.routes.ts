@@ -9,6 +9,7 @@ import { Favoritos } from './componentes/favoritos/favoritos';
 import { Combos } from './componentes/combos/combos';
 import { Perfil } from './componentes/perfil/perfil';
 import { Notificaciones } from './componentes/notificaciones/notificaciones';
+import { Regalos } from './componentes/regalos/regalos';
 import { PanelVendedor } from './componentes/panel-vendedor/panel-vendedor';
 import { authGuard, guestGuard, rolGuard } from './core/guards';
 
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: 'mis-compras', component: MisCompras, canActivate: [rolGuard('COMPRADOR')], title: 'Mis compras · GamerZone' },
   { path: 'favoritos', component: Favoritos, canActivate: [rolGuard('COMPRADOR')], title: 'Favoritos · GamerZone' },
   { path: 'perfil', component: Perfil, canActivate: [rolGuard('COMPRADOR')], title: 'Mi perfil · GamerZone' },
+  { path: 'regalos', component: Regalos, canActivate: [rolGuard('COMPRADOR')], title: 'Regalos · GamerZone' },
   { path: 'notificaciones', component: Notificaciones, canActivate: [rolGuard('COMPRADOR')], title: 'Notificaciones · GamerZone' },
   { path: 'vendedor', component: PanelVendedor, canActivate: [rolGuard('VENDEDOR')], title: 'Panel de vendedor · GamerZone' },
   { path: '**', pathMatch: 'full', redirectTo: '' },
