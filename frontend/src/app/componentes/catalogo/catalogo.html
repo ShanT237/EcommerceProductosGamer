@@ -125,11 +125,14 @@
           @if (precioTachado(p); as original) {
             <s class="precio-original">{{ precio(original) }}</s>
           }
-          @if (p.porcentajeDescuento) { <span class="etiqueta descuento">-{{ p.porcentajeDescuento }}%</span> }
-          @if (p.porcentajePromocion) { <span class="etiqueta promo">Promo -{{ p.porcentajePromocion }}%</span> }
+          @if (p.porcentajeDescuento) { <span class="etiqueta descuento">Oferta -{{ p.porcentajeDescuento }}%</span> }
+          @if (p.porcentajePromocion) { <span class="etiqueta promo">Temporada -{{ p.porcentajePromocion }}%</span> }
         </p>
         @if (p.promocionHasta; as hasta) {
-          <p class="promo-fin">La promoción termina el {{ fechaDia(hasta) }}.</p>
+          <p class="promo-fin">La promoción de temporada termina el {{ fechaDia(hasta) }}.</p>
+        }
+        @if (p.porcentajeDescuento && p.porcentajePromocion) {
+          <p class="desglose">Oferta y temporada se aplican en cadena: ahorras {{ descuentoTotal(p) }}% en total.</p>
         }
         <p class="stock" [class.agotado]="p.stock <= 0">{{ p.stock > 0 ? p.stock + ' unidades disponibles' : 'Producto agotado' }}</p>
 

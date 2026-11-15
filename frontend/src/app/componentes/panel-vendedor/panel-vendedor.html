@@ -98,6 +98,10 @@
                     <button type="button" class="btn btn-chico quitar-descuento"
                             [disabled]="quitandoDesc() === p.id" (click)="quitarDescuento(p)">Quitar oferta</button>
                   }
+                  @if (promocionAplicada(p); as pr) {
+                    <button type="button" class="btn btn-chico quitar-promocion"
+                            [disabled]="quitandoPromo() === pr.id" (click)="quitarPromocion(pr)">Quitar temporada</button>
+                  }
                 </div>
                 <div class="botones">
                   <button class="btn btn-chico" (click)="editar(p)">Editar</button>

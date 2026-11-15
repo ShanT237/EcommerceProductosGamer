@@ -4,6 +4,12 @@
     <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" />
     <div class="etiquetas">
       <span class="etiqueta gama-{{ producto().gama }}">{{ producto().gama }}</span>
+      @if (producto().porcentajeDescuento) {
+        <span class="etiqueta descuento">Oferta -{{ producto().porcentajeDescuento }}%</span>
+      }
+      @if (producto().porcentajePromocion) {
+        <span class="etiqueta promo">Temporada -{{ producto().porcentajePromocion }}%</span>
+      }
       @if (producto().exclusividad === 'EXCLUSIVO') {
         <span class="etiqueta excl">Exclusivo</span>
       }

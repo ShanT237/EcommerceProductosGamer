@@ -1,5 +1,5 @@
 import { Producto } from '../modelos/modelos';
-import { fechaDia, precioTachado, precioVigente } from './formato';
+import { descuentoTotal, estadoPromocion, fechaDia, precioTachado, precioVigente } from './formato';
 
 function producto(extra: Partial<Producto> = {}): Producto {
   return {
@@ -37,5 +37,43 @@ describe('formato (precio vigente)', () => {
     const texto = fechaDia('2026-11-30');
     expect(texto).toMatch(/30/);
     expect(texto).toMatch(/nov/i);
+  });
+});
+
+describe('formato (descuento total)', () => {
+  it('acumulaOfertaYPromocionEnCadena', () => {
+    const p = producto({ precio: 80000, precioOriginal: 100000, precioPromocional: 72000 });
+    expect(descuentoTotal(p)).toBe(28); // 20% y luego 10%: no suman 30%
+  });
+
+  it('conSoloOfertaEsElPorcentajeDeLaOferta', () => {
+    const p = producto({ precio: 80000, precioOriginal: 100000, porcentajeDescuento: 20 });
+    expect(descuentoTotal(p)).toBe(20);
+  });
+
+  it('conSoloPromocionEsElPorcentajeDeLaPromocion', () => {
+    const p = producto({ precioPromocional: 85000, porcentajePromocion: 15 });
+    expect(descuentoTotal(p)).toBe(15);
+  });
+
+  it('sinRebajaDevuelveNull', () => {
+    expect(descuentoTotal(producto())).toBeNull();
+  });
+});
+
+describe('formato (estado de la promoción)', () => {
+  const hoy = '2026-12-15';
+
+  it('elDiaDeInicioYElDiaFinalSonVigentes', () => {
+    expect(estadoPromocion('2026-12-15', '2026-12-31', hoy)).toBe('vigente');
+    expect(estadoPromocion('2026-12-01', '2026-12-15', hoy)).toBe('vigente');
+  });
+
+  it('antesDelInicioEsProgramada', () => {
+    expect(estadoPromocion('2026-12-16', '2026-12-31', hoy)).toBe('programada');
+  });
+
+  it('despuesDelFinEsVencida', () => {
+    expect(estadoPromocion('2026-12-01', '2026-12-14', hoy)).toBe('vencida');
   });
 });

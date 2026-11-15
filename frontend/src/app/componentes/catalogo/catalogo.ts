@@ -11,7 +11,7 @@ import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
 import { WishlistService } from '../../servicios/wishlist.service';
 import { mensajeDeError } from '../../servicios/api.util';
-import { fechaDia, precio, precioTachado, precioVigente } from '../../servicios/formato';
+import {descuentoTotal, fechaDia, precio, precioTachado, precioVigente} from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
 import { TarjetaProducto } from '../tarjeta-producto/tarjeta-producto';
 
@@ -319,4 +319,6 @@ export class Catalogo implements OnInit {
     // Limpia el parámetro para que al cerrar y recargar no se reabra solo.
     this.router.navigate([], { queryParams: { producto: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
+
+  protected readonly descuentoTotal = descuentoTotal;
 }

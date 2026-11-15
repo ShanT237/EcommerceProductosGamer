@@ -234,7 +234,6 @@ export class PanelVendedor implements OnInit {
 
   protected quitarPromocion(pr: PromocionTemporada) {
     if (this.quitandoPromo()) return;
-    if (!confirm(`¿Quitar la promoción de -${pr.porcentaje}% de "${pr.productoNombre}"?`)) return;
     this.quitandoPromo.set(pr.id);
     this.productos.quitarPromocion(pr.id).subscribe({
       next: () => {
@@ -246,6 +245,11 @@ export class PanelVendedor implements OnInit {
       },
       error: (e) => { this.quitandoPromo.set(null); this.toast.error(mensajeDeError(e)); },
     });
+  }
+
+  protected promocionAplicada(p: Producto): PromocionTemporada | undefined {
+    if (!p.porcentajePromocion) return undefined;
+    return this.promociones().find((pr) => pr.productoId === p.id && pr.hasta === p.promocionHasta);
   }
 
   protected aplicarDescuento() {

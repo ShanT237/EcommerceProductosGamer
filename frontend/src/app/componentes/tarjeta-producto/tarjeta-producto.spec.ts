@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Producto } from '../../modelos/modelos';
 import { TarjetaProducto } from './tarjeta-producto';
 
+
 function producto(extra: Partial<Producto> = {}): Producto {
   return {
     id: 'p1',
@@ -16,6 +17,7 @@ function producto(extra: Partial<Producto> = {}): Producto {
     ...extra,
   };
 }
+
 
 describe('TarjetaProducto (descuento)', () => {
   let fixture: ComponentFixture<TarjetaProducto>;
@@ -56,6 +58,16 @@ describe('TarjetaProducto (descuento)', () => {
     expect(raiz().querySelector('.etiqueta.promo')?.textContent).toContain('-10%');
     expect(raiz().querySelector('s.precio-original')?.textContent).toContain('100.000');
     expect(raiz().querySelector('.precio')?.textContent).toContain('72.000');
+  });
+
+  it('lasInsigniasSeDiferencianComoOfertaYTemporada', () => {
+    mostrar(producto({
+      precio: 80000, precioOriginal: 100000, porcentajeDescuento: 20,
+      precioPromocional: 72000, porcentajePromocion: 10,
+    }));
+
+    expect(raiz().querySelector('.etiqueta.descuento')?.textContent).toContain('Oferta');
+    expect(raiz().querySelector('.etiqueta.promo')?.textContent).toContain('Temporada');
   });
 
   it('sinPromocionNoMuestraInsigniaNiFechaDeFin', () => {
