@@ -32,4 +32,14 @@ public class PromocionRepositoryEnMemoria implements PromocionRepository {
                 .filter(p -> p.getProductoId().equals(productoId))
                 .toList();
     }
+
+    @Override
+    public Optional<Promocion> obtenerPorId(UUID id) {
+        return Optional.ofNullable(promociones.get(id));
+    }
+
+    @Override
+    public void eliminar(UUID id) {
+        promociones.remove(id);
+    }
 }

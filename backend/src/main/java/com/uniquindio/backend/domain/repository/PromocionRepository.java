@@ -26,4 +26,17 @@ public interface PromocionRepository {
         }
         return vigentes;
     }
+
+    Optional<Promocion> obtenerPorId(UUID id);
+
+    void eliminar(UUID id);
+
+    /** Todas las promociones (pasadas, vigentes y futuras) de los productos pedidos. */
+    default List<Promocion> obtenerPorProductoIds(Collection<UUID> productoIds) {
+        List<Promocion> resultado = new java.util.ArrayList<>();
+        for (UUID id : productoIds) {
+            resultado.addAll(obtenerPorProductoId(id));
+        }
+        return resultado;
+    }
 }

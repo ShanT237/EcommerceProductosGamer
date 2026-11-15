@@ -25,4 +25,6 @@ interface PromocionJpaDataRepository extends JpaRepository<PromocionEntity, UUID
             + "where p.productoId in :productoIds and p.desde <= :fecha and p.hasta >= :fecha")
     List<PromocionEntity> findVigentesDe(@Param("productoIds") Collection<UUID> productoIds,
                                          @Param("fecha") LocalDate fecha);
+
+    List<PromocionEntity> findByProductoIdIn(Collection<UUID> productoIds);
 }

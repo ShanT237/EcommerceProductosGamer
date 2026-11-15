@@ -51,4 +51,24 @@ public class PromocionRepositoryJpa implements PromocionRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public Optional<Promocion> obtenerPorId(UUID id) {
+        return dataRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public void eliminar(UUID id) {
+        dataRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Promocion> obtenerPorProductoIds(Collection<UUID> productoIds) {
+        if (productoIds.isEmpty()) {
+            return List.of();
+        }
+        return dataRepository.findByProductoIdIn(productoIds).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }
