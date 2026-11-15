@@ -7,8 +7,12 @@ import { API_URL } from '../../config';
 import { Compra, Producto, Sesion } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { CarritoService } from '../../servicios/carrito.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ToastService } from '../../servicios/toast.service';
 import { Carrito } from './carrito';
+
+/** Deja correr las promesas pendientes (la confirmación se resuelve de forma asíncrona). */
+const esperar = () => new Promise<void>((r) => setTimeout(r));
 
 const MENSAJE_STOCK = 'No hay suficiente stock disponible';
 
@@ -63,6 +67,7 @@ describe('Carrito (pantalla)', () => {
     http = TestBed.inject(HttpTestingController);
     carrito = TestBed.inject(CarritoService);
     toast = TestBed.inject(ToastService);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
     // El efecto del servicio vacía el carrito en su primera ejecución: se deja correr antes de añadir productos.
     TestBed.tick();
     fixture = TestBed.createComponent(Carrito);
@@ -77,12 +82,13 @@ describe('Carrito (pantalla)', () => {
     expect(fixture.nativeElement.querySelector('.vacio')).not.toBeNull();
   });
 
-  it('el botón Pagar se bloquea mientras se procesa', () => {
+  it('el botón Pagar se bloquea mientras se procesa', async () => {
     carrito.agregar(producto());
     fixture.detectChanges();
     expect(boton().disabled).toBe(false);
 
     boton().click();
+    await esperar();
     fixture.detectChanges();
 
     expect(boton().disabled).toBe(true);
@@ -90,12 +96,14 @@ describe('Carrito (pantalla)', () => {
     http.expectOne(postCompra());
   });
 
-  it('un segundo clic no genera una segunda petición', () => {
+  it('un segundo clic no genera una segunda petición', async () => {
     carrito.agregar(producto());
     fixture.detectChanges();
 
     boton().click();
+    await esperar();
     boton().click();
+    await esperar();
 
     // expectOne falla si hubiera dos peticiones POST.
     http.expectOne(postCompra());
@@ -109,11 +117,12 @@ describe('Carrito (pantalla)', () => {
     expect(mas.disabled).toBe(true);
   });
 
-  it('un 422 se muestra con el mensaje del backend', () => {
+  it('un 422 se muestra con el mensaje del backend', async () => {
     carrito.agregar(producto());
     fixture.detectChanges();
 
     boton().click();
+    await esperar();
     http.expectOne(postCompra()).flush({ mensaje: MENSAJE_STOCK }, { status: 422, statusText: 'Unprocessable Content' });
     fixture.detectChanges();
 
@@ -125,12 +134,13 @@ describe('Carrito (pantalla)', () => {
     expect(boton().disabled).toBe(false);
   });
 
-  it('un 422 después de pagos exitosos avisa que los anteriores quedaron completados', () => {
+  it('un 422 después de pagos exitosos avisa que los anteriores quedaron completados', async () => {
     carrito.agregar(producto({ id: 'a', nombre: 'Mouse' }));
     carrito.agregar(producto({ id: 'b', nombre: 'Teclado de ensayo' }));
     fixture.detectChanges();
 
     boton().click();
+    await esperar();
     http.expectOne(postCompra()).flush(compra('cA', 'a'));
     http.expectOne({ method: 'PUT', url: `${API_URL}/compras/cA/confirmar` }).flush(compra('cA', 'a'));
     http.expectOne(postCompra()).flush({ mensaje: MENSAJE_STOCK }, { status: 422, statusText: 'Unprocessable Content' });
@@ -140,17 +150,30 @@ describe('Carrito (pantalla)', () => {
     expect(carrito.items().map((i) => i.producto.id)).toEqual(['b']);
   });
 
-  it('un pago completo navega a /mis-compras', () => {
+  it('un pago completo navega a /mis-compras', async () => {
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     carrito.agregar(producto());
     fixture.detectChanges();
 
     boton().click();
+    await esperar();
     http.expectOne(postCompra()).flush(compra('cA', 'p1'));
     http.expectOne({ method: 'PUT', url: `${API_URL}/compras/cA/confirmar` }).flush(compra('cA', 'p1'));
 
     expect(navegar).toHaveBeenCalledWith('/mis-compras');
     expect(toast.toasts().some((t) => t.tipo === 'ok' && t.texto.includes('1 producto(s) pagado(s)'))).toBe(true);
     expect(carrito.items().length).toBe(0);
+  });
+
+  it('si la persona cancela la confirmación no se hace ninguna petición', async () => {
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(false);
+    carrito.agregar(producto());
+    fixture.detectChanges();
+
+    boton().click();
+    await esperar();
+
+    http.expectNone(postCompra());
+    expect(carrito.items().length).toBe(1);
   });
 });

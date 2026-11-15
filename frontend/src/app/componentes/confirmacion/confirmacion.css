@@ -1,0 +1,22 @@
+/* Por encima de los modales de la app (z-index 100) y por debajo de los toasts (200). */
+.fondo {
+  position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; padding: 20px;
+  background: rgba(4, 3, 10, 0.82); backdrop-filter: blur(6px);
+  animation: aparecer 0.15s ease both;
+}
+.dialogo {
+  width: min(440px, 100%); padding: 28px; display: flex; flex-direction: column; gap: 14px;
+  background: #0e0c20;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7), 0 0 90px rgba(139, 92, 246, 0.2);
+}
+.dialogo h2 { font-size: 22px; }
+.dialogo p { color: var(--texto-2); line-height: 1.45; }
+.acciones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 6px; }
+.btn-cancelar:focus-visible, .btn-aceptar:focus-visible { outline: 2px solid var(--cian); outline-offset: 3px; }
+.peligro-solido {
+  border: none; color: #fff;
+  background: linear-gradient(110deg, #ff4d6d, #d6204a);
+  box-shadow: 0 0 22px rgba(255, 77, 109, 0.35);
+}
+.peligro-solido:hover:not(:disabled) { box-shadow: 0 0 34px rgba(255, 77, 109, 0.55); }
+@keyframes aparecer { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }

@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../servicios/auth.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { UsuarioService } from '../../servicios/usuario.service';
 import { ToastService } from '../../servicios/toast.service';
 import { mensajeDeError } from '../../servicios/api.util';
@@ -15,6 +16,7 @@ export class Perfil {
   protected auth = inject(AuthService);
   private usuarios = inject(UsuarioService);
   private toast = inject(ToastService);
+  private confirmacion = inject(ConfirmacionService);
 
   // ---- datos personales ----
   protected nombre = signal('');
@@ -29,12 +31,21 @@ export class Perfil {
   protected guardandoClave = signal(false);
   protected errorClave = signal('');
 
-  protected guardarPerfil() {
+  protected async guardarPerfil() {
     this.errorPerfil.set('');
     if (!this.nombre().trim()) return this.errorPerfil.set('Escribe tu nombre.');
     if (!this.correo().trim()) return this.errorPerfil.set('Escribe tu correo.');
 
     const cambioCorreo = this.correo().trim() !== this.auth.sesion()?.correo;
+    if (cambioCorreo) {
+      const acepto = await this.confirmacion.pedir({
+        titulo: 'Cambiar correo',
+        mensaje: `Tu correo pasará a ser ${this.correo().trim()} y tendrás que ingresar de nuevo con él. ¿Continuar?`,
+        confirmar: 'Cambiar correo',
+        peligro: false,
+      });
+      if (!acepto) return;
+    }
     this.guardandoPerfil.set(true);
     this.usuarios.editarPerfil(this.nombre().trim(), this.correo().trim()).subscribe({
       next: () => {
