@@ -7,6 +7,7 @@ import { Rol } from '../modelos/modelos';
 export const authGuard: CanActivateFn = (_ruta, estado) => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  auth.verificarSesion(); // en cada navegación, no solo al recargar la página
   return auth.autenticado() ? true : router.createUrlTree(['/login'], { queryParams: { volver: estado.url } });
 };
 
@@ -22,6 +23,7 @@ export const guestGuard: CanActivateFn = () => {
 export const rolGuard = (rol: Rol): CanActivateFn => () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  auth.verificarSesion();
   if (!auth.autenticado()) return router.createUrlTree(['/login']);
   return auth.rol() === rol ? true : router.createUrlTree(['/']);
 };
