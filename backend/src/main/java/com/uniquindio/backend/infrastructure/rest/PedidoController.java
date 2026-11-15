@@ -6,6 +6,7 @@ import com.uniquindio.backend.application.usecase.CancelarPedidoUseCase;
 import com.uniquindio.backend.application.usecase.ConfirmarPedidoUseCase;
 import com.uniquindio.backend.application.usecase.CrearPedidoUseCase;
 import com.uniquindio.backend.application.usecase.ItemPedido;
+import com.uniquindio.backend.application.usecase.SolicitarReembolsoPedidoUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -35,13 +36,16 @@ public class PedidoController {
     private final CrearPedidoUseCase crearPedidoUseCase;
     private final ConfirmarPedidoUseCase confirmarPedidoUseCase;
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
+    private final SolicitarReembolsoPedidoUseCase solicitarReembolsoPedidoUseCase;
 
     public PedidoController(CrearPedidoUseCase crearPedidoUseCase,
                             ConfirmarPedidoUseCase confirmarPedidoUseCase,
-                            CancelarPedidoUseCase cancelarPedidoUseCase) {
+                            CancelarPedidoUseCase cancelarPedidoUseCase,
+                            SolicitarReembolsoPedidoUseCase solicitarReembolsoPedidoUseCase) {
         this.crearPedidoUseCase = crearPedidoUseCase;
         this.confirmarPedidoUseCase = confirmarPedidoUseCase;
         this.cancelarPedidoUseCase = cancelarPedidoUseCase;
+        this.solicitarReembolsoPedidoUseCase = solicitarReembolsoPedidoUseCase;
     }
 
     // Crear pedido: una compra PENDIENTE por línea, con stock descontado de todas o de ninguna.
@@ -80,5 +84,14 @@ public class PedidoController {
             @AuthenticationPrincipal UUID usuarioId) {
         List<Compra> compras = cancelarPedidoUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(PedidoResponse.desde(compras)); // 200 OK
+    }
+
+    // Reembolsar el pedido completo; ninguna de sus líneas puede reembolsarse por separado.
+    @PutMapping("/{id}/reembolso")
+    public ResponseEntity<PedidoResponse> reembolsar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID usuarioId) {
+        List<Compra> compras = solicitarReembolsoPedidoUseCase.ejecutar(id, usuarioId);
+        return ResponseEntity.ok(PedidoResponse.desde(compras));
     }
 }
