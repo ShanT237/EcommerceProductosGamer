@@ -2,9 +2,11 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.request.ComprarComboRequest;
 import com.uniquindio.backend.application.dto.request.CrearComboRequest;
+import com.uniquindio.backend.application.dto.response.ComboDetalleResponse;
 import com.uniquindio.backend.application.dto.response.ComboResponse;
 import com.uniquindio.backend.application.dto.response.ComprarComboResponse;
 import com.uniquindio.backend.application.usecase.ComprarComboUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarCombosUseCase;
 import com.uniquindio.backend.application.usecase.CrearComboUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductosComboUseCase;
 import com.uniquindio.backend.domain.entity.Combo;
@@ -34,16 +36,33 @@ public class ComboController {
     private final CrearComboUseCase crearComboUseCase;
     private final ModificarProductosComboUseCase modificarProductosComboUseCase;
     private final ComprarComboUseCase comprarComboUseCase;
+    private final ConsultarCombosUseCase consultarCombosUseCase;
     private final ComboMapper mapper;
 
     public ComboController(CrearComboUseCase crearComboUseCase,
                            ModificarProductosComboUseCase modificarProductosComboUseCase,
                            ComprarComboUseCase comprarComboUseCase,
+                           ConsultarCombosUseCase consultarCombosUseCase,
                            ComboMapper mapper) {
         this.crearComboUseCase = crearComboUseCase;
         this.modificarProductosComboUseCase = modificarProductosComboUseCase;
         this.comprarComboUseCase = comprarComboUseCase;
+        this.consultarCombosUseCase = consultarCombosUseCase;
         this.mapper = mapper;
+    }
+
+    // Catálogo de combos comprables (cualquier sesión: comprador o vendedor)
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<List<ComboDetalleResponse>> listar() {
+        return ResponseEntity.ok(mapper.toDetalleResponses(consultarCombosUseCase.todos()));
+    }
+
+    // Combos del vendedor autenticado (incluye los que tienen productos pausados)
+    @PreAuthorize("hasRole('VENDEDOR')")
+    @GetMapping("/mios")
+    public ResponseEntity<List<ComboDetalleResponse>> mios(@AuthenticationPrincipal UUID vendedorId) {
+        return ResponseEntity.ok(mapper.toDetalleResponses(consultarCombosUseCase.deVendedor(vendedorId)));
     }
 
     // CU-07 Crear Combo Gamer (del vendedor autenticado)

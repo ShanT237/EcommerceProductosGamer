@@ -6,6 +6,7 @@ import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.ComboPersist
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,5 +25,15 @@ public class ComboRepositoryJpa implements ComboRepository {
     @Override
     public void guardar(Combo combo) {
         dataRepository.save(mapper.toEntity(combo));
+    }
+
+    @Override
+    public List<Combo> obtenerTodos() {
+        return dataRepository.findAll().stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public List<Combo> obtenerPorVendedorId(UUID vendedorId) {
+        return dataRepository.findByVendedorId(vendedorId).stream().map(mapper::toDomain).toList();
     }
 }
