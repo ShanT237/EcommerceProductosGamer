@@ -146,3 +146,48 @@ export interface PromocionTemporada {
   desde: string; // ISO yyyy-MM-dd
   hasta: string;
 }
+
+/** Producto dentro de un combo, tal como lo devuelve `GET /api/combos`. */
+export interface ProductoDeCombo {
+  id: string;
+  nombre: string;
+  precio: number;
+  stock: number;
+}
+
+/** Combo con sus productos y los precios ya calculados por el backend (`GET /api/combos` y `/combos/mios`). */
+export interface Combo {
+  id: string;
+  vendedorId: string;
+  nombre: string;
+  descripcion: string;
+  /** Porcentaje de descuento del combo (0 a 99). */
+  descuento: number;
+  productos: ProductoDeCombo[];
+  precioSinDescuento: number;
+  precioConDescuento: number;
+}
+
+/** Respuesta de crear o modificar un combo: solo trae los ids de sus productos. */
+export interface ComboCreado {
+  id: string;
+  vendedorId: string;
+  nombre: string;
+  descripcion: string;
+  descuento: number;
+  productos: string[];
+}
+
+export interface NuevoCombo {
+  nombre: string;
+  descripcion: string;
+  descuento: number;
+  productoIds: string[];
+}
+
+/** Respuesta de `POST /api/combos/{id}/comprar`: una compra PENDIENTE por producto del combo. */
+export interface ResultadoCompraCombo {
+  comboId: string;
+  compras: Compra[];
+  total: number;
+}

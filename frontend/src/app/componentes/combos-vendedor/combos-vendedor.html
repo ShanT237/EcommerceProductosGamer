@@ -1,0 +1,94 @@
+<section class="dos aparece">
+  <form class="panel formulario" (ngSubmit)="crear()">
+    <h3>Nuevo combo</h3>
+    <p class="muted">Agrupa dos o más de tus productos con un descuento. Se aplica sobre la suma de sus precios.</p>
+
+    <div class="campo">
+      <label for="cv-nombre">Nombre</label>
+      <input id="cv-nombre" name="cv-nombre" class="entrada" maxlength="100" placeholder="Combo Gamer Pro" [(ngModel)]="nombre">
+    </div>
+    <div class="campo">
+      <label for="cv-desc">Descripción</label>
+      <textarea id="cv-desc" name="cv-desc" class="entrada" maxlength="500" placeholder="Teclado + mouse + headset" [(ngModel)]="descripcion"></textarea>
+    </div>
+    <div class="campo">
+      <label for="cv-dto">Descuento (%)</label>
+      <input id="cv-dto" name="cv-dto" class="entrada" type="number" min="0" max="99" [(ngModel)]="descuento">
+    </div>
+
+    <fieldset class="campo seleccion">
+      <legend>Productos del combo ({{ seleccion().size }} elegidos)</legend>
+      @if (misProductos().length === 0) {
+        <p class="muted">Primero publica productos para poder armar un combo.</p>
+      }
+      @for (p of misProductos(); track p.id) {
+        <label class="opcion">
+          <input type="checkbox" [checked]="seleccion().has(p.id)" (change)="alternar(p.id)">
+          <span>{{ p.nombre }}</span>
+          <span class="muted">{{ precio(p.precio) }}</span>
+        </label>
+      }
+    </fieldset>
+
+    @if (errorForm()) { <p class="error" role="alert">{{ errorForm() }}</p> }
+    <button class="btn btn-neon crear" type="submit" [disabled]="creando()">{{ creando() ? 'Creando…' : 'Crear combo' }}</button>
+  </form>
+
+  <div class="mios">
+    <h3 class="subtitulo">Mis combos</h3>
+
+    @if (error()) {
+      <div class="panel vacio">
+        <p>{{ error() }}</p>
+        <button type="button" class="btn btn-chico" (click)="cargar()">Reintentar</button>
+      </div>
+    } @else if (cargando() && combos().length === 0) {
+      <div class="panel vacio"><p class="muted">Cargando…</p></div>
+    } @else if (combos().length === 0) {
+      <div class="panel vacio">
+        <p class="grande">◈</p>
+        <p>Aún no has creado combos.</p>
+      </div>
+    } @else {
+      @for (c of combos(); track c.id) {
+        <article class="panel combo">
+          <div class="encabezado">
+            <div>
+              <h4>{{ c.nombre }}</h4>
+              <p class="muted">{{ c.descripcion }}</p>
+            </div>
+            <span class="etiqueta descuento">-{{ c.descuento }}%</span>
+          </div>
+
+          <ul class="productos">
+            @for (p of c.productos; track p.id) {
+              <li>
+                <span>{{ p.nombre }} <span class="muted">· {{ precio(p.precio) }}</span></span>
+                <button type="button" class="btn btn-chico btn-peligro quitar"
+                        [attr.aria-label]="'Quitar ' + p.nombre + ' del combo'"
+                        [disabled]="ocupado() === c.id" (click)="quitar(c, p.id)">Quitar</button>
+              </li>
+            }
+          </ul>
+
+          <div class="precios">
+            <s class="precio-original">{{ precio(c.precioSinDescuento) }}</s>
+            <strong class="precio">{{ precio(c.precioConDescuento) }}</strong>
+          </div>
+
+          @if (disponiblesPara(c).length > 0) {
+            <div class="anadir">
+              <select class="entrada" [attr.aria-label]="'Producto a añadir a ' + c.nombre"
+                      [value]="porAnadir()[c.id] ?? ''" (change)="elegirAnadir(c.id, $event)">
+                <option value="">Añadir un producto…</option>
+                @for (p of disponiblesPara(c); track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+              </select>
+              <button type="button" class="btn btn-chico agregar"
+                      [disabled]="!porAnadir()[c.id] || ocupado() === c.id" (click)="agregar(c)">Añadir</button>
+            </div>
+          }
+        </article>
+      }
+    }
+  </div>
+</section>

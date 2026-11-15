@@ -1,0 +1,64 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <h1 class="titulo-seccion">Combos <span class="degradado">gamer</span></h1>
+    <p class="muted">Varios productos juntos con un descuento especial.</p>
+  </header>
+
+  @if (error()) {
+    <div class="panel vacio">
+      <p>{{ error() }}</p>
+      <button type="button" class="btn btn-chico" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (cargando()) {
+    <div class="rejilla">
+      @for (i of [1, 2, 3]; track i) { <div class="esqueleto"></div> }
+    </div>
+  } @else if (combos().length === 0) {
+    <div class="panel vacio">
+      <p class="grande">◈</p>
+      <p>Todavía no hay combos disponibles.</p>
+    </div>
+  } @else {
+    <div class="rejilla">
+      @for (c of combos(); track c.id) {
+        <article class="panel combo aparece">
+          <div class="encabezado">
+            <h3>{{ c.nombre }}</h3>
+            <span class="etiqueta descuento">-{{ c.descuento }}%</span>
+          </div>
+          <p class="muted desc">{{ c.descripcion }}</p>
+
+          <ul class="productos">
+            @for (p of c.productos; track p.id) {
+              <li><span>{{ p.nombre }}</span><span class="muted">{{ precio(p.precio) }}</span></li>
+            }
+          </ul>
+
+          <div class="precios">
+            <s class="precio-original">{{ precio(c.precioSinDescuento) }}</s>
+            <strong class="precio">{{ precio(c.precioConDescuento) }}</strong>
+            <small class="ahorro">Ahorras {{ precio(ahorro(c)) }} por unidad</small>
+          </div>
+
+          @if (esComprador()) {
+            @if (limite(c) <= 0) {
+              <p class="rojo">Agotado: algún producto del combo no tiene stock.</p>
+            } @else {
+              <div class="compra">
+                <div class="cantidad">
+                  <button type="button" class="btn btn-chico menos" aria-label="Menos unidades"
+                          [disabled]="cantidadDe(c) <= 1" (click)="cambiarCantidad(c, -1)">−</button>
+                  <span>{{ cantidadDe(c) }}</span>
+                  <button type="button" class="btn btn-chico mas" aria-label="Más unidades"
+                          [disabled]="cantidadDe(c) >= limite(c)" (click)="cambiarCantidad(c, 1)">+</button>
+                </div>
+                <button type="button" class="btn btn-neon comprar" [disabled]="comprando() === c.id"
+                        (click)="comprar(c)">{{ comprando() === c.id ? 'Reservando…' : 'Comprar combo' }}</button>
+              </div>
+            }
+          }
+        </article>
+      }
+    </div>
+  }
+</div>
