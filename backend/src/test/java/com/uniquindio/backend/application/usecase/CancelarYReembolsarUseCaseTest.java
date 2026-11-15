@@ -104,8 +104,8 @@ class CancelarYReembolsarUseCaseTest {
     }
 
     @Test
-    @DisplayName("El reembolso por línea sigue permitido para una compra completada de un pedido")
-    void unaLineaDeUnPedidoCompletadaSePuedeReembolsar() {
+    @DisplayName("Una línea de un pedido completado no se puede reembolsar por separado")
+    void unaLineaDeUnPedidoCompletadaSeRechazaAlReembolsar() {
         UUID usuarioId = UUID.randomUUID();
         Producto producto = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "RGB", 50.0, 10, Gama.MEDIA, Exclusividad.NORMAL);
         producto.reducirStock(1); // Queda 9
@@ -115,9 +115,9 @@ class CancelarYReembolsarUseCaseTest {
         linea.confirmar();
         compraRepository.guardar(linea);
 
-        Compra reembolsada = reembolsoUseCase.ejecutar(linea.getId(), usuarioId);
+        assertThrows(ReglaDominioException.class, () -> reembolsoUseCase.ejecutar(linea.getId(), usuarioId));
 
-        assertEquals(EstadoCompra.REEMBOLSADA, reembolsada.getEstado());
-        assertEquals(10, productoRepository.obtenerPorId(producto.getId()).get().getStock());
+        assertEquals(EstadoCompra.COMPLETADA, compraRepository.obtenerPorId(linea.getId()).get().getEstado());
+        assertEquals(9, productoRepository.obtenerPorId(producto.getId()).get().getStock());
     }
 }
