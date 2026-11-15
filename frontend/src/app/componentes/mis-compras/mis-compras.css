@@ -25,6 +25,11 @@ h3 { font-size: 17px; margin-bottom: 4px; }
 .estado-REEMBOLSADA { color: var(--violeta); }
 .estado-CANCELADA, .estado-EXPIRADA { color: var(--texto-2); }
 .botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 380px; }
+.detalle-operacion { grid-column: 1 / -1; border-top: 1px solid var(--borde); padding-top: 12px; }
+.linea-producto { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 10px 0; }
+.linea-producto + .linea-producto { border-top: 1px solid var(--borde); }
+.linea-producto p { margin-top: 4px; }
+.detalle-linea-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
 .vacio .grande { font-size: 56px; color: var(--cian); text-shadow: var(--brillo-cian); }
 .vacio .btn { margin-top: 14px; }
 
@@ -41,6 +46,8 @@ h3 { font-size: 17px; margin-bottom: 4px; }
   .compra { grid-template-columns: 1fr; }
   .monto { align-items: flex-start; flex-direction: row; justify-content: space-between; align-items: center; }
   .botones { justify-content: flex-start; max-width: none; }
+  .linea-producto { align-items: flex-start; flex-direction: column; }
+  .detalle-linea-acciones { justify-content: flex-start; }
 }
 
 .canjear { margin-top: 8px; align-self: flex-start; }
