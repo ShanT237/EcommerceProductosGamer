@@ -41,8 +41,12 @@ export class ComboService {
     return this.http.delete<void>(`${API_URL}/combos/${id}`);
   }
 
-  /** POST /combos/{id}/comprar: crea una compra PENDIENTE por producto del combo (descuento ya aplicado). */
-  comprar(id: string, cantidad: number): Observable<ResultadoCompraCombo> {
-    return this.http.post<ResultadoCompraCombo>(`${API_URL}/combos/${id}/comprar`, { cantidad });
+  /** POST /combos/{id}/comprar: crea un pedido con todas las líneas del combo y cupón opcional. */
+  comprar(id: string, cantidad: number, codigoCupon?: string): Observable<ResultadoCompraCombo> {
+    const codigo = codigoCupon?.trim();
+    return this.http.post<ResultadoCompraCombo>(
+      `${API_URL}/combos/${id}/comprar`,
+      codigo ? { cantidad, codigoCupon: codigo } : { cantidad },
+    );
   }
 }
