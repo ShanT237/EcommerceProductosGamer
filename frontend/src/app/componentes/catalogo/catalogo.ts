@@ -11,7 +11,7 @@ import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
 import { WishlistService } from '../../servicios/wishlist.service';
 import { mensajeDeError } from '../../servicios/api.util';
-import { precio } from '../../servicios/formato';
+import { fechaDia, precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
 import { TarjetaProducto } from '../tarjeta-producto/tarjeta-producto';
 
@@ -32,6 +32,9 @@ export class Catalogo implements OnInit {
   protected wishlist = inject(WishlistService);
   protected auth = inject(AuthService);
   protected precio = precio;
+  protected precioVigente = precioVigente;
+  protected precioTachado = precioTachado;
+  protected fechaDia = fechaDia;
 
   // ---- filtros (búsqueda predictiva: se consulta 300 ms después de dejar de escribir) ----
   protected texto = signal('');
@@ -90,7 +93,10 @@ export class Catalogo implements OnInit {
   protected cupon = signal('');
   protected cuponAplicado = signal(false);
   protected esComprador = computed(() => this.auth.rol() === 'COMPRADOR');
-  protected total = computed(() => (this.seleccionado()?.precio ?? 0) * this.cantidad());
+  protected total = computed(() => {
+    const p = this.seleccionado();
+    return (p ? precioVigente(p) : 0) * this.cantidad(); // con la promoción vigente, como se cobrará
+  });
   // El estado de favoritos vive en WishlistService (viene del servidor), no aquí.
   protected esFavorito = computed(() => {
     const p = this.seleccionado();

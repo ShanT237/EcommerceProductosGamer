@@ -5,6 +5,7 @@ import com.uniquindio.backend.application.dto.response.PublicarProductoResponse;
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.domain.valueobject.Pagina;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import com.uniquindio.backend.application.dto.request.ModificarProductoRequest;
@@ -20,6 +21,7 @@ import com.uniquindio.backend.application.dto.request.BuscarProductosRequest;
 import com.uniquindio.backend.application.dto.response.BuscarProductoResponse;
 import com.uniquindio.backend.application.dto.response.PaginaResponse;
 import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
+import java.util.Map;
 import java.net.URI;
 import java.util.UUID;
 
@@ -43,6 +46,7 @@ public class ProductoController {
     private final EditarInformacionProductoUseCase editarInformacionProductoUseCase;
     private final CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase;
     private final BuscarProductosUseCase buscarProductosUseCase;
+    private final ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
@@ -51,6 +55,7 @@ public class ProductoController {
                               EditarInformacionProductoUseCase editarInformacionProductoUseCase,
                               CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase,
                               BuscarProductosUseCase buscarProductosUseCase,
+                              ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
@@ -58,6 +63,7 @@ public class ProductoController {
         this.editarInformacionProductoUseCase = editarInformacionProductoUseCase;
         this.cambiarVisibilidadProductoUseCase = cambiarVisibilidadProductoUseCase;
         this.buscarProductosUseCase = buscarProductosUseCase;
+        this.consultarPromocionesVigentesUseCase = consultarPromocionesVigentesUseCase;
         this.mapper = mapper;
     }
 
@@ -125,8 +131,10 @@ public class ProductoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pagina<Producto> pagina = buscarProductosUseCase.ejecutar(request.aFiltro(), page, size);
+        Map<UUID, Promocion> promociones = consultarPromocionesVigentesUseCase.ejecutar(
+                pagina.contenido().stream().map(Producto::getId).toList());
         List<BuscarProductoResponse> contenido = pagina.contenido().stream()
-                .map(mapper::toBuscarResponse)
+                .map(p -> mapper.toBuscarResponse(p, promociones.get(p.getId())))
                 .toList();
         return new PaginaResponse<>(
                 contenido,

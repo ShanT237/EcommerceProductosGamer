@@ -9,6 +9,7 @@ import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
+import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -73,6 +74,9 @@ class EliminarProductoControllerTest {
 
     @MockitoBean
     private BuscarProductosUseCase buscarProductosUseCase;
+
+    @MockitoBean
+    private ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;

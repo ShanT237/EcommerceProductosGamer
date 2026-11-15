@@ -7,7 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,6 +31,18 @@ public class PromocionRepositoryJpa implements PromocionRepository {
         return dataRepository.findVigentes(productoId, fecha).stream()
                 .findFirst()
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public Map<UUID, Promocion> obtenerVigentesPorProductoIds(Collection<UUID> productoIds, LocalDate fecha) {
+        if (productoIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Promocion> vigentes = new HashMap<>();
+        dataRepository.findVigentesDe(productoIds, fecha).stream()
+                .map(mapper::toDomain)
+                .forEach(promocion -> vigentes.putIfAbsent(promocion.getProductoId(), promocion));
+        return vigentes;
     }
 
     @Override

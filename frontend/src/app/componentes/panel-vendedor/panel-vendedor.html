@@ -87,6 +87,9 @@
                   @if (p.porcentajeDescuento) {
                     <span class="etiqueta descuento">-{{ p.porcentajeDescuento }}%</span>
                   }
+                  @if (p.porcentajePromocion) {
+                    <span class="etiqueta promo">Promo -{{ p.porcentajePromocion }}%</span>
+                  }
                   <span class="muted" [class.rojo]="p.stock <= 0">{{ p.stock }} en stock</span>
                   @if (p.precioOriginal) {
                     <button type="button" class="btn btn-chico quitar-descuento"

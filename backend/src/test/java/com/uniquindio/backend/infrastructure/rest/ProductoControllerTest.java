@@ -7,6 +7,8 @@ import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.entity.Promocion;
+import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -28,7 +30,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -68,6 +72,9 @@ class ProductoControllerTest {
 
     @MockitoBean
     private BuscarProductosUseCase buscarProductosUseCase;
+
+    @MockitoBean
+    private ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -263,5 +270,32 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.totalElementos").value(1));
 
         Mockito.verify(buscarProductosUseCase).ejecutar(any(), eq(0), eq(20));
+    }
+
+    @Test
+    void buscarIncluyeLaPromocionVigenteDeCadaProducto() throws Exception {
+        when(buscarProductosUseCase.ejecutar(any(), eq(0), eq(20)))
+                .thenReturn(new Pagina<>(List.of(producto()), 0, 20, 1, 1));
+        when(consultarPromocionesVigentesUseCase.ejecutar(any())).thenReturn(Map.of(productoId,
+                Promocion.programar(UUID.randomUUID(), productoId, 15,
+                        LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30))));
+
+        mockMvc.perform(get("/api/productos").with(comprador(UUID.randomUUID())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].precio").value(100.0))
+                .andExpect(jsonPath("$.contenido[0].precioPromocional").value(85.0))
+                .andExpect(jsonPath("$.contenido[0].porcentajePromocion").value(15.0))
+                .andExpect(jsonPath("$.contenido[0].promocionHasta").value("2026-11-30"));
+    }
+
+    @Test
+    void buscarSinPromocionDejaLosCamposPromocionalesVacios() throws Exception {
+        when(buscarProductosUseCase.ejecutar(any(), eq(0), eq(20)))
+                .thenReturn(new Pagina<>(List.of(producto()), 0, 20, 1, 1));
+
+        mockMvc.perform(get("/api/productos").with(comprador(UUID.randomUUID())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].precioPromocional").doesNotExist())
+                .andExpect(jsonPath("$.contenido[0].promocionHasta").doesNotExist());
     }
 }

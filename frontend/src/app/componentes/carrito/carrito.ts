@@ -1,7 +1,7 @@
 import {Component, inject, signal} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CarritoService } from '../../servicios/carrito.service';
-import { precio } from '../../servicios/formato';
+import { precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ToastService } from '../../servicios/toast.service';
 import { ArteProducto } from '../arte-producto/arte-producto';
 
@@ -17,6 +17,8 @@ export class Carrito {
   private toast = inject(ToastService);
   private router = inject(Router);
   protected precio = precio;
+  protected precioVigente = precioVigente;
+  protected precioTachado = precioTachado;
   protected cupon = signal('');
 
   protected pagar() {
