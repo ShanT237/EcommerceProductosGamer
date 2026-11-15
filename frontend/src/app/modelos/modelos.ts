@@ -242,3 +242,32 @@ export interface NuevoCupon {
   vence: string;
   usosMaximos: number;
 }
+
+export type EstadoRegalo = 'DISPONIBLE' | 'ELEGIDO' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO';
+
+/** Respuesta de la API de regalos. Apunta a un producto o a un combo (nunca a ambos). */
+export interface Regalo {
+  id: string;
+  estado: EstadoRegalo;
+  idProducto: string | null;
+  idCombo: string | null;
+  idUsuario: string | null;
+  notificado: boolean;
+  fechaCreacion: string;
+  fechaEntrega: string | null;
+}
+
+/** `GET /api/regalos/progreso`: un regalo por cada `comprasPorRegalo` compras completadas. */
+export interface ProgresoRegalos {
+  comprasCompletadas: number;
+  comprasPorRegalo: number;
+  regalosAsignados: number;
+  regalosDisponibles: number;
+  comprasParaSiguiente: number;
+}
+
+/** Cuerpo de `POST /api/regalos`: debe venir exactamente uno de los dos. */
+export interface NuevoRegalo {
+  productoId?: string;
+  comboId?: string;
+}

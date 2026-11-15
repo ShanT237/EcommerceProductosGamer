@@ -2,6 +2,9 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Regalo;
 
+import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,6 +18,12 @@ public interface RegaloRepository {
     Optional<Regalo> obtenerPorId(UUID id);
 
     void guardar(Regalo regalo);
+
+    /** Regalos en un estado dado (p. ej. DISPONIBLE para el catálogo de regalos). */
+    List<Regalo> obtenerPorEstado(EstadoRegalo estado);
+
+    /** Regalos asignados a un usuario, en cualquier estado. */
+    List<Regalo> obtenerPorUsuarioId(UUID usuarioId);
 
     long contarAsignadosA(UUID usuarioId);
 

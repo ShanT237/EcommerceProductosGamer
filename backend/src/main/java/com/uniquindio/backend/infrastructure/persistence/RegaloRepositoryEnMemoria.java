@@ -5,6 +5,7 @@ import com.uniquindio.backend.domain.repository.RegaloRepository;
 import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +22,16 @@ public class RegaloRepositoryEnMemoria implements RegaloRepository {
     @Override
     public void guardar(Regalo regalo) {
         regalos.put(regalo.getId(), regalo);
+    }
+
+    @Override
+    public List<Regalo> obtenerPorEstado(EstadoRegalo estado) {
+        return regalos.values().stream().filter(r -> r.getEstado() == estado).toList();
+    }
+
+    @Override
+    public List<Regalo> obtenerPorUsuarioId(UUID usuarioId) {
+        return regalos.values().stream().filter(r -> usuarioId.equals(r.getIdUsuario())).toList();
     }
 
     @Override
