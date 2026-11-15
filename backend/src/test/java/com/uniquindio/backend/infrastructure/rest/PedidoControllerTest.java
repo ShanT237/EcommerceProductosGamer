@@ -4,6 +4,7 @@ import com.uniquindio.backend.application.usecase.CancelarPedidoUseCase;
 import com.uniquindio.backend.application.usecase.ConfirmarPedidoUseCase;
 import com.uniquindio.backend.application.usecase.CrearPedidoUseCase;
 import com.uniquindio.backend.application.usecase.ItemPedido;
+import com.uniquindio.backend.application.usecase.SolicitarReembolsoPedidoUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Cupon;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
@@ -65,6 +66,9 @@ class PedidoControllerTest {
 
     @MockitoBean
     private CancelarPedidoUseCase cancelarPedidoUseCase;
+
+    @MockitoBean
+    private SolicitarReembolsoPedidoUseCase solicitarReembolsoPedidoUseCase;
 
     // SecurityConfig necesita el EmisorToken para armar el filtro JWT; las sesiones se simulan con SesionTest.
     @MockitoBean
@@ -273,6 +277,19 @@ class PedidoControllerTest {
     }
 
     @Test
+    void reembolsaElPedidoCompletoUsandoElUsuarioDelToken() throws Exception {
+        when(solicitarReembolsoPedidoUseCase.ejecutar(any(), any())).thenReturn(lineasSimuladas());
+
+        mockMvc.perform(put("/api/pedidos/{id}/reembolso", pedidoId)
+                        .with(comprador(usuarioId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pedidoId").value(pedidoId.toString()))
+                .andExpect(jsonPath("$.compras.length()").value(2));
+
+        Mockito.verify(solicitarReembolsoPedidoUseCase).ejecutar(pedidoId, usuarioId);
+    }
+
+    @Test
     void confirmarUnPedidoInexistenteRetorna404() throws Exception {
         when(confirmarPedidoUseCase.ejecutar(any(), any()))
                 .thenThrow(new NoSuchElementException("El pedido no existe"));
@@ -303,7 +320,8 @@ class PedidoControllerTest {
         mockMvc.perform(put("/api/pedidos/{id}/confirmar", pedidoId))
                 .andExpect(status().isUnauthorized());
 
-        Mockito.verifyNoInteractions(crearPedidoUseCase, confirmarPedidoUseCase, cancelarPedidoUseCase);
+        Mockito.verifyNoInteractions(crearPedidoUseCase, confirmarPedidoUseCase, cancelarPedidoUseCase,
+                solicitarReembolsoPedidoUseCase);
     }
 
     @Test
@@ -319,7 +337,10 @@ class PedidoControllerTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(put("/api/pedidos/{id}/cancelar", pedidoId).with(vendedor(usuarioId)))
                 .andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/pedidos/{id}/reembolso", pedidoId).with(vendedor(usuarioId)))
+                .andExpect(status().isForbidden());
 
-        Mockito.verifyNoInteractions(crearPedidoUseCase, confirmarPedidoUseCase, cancelarPedidoUseCase);
+        Mockito.verifyNoInteractions(crearPedidoUseCase, confirmarPedidoUseCase, cancelarPedidoUseCase,
+                solicitarReembolsoPedidoUseCase);
     }
 }
