@@ -169,22 +169,22 @@ class ComboControllerTest {
     void comprarUsaElUsuarioDelToken() throws Exception {
         Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, p1, 2,
                 LocalDateTime.now(), new Precio(85));
-        when(comprarComboUseCase.ejecutar(usuarioId, comboId, 2)).thenReturn(List.of(compra));
+        when(comprarComboUseCase.ejecutar(usuarioId, comboId, 2, "GAMER10")).thenReturn(List.of(compra));
 
         mockMvc.perform(post("/api/combos/{id}/comprar", comboId)
                         .with(comprador(usuarioId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"cantidad\": 2 }"))
+                        .content("{ \"cantidad\": 2, \"codigoCupon\": \"GAMER10\" }"))
                 .andExpect(status().isCreated())                  // 201
                 .andExpect(jsonPath("$.comboId").value(comboId.toString()));
 
-        Mockito.verify(comprarComboUseCase).ejecutar(usuarioId, comboId, 2);
+        Mockito.verify(comprarComboUseCase).ejecutar(usuarioId, comboId, 2, "GAMER10");
     }
 
     @Test
     void comprarIgnoraUnUsuarioIdEnElBody() throws Exception {
         UUID ajeno = UUID.randomUUID();
-        when(comprarComboUseCase.ejecutar(usuarioId, comboId, 1)).thenReturn(List.of());
+        when(comprarComboUseCase.ejecutar(usuarioId, comboId, 1, null)).thenReturn(List.of());
 
         mockMvc.perform(post("/api/combos/{id}/comprar", comboId)
                         .with(comprador(usuarioId))
@@ -192,7 +192,7 @@ class ComboControllerTest {
                         .content("{ \"usuarioId\": \"%s\", \"cantidad\": 1 }".formatted(ajeno)))
                 .andExpect(status().isCreated());
 
-        Mockito.verify(comprarComboUseCase, Mockito.never()).ejecutar(eq(ajeno), any(), Mockito.anyInt());
+        Mockito.verify(comprarComboUseCase).ejecutar(usuarioId, comboId, 1, null);
     }
 
     @Test
