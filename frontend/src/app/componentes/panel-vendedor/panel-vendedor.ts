@@ -9,6 +9,7 @@ import {
   ReporteVentas
 } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ReporteService } from '../../servicios/reporte.service';
 import { ToastService } from '../../servicios/toast.service';
@@ -31,6 +32,7 @@ export class PanelVendedor implements OnInit {
   private productos = inject(ProductoService);
   private reportes = inject(ReporteService);
   private toast = inject(ToastService);
+  private confirmacion = inject(ConfirmacionService);
   protected precio = precio;
   protected precioVigente = precioVigente;
   protected precioTachado = precioTachado;
@@ -180,8 +182,13 @@ export class PanelVendedor implements OnInit {
     });
   }
 
-  protected eliminar(p: Producto) {
-    if (!confirm(`¿Eliminar "${p.nombre}"? Dejará de aparecer en el catálogo.`)) return;
+  protected async eliminar(p: Producto) {
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Eliminar producto',
+      mensaje: `¿Eliminar "${p.nombre}"? Dejará de aparecer en el catálogo.`,
+      confirmar: 'Eliminar',
+    });
+    if (!acepto) return;
     this.productos.eliminar(p.id).subscribe({
       next: () => { this.toast.ok('Producto eliminado.'); this.cargarCatalogo(); this.cargarResumen(); },
       error: (e) => this.toast.error(mensajeDeError(e)),
@@ -232,8 +239,14 @@ export class PanelVendedor implements OnInit {
     this.errorPromo.set('');
   }
 
-  protected quitarPromocion(pr: PromocionTemporada) {
+  protected async quitarPromocion(pr: PromocionTemporada) {
     if (this.quitandoPromo()) return;
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Quitar promoción',
+      mensaje: `¿Retirar la promoción de temporada de -${pr.porcentaje}% de "${pr.productoNombre}"? El producto volverá a su precio sin promoción.`,
+      confirmar: 'Quitar promoción',
+    });
+    if (!acepto || this.quitandoPromo()) return;
     this.quitandoPromo.set(pr.id);
     this.productos.quitarPromocion(pr.id).subscribe({
       next: () => {
@@ -252,11 +265,22 @@ export class PanelVendedor implements OnInit {
     return this.promociones().find((pr) => pr.productoId === p.id && pr.hasta === p.promocionHasta);
   }
 
-  protected aplicarDescuento() {
+  protected async aplicarDescuento() {
     this.errorDesc.set('');
     if (!this.descProducto()) return this.errorDesc.set('Elige un producto.');
     const pct = this.descPorcentaje();
     if (pct == null || pct <= 0 || pct >= 100) return this.errorDesc.set('El porcentaje debe estar entre 0 y 100.');
+
+    const producto = this.misProductos().find((x) => x.id === this.descProducto());
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Aplicar oferta inmediata',
+      mensaje: producto
+        ? `"${producto.nombre}" pasará de ${precio(producto.precio)} a ${precio(Math.round(producto.precio * (1 - pct / 100)))} (-${pct}%) desde ya. Cambia el precio base del producto.`
+        : `Se aplicará un descuento de -${pct}% desde ya. Cambia el precio base del producto.`,
+      confirmar: 'Aplicar descuento',
+      peligro: false,
+    });
+    if (!acepto) return;
 
     this.aplicandoDesc.set(true);
     this.productos.aplicarDescuento(this.descProducto(), pct).subscribe({
@@ -270,8 +294,14 @@ export class PanelVendedor implements OnInit {
     });
   }
 
-  protected quitarDescuento(p: Producto) {
+  protected async quitarDescuento(p: Producto) {
     if (this.quitandoDesc()) return;
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Quitar oferta',
+      mensaje: `¿Retirar la oferta de "${p.nombre}"? Volverá a costar ${precio(p.precioOriginal ?? p.precio)}.`,
+      confirmar: 'Quitar oferta',
+    });
+    if (!acepto || this.quitandoDesc()) return;
     this.quitandoDesc.set(p.id);
     this.productos.quitarDescuento(p.id).subscribe({
       next: (r) => {

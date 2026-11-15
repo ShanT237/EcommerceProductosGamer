@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Compra, EstadoCompra } from '../../modelos/modelos';
 import { CompraService } from '../../servicios/compra.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
 import { mensajeDeError } from '../../servicios/api.util';
@@ -21,6 +22,7 @@ export class MisCompras implements OnInit {
   private compras = inject(CompraService);
   private productos = inject(ProductoService);
   private toast = inject(ToastService);
+  private confirmacion = inject(ConfirmacionService);
   protected precio = precio;
   protected fechaHora = fechaHora;
 
@@ -78,12 +80,37 @@ export class MisCompras implements OnInit {
     });
   }
 
-  protected confirmar(c: Compra) { this.accion(c, this.compras.confirmar(c.id), 'Compra confirmada. ¡Disfrútala!'); }
-  protected cancelar(c: Compra) { this.accion(c, this.compras.cancelar(c.id), 'Compra cancelada.'); }
-  protected reembolsar(c: Compra) {
-    if (confirm('¿Seguro que quieres solicitar el reembolso de esta compra?')) {
-      this.accion(c, this.compras.reembolsar(c.id), 'Reembolso solicitado correctamente.');
-    }
+  protected async confirmar(c: Compra) {
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Confirmar pago',
+      mensaje: `Vas a pagar ${precio(c.subtotal)} por "${this.nombreDe(c.productoId)}" (${c.cantidad} u.). Es un pago simulado.`,
+      confirmar: 'Pagar',
+      peligro: false,
+    });
+    if (!acepto) return;
+    this.accion(c, this.compras.confirmar(c.id), 'Compra confirmada. ¡Disfrútala!');
+  }
+
+  protected async cancelar(c: Compra) {
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Cancelar compra',
+      mensaje: `¿Cancelar la compra de "${this.nombreDe(c.productoId)}" por ${precio(c.subtotal)}? Se liberará la reserva.`,
+      confirmar: 'Cancelar compra',
+      cancelar: 'Volver',
+    });
+    if (!acepto) return;
+    this.accion(c, this.compras.cancelar(c.id), 'Compra cancelada.');
+  }
+
+  protected async reembolsar(c: Compra) {
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Solicitar reembolso',
+      mensaje: `¿Solicitar el reembolso de ${precio(c.subtotal)} por "${this.nombreDe(c.productoId)}"? Esta acción no se puede deshacer.`,
+      confirmar: 'Solicitar reembolso',
+      cancelar: 'Volver',
+    });
+    if (!acepto) return;
+    this.accion(c, this.compras.reembolsar(c.id), 'Reembolso solicitado correctamente.');
   }
 
   protected abrirDialogo(tipo: Dialogo['tipo'], compra: Compra) {
@@ -97,10 +124,17 @@ export class MisCompras implements OnInit {
 
   protected abrirPuntos() { this.puntosACanjear.set(null); this.redimiendo.set(true); }
 
-  protected redimir() {
+  protected async redimir() {
     const n = this.puntosACanjear();
     if (n == null || n <= 0) return this.toast.error('Escribe cuántos puntos quieres redimir.');
     if (n > this.puntos()) return this.toast.error('No tienes tantos puntos.');
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Redimir puntos',
+      mensaje: `Vas a canjear ${n} de tus ${this.puntos()} puntos. No se pueden devolver.`,
+      confirmar: 'Redimir',
+      peligro: false,
+    });
+    if (!acepto) return;
     this.compras.redimirPuntos(n).subscribe({
       next: (r) => {
         this.puntos.set(r.saldo);

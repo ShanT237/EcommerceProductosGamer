@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { API_URL } from '../../config';
 import { Pagina, Producto, PromocionTemporada, Sesion } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ToastService } from '../../servicios/toast.service';
 import { PanelVendedor } from './panel-vendedor';
 
@@ -56,6 +57,9 @@ const conDescuento = () => producto({ precio: 80000, precioOriginal: 100000, por
 const pagina = (contenido: Producto[]): Pagina<Producto> =>
   ({ contenido, pagina: 0, tamano: 100, totalElementos: contenido.length, totalPaginas: 1 });
 
+/** Deja correr las promesas pendientes (la confirmación se resuelve de forma asíncrona). */
+const esperar = () => new Promise<void>((r) => setTimeout(r));
+
 describe('PanelVendedor (descuento inmediato)', () => {
   let fixture: ComponentFixture<PanelVendedor>;
   let http: HttpTestingController;
@@ -95,6 +99,7 @@ describe('PanelVendedor (descuento inmediato)', () => {
     });
     http = TestBed.inject(HttpTestingController);
     toast = TestBed.inject(ToastService);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -117,10 +122,11 @@ describe('PanelVendedor (descuento inmediato)', () => {
     expect(raiz().querySelector('.fila .etiqueta.descuento')).toBeNull();
   });
 
-  it('quitarDescuentoHaceDeleteYRecargaElCatalogoSinElDescuento', () => {
+  it('quitarDescuentoHaceDeleteYRecargaElCatalogoSinElDescuento', async () => {
     abrirMisProductos([conDescuento()]);
 
     (raiz().querySelector('.quitar-descuento') as HTMLButtonElement).click();
+    await esperar();
     http.expectOne({ method: 'DELETE', url: `${API_URL}/descuentos/p1` })
       .flush({ id: 'p1', nombre: 'Mouse', nuevoPrecio: 100000, precioOriginal: null, porcentajeDescuento: null });
     responderCarga([producto()]); // tras quitar, se vuelve a pedir el catálogo
@@ -131,10 +137,11 @@ describe('PanelVendedor (descuento inmediato)', () => {
     expect(toast.toasts().find((t) => t.tipo === 'ok')?.texto).toContain('Descuento retirado');
   });
 
-  it('unErrorAlQuitarMuestraElMensajeDelBackendYConservaElDescuento', () => {
+  it('unErrorAlQuitarMuestraElMensajeDelBackendYConservaElDescuento', async () => {
     abrirMisProductos([conDescuento()]);
 
     (raiz().querySelector('.quitar-descuento') as HTMLButtonElement).click();
+    await esperar();
     http.expectOne({ method: 'DELETE', url: `${API_URL}/descuentos/p1` }).flush(
       { mensaje: 'El producto no tiene un descuento activo' },
       { status: 422, statusText: 'Unprocessable Content' },
@@ -220,6 +227,7 @@ describe('PanelVendedor (promociones de temporada)', () => {
     });
     http = TestBed.inject(HttpTestingController);
     toast = TestBed.inject(ToastService);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -237,14 +245,14 @@ describe('PanelVendedor (promociones de temporada)', () => {
     expect(raiz().querySelector('.fila .etiqueta.promo')?.textContent).toContain('15%');
   });
 
-  it('laFilaMuestraQuitarTemporadaYElimina​LaPromocionAplicada', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('laFilaMuestraQuitarTemporadaYElimina​LaPromocionAplicada', async () => {
     abrirMisProductos(
       [producto({ precioPromocional: 85000, porcentajePromocion: 15, promocionHasta: '2026-12-31' })],
       [promo()],
     );
 
     (raiz().querySelector('.fila .quitar-promocion') as HTMLButtonElement).click();
+    await esperar();
     http.expectOne({ method: 'DELETE', url: `${API_URL}/promociones/pr1` })
       .flush(null, { status: 204, statusText: 'No Content' });
     responderCarga([producto()], []);
@@ -382,12 +390,12 @@ describe('PanelVendedor (promociones de temporada)', () => {
     expect(raiz().querySelector('form .error')?.textContent).toContain('ya tiene una promoción');
   });
 
-  it('quitarLaPromocionHaceDeleteYRecargaLaListaYElCatalogo', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('quitarLaPromocionHaceDeleteYRecargaLaListaYElCatalogo', async () => {
     abrirMisProductos([producto({ precioPromocional: 85000, porcentajePromocion: 15 })], [promo()]);
     irAPromociones();
 
     (raiz().querySelector('.activos .acciones .btn-peligro') as HTMLButtonElement).click();
+    await esperar();
     http.expectOne({ method: 'DELETE', url: `${API_URL}/promociones/pr1` }).flush(null, { status: 204, statusText: 'No Content' });
     responderCarga([producto()], []); // tras quitar se piden otra vez el catálogo y la lista
 
@@ -395,22 +403,23 @@ describe('PanelVendedor (promociones de temporada)', () => {
     expect(raiz().querySelector('.activos .estado')).toBeNull();
   });
 
-  it('siElVendedorNoConfirmaNoSeQuitaLaPromocion', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('siElVendedorNoConfirmaNoSeQuitaLaPromocion', async () => {
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(false);
     abrirMisProductos([producto()], [promo()]);
     irAPromociones();
 
     (raiz().querySelector('.activos .acciones .btn-peligro') as HTMLButtonElement).click();
+    await esperar();
 
     http.expectNone((r) => r.method === 'DELETE');
   });
 
-  it('unErrorAlQuitarLaPromocionMuestraElMensajeYLaConserva', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('unErrorAlQuitarLaPromocionMuestraElMensajeYLaConserva', async () => {
     abrirMisProductos([producto()], [promo()]);
     irAPromociones();
 
     (raiz().querySelector('.activos .acciones .btn-peligro') as HTMLButtonElement).click();
+    await esperar();
     http.expectOne({ method: 'DELETE', url: `${API_URL}/promociones/pr1` }).flush(
       { mensaje: 'La promoción no existe' },
       { status: 404, statusText: 'Not Found' },

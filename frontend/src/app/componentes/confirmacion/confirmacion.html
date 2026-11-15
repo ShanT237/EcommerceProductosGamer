@@ -1,0 +1,15 @@
+@if (servicio.actual(); as c) {
+  <div class="fondo" (click)="cancelar()">
+    <div class="panel dialogo" role="alertdialog" aria-modal="true"
+         aria-labelledby="confirmacion-titulo" aria-describedby="confirmacion-mensaje"
+         (click)="$event.stopPropagation()">
+      <h2 id="confirmacion-titulo">{{ c.titulo }}</h2>
+      <p id="confirmacion-mensaje">{{ c.mensaje }}</p>
+      <div class="acciones">
+        <button #botonCancelar type="button" class="btn btn-cancelar" (click)="cancelar()">{{ c.cancelar }}</button>
+        <button type="button" class="btn btn-aceptar" [class.peligro-solido]="c.peligro" [class.btn-neon]="!c.peligro"
+                (click)="aceptar()">{{ c.confirmar }}</button>
+      </div>
+    </div>
+  </div>
+}

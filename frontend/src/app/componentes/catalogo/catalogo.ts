@@ -7,6 +7,7 @@ import { Compra, Gama, Pagina, Producto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { CarritoService } from '../../servicios/carrito.service';
 import { CompraService } from '../../servicios/compra.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
 import { WishlistService } from '../../servicios/wishlist.service';
@@ -27,6 +28,7 @@ export class Catalogo implements OnInit {
   private compras = inject(CompraService);
   private carrito = inject(CarritoService);
   private toast = inject(ToastService);
+  private confirmacion = inject(ConfirmacionService);
   private router = inject(Router);
   private ruta = inject(ActivatedRoute);
   protected wishlist = inject(WishlistService);
@@ -220,9 +222,16 @@ export class Catalogo implements OnInit {
     });
   }
 
-  protected pagar() {
+  protected async pagar() {
     const c = this.reserva();
-    if (!c) return;
+    if (!c || this.procesando()) return;
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Confirmar pago',
+      mensaje: `Vas a pagar ${precio(c.subtotal)} por ${this.seleccionado()?.nombre ?? 'tu compra'} (${c.cantidad} u.). Es un pago simulado.`,
+      confirmar: 'Pagar',
+      peligro: false,
+    });
+    if (!acepto || this.reserva()?.id !== c.id) return;
     this.procesando.set(true);
     this.compras.confirmar(c.id).subscribe({
       next: () => {
@@ -240,9 +249,16 @@ export class Catalogo implements OnInit {
     });
   }
 
-  protected cancelarReserva() {
+  protected async cancelarReserva() {
     const c = this.reserva();
-    if (!c) return;
+    if (!c || this.procesando()) return;
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Cancelar reserva',
+      mensaje: '¿Cancelar esta reserva? Se liberarán las unidades reservadas.',
+      confirmar: 'Cancelar reserva',
+      cancelar: 'Volver',
+    });
+    if (!acepto || this.reserva()?.id !== c.id) return;
     this.procesando.set(true);
     this.compras.cancelar(c.id).subscribe({
       next: () => {
