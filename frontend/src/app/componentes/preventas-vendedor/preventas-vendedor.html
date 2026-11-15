@@ -1,0 +1,57 @@
+<section class="preventas">
+  <form class="panel formulario" (ngSubmit)="programar()">
+    <h2>Programar preventa</h2>
+    <p class="muted">El producto no se podrá comprar ni añadir al carrito hasta su fecha de lanzamiento.</p>
+
+    <div class="campo">
+      <label for="producto-preventa">Producto</label>
+      <select id="producto-preventa" name="productoId" class="entrada" [(ngModel)]="productoId"
+              [disabled]="guardando() || !servicio.cargada()">
+        <option value="">Elige un producto…</option>
+        @for (producto of productosDisponibles(); track producto.id) {
+          <option [value]="producto.id">{{ producto.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="fecha-lanzamiento">Fecha de lanzamiento</label>
+      <input id="fecha-lanzamiento" name="fechaLanzamiento" class="entrada" type="date"
+             [min]="fechaMinima()" [(ngModel)]="fechaLanzamiento" [disabled]="guardando()">
+    </div>
+
+    <div class="campo">
+      <label for="descripcion-preventa">Descripción</label>
+      <textarea id="descripcion-preventa" name="descripcion" class="entrada" maxlength="500"
+                [(ngModel)]="descripcion" [disabled]="guardando()"
+                placeholder="Detalles del lanzamiento o de la edición"></textarea>
+    </div>
+
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+    <button class="btn btn-neon" type="submit" [disabled]="guardando() || !servicio.cargada()">
+      {{ guardando() ? 'Programando…' : 'Programar preventa' }}
+    </button>
+  </form>
+
+  <section class="panel listado">
+    <h2>Próximos lanzamientos</h2>
+    @if (servicio.cargando() && !servicio.cargada()) {
+      <p class="muted">Cargando preventas…</p>
+    } @else if (preventasPropias().length === 0) {
+      <p class="muted">No tienes preventas futuras programadas.</p>
+    } @else {
+      @for (item of preventasPropias(); track item.preventa.id) {
+        <article class="preventa">
+          <div>
+            <h3>{{ item.producto?.nombre ?? 'Producto' }}</h3>
+            <p class="muted">{{ item.preventa.descripcion }}</p>
+          </div>
+          <time [attr.datetime]="item.preventa.fechaLanzamiento">
+            {{ fechaDia(item.preventa.fechaLanzamiento) }}
+          </time>
+        </article>
+      }
+    }
+  </section>
+</section>

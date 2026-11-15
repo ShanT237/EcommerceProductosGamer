@@ -16,6 +16,7 @@
 .tarjeta:hover .brillo { opacity: 1; }
 .arte { position: relative; padding: 22px 18px 8px; background: radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.18), transparent 70%); transform: translateZ(30px); }
 .etiquetas { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.etiqueta.preventa { color: var(--ambar); border-color: var(--ambar); background: rgba(255, 176, 32, 0.1); }
 .info { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 h3 { font-size: 16px; }
 .desc { color: var(--texto-2); font-size: 16px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

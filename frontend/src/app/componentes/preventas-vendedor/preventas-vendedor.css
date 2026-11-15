@@ -1,0 +1,16 @@
+.preventas { display: grid; grid-template-columns: minmax(280px, 0.9fr) minmax(300px, 1.1fr); gap: 20px; align-items: start; }
+.formulario, .listado { padding: 26px; }
+.formulario { display: flex; flex-direction: column; gap: 16px; }
+h2 { font-size: 16px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cian); }
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo label { font-weight: 600; }
+textarea.entrada { min-height: 100px; resize: vertical; }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; }
+.listado { display: flex; flex-direction: column; gap: 14px; }
+.preventa { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--borde); }
+.preventa h3 { font-size: 17px; margin-bottom: 4px; }
+.preventa time { flex: 0 0 auto; color: var(--ambar); font-weight: 700; }
+
+@media (max-width: 760px) {
+  .preventas { grid-template-columns: 1fr; }
+}

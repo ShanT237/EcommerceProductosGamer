@@ -9,6 +9,7 @@ import { CarritoService } from '../../servicios/carrito.service';
 import { CompraService } from '../../servicios/compra.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
+import { PreventaService } from '../../servicios/preventa.service';
 import { ToastService } from '../../servicios/toast.service';
 import { WishlistService } from '../../servicios/wishlist.service';
 import { mensajeDeError } from '../../servicios/api.util';
@@ -31,6 +32,7 @@ export class Catalogo implements OnInit {
   private confirmacion = inject(ConfirmacionService);
   private router = inject(Router);
   private ruta = inject(ActivatedRoute);
+  protected preventas = inject(PreventaService);
   protected wishlist = inject(WishlistService);
   protected auth = inject(AuthService);
   protected precio = precio;
@@ -114,6 +116,9 @@ export class Catalogo implements OnInit {
   }
 
   ngOnInit() {
+    this.preventas.cargar().subscribe({
+      error: (e) => this.toast.error(mensajeDeError(e)),
+    });
     this.cargar(); // única consulta al abrir: una página (page + size) al backend
   }
 
@@ -196,6 +201,10 @@ export class Catalogo implements OnInit {
   protected alCarrito() {
     const p = this.seleccionado();
     if (!p) return;
+    if (!this.permiteComprar(p)) {
+      this.toast.info(this.preventaMensaje(p));
+      return;
+    }
     this.carrito.agregar(p, this.cantidad());
     this.toast.ok('Añadido al carrito.');
     this.cerrar();
@@ -204,6 +213,10 @@ export class Catalogo implements OnInit {
   protected reservar() {
     const p = this.seleccionado();
     if (!p) return;
+    if (!this.permiteComprar(p)) {
+      this.toast.info(this.preventaMensaje(p));
+      return;
+    }
     this.procesando.set(true);
     this.compras.crearPedido([{ productoId: p.id, cantidad: this.cantidad() }], this.codigoCupon()).subscribe({
       next: (pedido) => {
@@ -303,4 +316,20 @@ export class Catalogo implements OnInit {
   }
 
   protected readonly descuentoTotal = descuentoTotal;
+
+  protected preventaDe(productoId: string) {
+    return this.preventas.futuras().get(productoId) ?? null;
+  }
+
+  protected permiteComprar(producto: Producto): boolean {
+    return this.preventas.cargada() && !this.preventaDe(producto.id) && producto.stock > 0;
+  }
+
+  protected preventaMensaje(producto: Producto): string {
+    const preventa = this.preventaDe(producto.id);
+    if (preventa) {
+      return `Este producto está en preventa y estará disponible el ${fechaDia(preventa.fechaLanzamiento)}.`;
+    }
+    return 'Estamos verificando la disponibilidad de preventa. Inténtalo de nuevo en un momento.';
+  }
 }

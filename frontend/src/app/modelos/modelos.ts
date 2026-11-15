@@ -162,6 +162,14 @@ export interface PromocionTemporada {
   hasta: string;
 }
 
+/** Preventa programada para un producto con fecha de lanzamiento futura. */
+export interface Preventa {
+  id: string;
+  productoId: string;
+  fechaLanzamiento: string;
+  descripcion: string;
+}
+
 /** Producto dentro de un combo, tal como lo devuelve `GET /api/combos`. */
 export interface ProductoDeCombo {
   id: string;
