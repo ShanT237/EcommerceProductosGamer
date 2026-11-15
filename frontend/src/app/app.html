@@ -26,6 +26,7 @@
             }
           </a>
           <a routerLink="/mis-compras" routerLinkActive="activo" (click)="cerrarMenu()">Mis compras</a>
+          <a routerLink="/regalos" routerLinkActive="activo" (click)="cerrarMenu()">Regalos</a>
           <a routerLink="/perfil" routerLinkActive="activo" (click)="cerrarMenu()">Perfil</a>
           <a routerLink="/notificaciones" routerLinkActive="activo" class="campana" (click)="cerrarMenu()"
              [attr.aria-label]="notificaciones.noLeidas() > 0 ? 'Notificaciones, ' + notificaciones.noLeidas() + ' sin leer' : 'Notificaciones'"
