@@ -18,6 +18,7 @@ export class CompraService {
   }
   confirmarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/confirmar`, {}); }
   cancelarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/cancelar`, {}); }
+  reembolsarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/reembolso`, {}); }
   confirmar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/confirmar`, {}); }
   cancelar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/cancelar`, {}); }
   reembolsar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/reembolso`, {}); }
