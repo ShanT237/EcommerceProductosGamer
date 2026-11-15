@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { API_URL } from '../config';
-import { Compra, Producto, Sesion } from '../modelos/modelos';
+import { Compra, Pedido, Producto, Sesion } from '../modelos/modelos';
 import { AuthService } from './auth.service';
 import { CarritoService, ResultadoPago } from './carrito.service';
 
@@ -34,7 +34,12 @@ function compra(id: string, productoId: string, cantidad = 1): Compra {
     subtotal: 100 * cantidad,
     fecha: '2026-11-13T10:00:00',
     estado: 'PENDIENTE',
+    pedidoId: 'ped1',
   };
+}
+
+function pedido(compras: Compra[]): Pedido {
+  return { pedidoId: 'ped1', compras, total: compras.reduce((suma, c) => suma + c.subtotal, 0) };
 }
 
 describe('CarritoService', () => {
@@ -42,8 +47,8 @@ describe('CarritoService', () => {
   let http: HttpTestingController;
   let sesion: ReturnType<typeof signal<Sesion | null>>;
 
-  const postCompra = () => ({ method: 'POST', url: `${API_URL}/compras` });
-  const putAccion = (id: string, accion: string) => ({ method: 'PUT', url: `${API_URL}/compras/${id}/${accion}` });
+  const postPedido = () => ({ method: 'POST', url: `${API_URL}/pedidos` });
+  const putPedido = (id: string, accion: string) => ({ method: 'PUT', url: `${API_URL}/pedidos/${id}/${accion}` });
   const sinStock = { status: 422, statusText: 'Unprocessable Content' };
 
   beforeEach(() => {
@@ -128,75 +133,77 @@ describe('CarritoService', () => {
   });
 
   describe('pagar', () => {
-    it('crea y confirma cada ítem en orden', () => {
-      const a = producto({ id: 'a' });
-      const b = producto({ id: 'b' });
-      carrito.agregar(a, 2);
-      carrito.agregar(b, 1);
+    it('hace un solo POST con todos los ítems', () => {
+      carrito.agregar(producto({ id: 'a' }), 2);
+      carrito.agregar(producto({ id: 'b' }), 1);
+
+      carrito.pagar().subscribe();
+
+      // expectOne falla si hubiera más de un POST (uno por ítem).
+      const post = http.expectOne(postPedido());
+      expect(post.request.body).toEqual({
+        items: [
+          { productoId: 'a', cantidad: 2 },
+          { productoId: 'b', cantidad: 1 },
+        ],
+      });
+      post.flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
+      http.expectOne(putPedido('ped1', 'confirmar')).flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
+    });
+
+    it('confirma el pedido después de crearlo y vacía el carrito', () => {
+      carrito.agregar(producto({ id: 'a' }), 2);
+      carrito.agregar(producto({ id: 'b' }), 1);
 
       const resultados: ResultadoPago[] = [];
       carrito.pagar().subscribe((r) => resultados.push(r));
 
-      const postA = http.expectOne(postCompra());
-      expect(postA.request.body).toEqual({ productoId: 'a', cantidad: 2 });
-      postA.flush(compra('cA', 'a', 2));
-
-      // Secuencial: B no se pide hasta que A queda confirmada.
-      http.expectNone(postCompra());
-      http.expectOne(putAccion('cA', 'confirmar')).flush(compra('cA', 'a', 2));
-
-      const postB = http.expectOne(postCompra());
-      expect(postB.request.body).toEqual({ productoId: 'b', cantidad: 1 });
-      postB.flush(compra('cB', 'b'));
-      http.expectOne(putAccion('cB', 'confirmar')).flush(compra('cB', 'b'));
+      http.expectOne(postPedido()).flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
+      // Confirmar no se pide hasta que el pedido existe, y es un único PUT para todo el pedido.
+      expect(carrito.pagando()).toBe(true);
+      const confirmado = pedido([{ ...compra('cA', 'a', 2), estado: 'COMPLETADA' }, { ...compra('cB', 'b'), estado: 'COMPLETADA' }]);
+      http.expectOne(putPedido('ped1', 'confirmar')).flush(confirmado);
 
       expect(resultados.length).toBe(1);
-      expect(resultados[0].completadas.length).toBe(2);
-      expect(resultados[0].fallo).toBeNull();
+      expect(resultados[0].error).toBeNull();
+      expect(resultados[0].compras.length).toBe(2);
       expect(carrito.items().length).toBe(0);
       expect(carrito.pagando()).toBe(false);
     });
 
-    it('se detiene en el primer fallo y conserva los ítems restantes', () => {
-      const a = producto({ id: 'a' });
-      const b = producto({ id: 'b' });
-      const c = producto({ id: 'c' });
-      carrito.agregar(a);
-      carrito.agregar(b);
-      carrito.agregar(c);
+    it('si falla la creación el carrito queda intacto y se informa el mensaje del backend', () => {
+      carrito.agregar(producto({ id: 'a' }));
+      carrito.agregar(producto({ id: 'b' }), 2);
 
       const resultados: ResultadoPago[] = [];
       carrito.pagar().subscribe((r) => resultados.push(r));
 
-      http.expectOne(postCompra()).flush(compra('cA', 'a'));
-      http.expectOne(putAccion('cA', 'confirmar')).flush(compra('cA', 'a'));
-      http.expectOne(postCompra()).flush({ mensaje: MENSAJE_STOCK }, sinStock);
+      http.expectOne(postPedido()).flush({ mensaje: MENSAJE_STOCK }, sinStock);
 
-      // No se hizo ninguna petición por C (http.verify() también lo comprueba).
-      http.expectNone(postCompra());
-
-      const r = resultados[0];
-      expect(r.completadas.length).toBe(1);
-      expect(r.fallo?.producto.id).toBe('b');
-      expect(r.fallo?.mensaje).toBe(MENSAJE_STOCK);
-      expect(carrito.items().map((i) => i.producto.id)).toEqual(['b', 'c']);
+      // Nada que confirmar ni cancelar: el pedido nunca se creó.
+      http.expectNone(putPedido('ped1', 'confirmar'));
+      http.expectNone(putPedido('ped1', 'cancelar'));
+      expect(resultados[0].compras.length).toBe(0);
+      expect(resultados[0].error).toBe(MENSAJE_STOCK);
+      expect(carrito.items().map((i) => i.producto.id)).toEqual(['a', 'b']);
+      expect(carrito.items()[1].cantidad).toBe(2);
       expect(carrito.pagando()).toBe(false);
     });
 
-    it('cancela la reserva si falla la confirmación', () => {
+    it('si falla la confirmación cancela el pedido y conserva el carrito', () => {
       carrito.agregar(producto({ id: 'a' }));
 
       const resultados: ResultadoPago[] = [];
       carrito.pagar().subscribe((r) => resultados.push(r));
 
-      http.expectOne(postCompra()).flush(compra('cA', 'a'));
-      http.expectOne(putAccion('cA', 'confirmar')).flush({ mensaje: MENSAJE_STOCK }, sinStock);
-      http.expectOne(putAccion('cA', 'cancelar')).flush(compra('cA', 'a'));
+      http.expectOne(postPedido()).flush(pedido([compra('cA', 'a')]));
+      http.expectOne(putPedido('ped1', 'confirmar')).flush({ mensaje: MENSAJE_STOCK }, sinStock);
+      http.expectOne(putPedido('ped1', 'cancelar')).flush(pedido([{ ...compra('cA', 'a'), estado: 'CANCELADA' }]));
 
-      const r = resultados[0];
-      expect(r.completadas.length).toBe(0);
-      expect(r.fallo?.mensaje).toBe(MENSAJE_STOCK);
+      expect(resultados[0].compras.length).toBe(0);
+      expect(resultados[0].error).toBe(MENSAJE_STOCK);
       expect(carrito.items().map((i) => i.producto.id)).toEqual(['a']);
+      expect(carrito.pagando()).toBe(false);
     });
 
     it('reporta el error de confirmar aunque la cancelación también falle', () => {
@@ -205,15 +212,16 @@ describe('CarritoService', () => {
       const resultados: ResultadoPago[] = [];
       carrito.pagar().subscribe((r) => resultados.push(r));
 
-      http.expectOne(postCompra()).flush(compra('cA', 'a'));
-      http.expectOne(putAccion('cA', 'confirmar')).flush({ mensaje: MENSAJE_STOCK }, sinStock);
-      http.expectOne(putAccion('cA', 'cancelar')).flush({ mensaje: 'otro error' }, { status: 500, statusText: 'Server Error' });
+      http.expectOne(postPedido()).flush(pedido([compra('cA', 'a')]));
+      http.expectOne(putPedido('ped1', 'confirmar')).flush({ mensaje: MENSAJE_STOCK }, sinStock);
+      http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'otro error' }, { status: 500, statusText: 'Server Error' });
 
-      expect(resultados[0].fallo?.mensaje).toBe(MENSAJE_STOCK);
+      expect(resultados[0].error).toBe(MENSAJE_STOCK);
+      expect(carrito.items().length).toBe(1);
       expect(carrito.pagando()).toBe(false);
     });
 
-    it('ignora un segundo clic mientras ya está pagando', () => {
+    it('un segundo clic mientras ya está pagando no genera otro POST', () => {
       carrito.agregar(producto({ id: 'a' }));
 
       const resultados: ResultadoPago[] = [];
@@ -221,12 +229,12 @@ describe('CarritoService', () => {
       carrito.pagar().subscribe((r) => resultados.push(r));
 
       // expectOne falla si hubiera dos peticiones POST.
-      const postA = http.expectOne(postCompra());
+      const post = http.expectOne(postPedido());
       expect(carrito.pagando()).toBe(true);
 
-      postA.flush(compra('cA', 'a'));
+      post.flush(pedido([compra('cA', 'a')]));
       expect(carrito.pagando()).toBe(true);
-      http.expectOne(putAccion('cA', 'confirmar')).flush(compra('cA', 'a'));
+      http.expectOne(putPedido('ped1', 'confirmar')).flush(pedido([compra('cA', 'a')]));
 
       expect(carrito.pagando()).toBe(false);
       expect(resultados.length).toBe(1);
@@ -236,7 +244,7 @@ describe('CarritoService', () => {
       const resultados: ResultadoPago[] = [];
       carrito.pagar().subscribe((r) => resultados.push(r));
 
-      http.expectNone(postCompra());
+      http.expectNone(postPedido());
       expect(resultados.length).toBe(0);
       expect(carrito.pagando()).toBe(false);
     });

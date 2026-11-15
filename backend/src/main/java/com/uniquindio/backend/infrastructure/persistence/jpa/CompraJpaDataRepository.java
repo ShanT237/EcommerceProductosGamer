@@ -12,6 +12,8 @@ interface CompraJpaDataRepository extends JpaRepository<CompraEntity, UUID> {
 
     List<CompraEntity> findByUsuarioId(UUID usuarioId);
 
+    List<CompraEntity> findByPedidoId(UUID pedidoId);
+
     boolean existsByUsuarioIdAndProductoIdAndEstadoIn(
             UUID usuarioId, UUID productoId, Collection<EstadoCompra> estados);
 

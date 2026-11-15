@@ -19,6 +19,8 @@ import java.util.UUID;
  *  - Regla 2: un comprador no puede calificar un producto sin haberlo comprado.
  *  - Regla 6: los puntos solo se asignan después de realizar una reseña.
  *  - Reembolso: solo dentro de un plazo definido y antes de haber descargado el archivo.
+ *  - Pedido: las compras creadas desde el carrito comparten un pedidoId (null si la compra
+ *    es suelta). Un pedido se confirma o se cancela completo, nunca línea por línea.
  */
 @Getter
 public class Compra {
@@ -34,12 +36,13 @@ public class Compra {
     private boolean puntosAsignados;
     private boolean descargado;
     private boolean cuponAplicado;
+    private final UUID pedidoId;   // null cuando la compra no pertenece a un pedido
 
     public static final Duration PLAZO_REEMBOLSO = Duration.ofHours(48);
     private static final int PUNTOS_POR_RESENA = 10;
 
     private Compra(UUID id, UUID usuarioId, UUID productoId, int cantidad,
-                   LocalDateTime fecha, Precio precioUnitario) {
+                   LocalDateTime fecha, Precio precioUnitario, UUID pedidoId) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.productoId = productoId;
@@ -50,10 +53,20 @@ public class Compra {
         this.resenada = false;
         this.puntosAsignados = false;
         this.descargado = false;
+        this.pedidoId = pedidoId;
     }
 
     public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
                                   LocalDateTime fecha, Precio precioUnitario) {
+        return realizar(id, usuarioId, productoId, cantidad, fecha, precioUnitario, null);
+    }
+
+    /**
+     * Compra que forma parte de un pedido (carrito): todas las líneas del pedido
+     * comparten el mismo pedidoId. Con pedidoId null equivale a una compra suelta.
+     */
+    public static Compra realizar(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                  LocalDateTime fecha, Precio precioUnitario, UUID pedidoId) {
         Objects.requireNonNull(id, "El id de la compra es obligatorio");
         Objects.requireNonNull(usuarioId, "El id del usuario es obligatorio");
         Objects.requireNonNull(productoId, "El id del producto es obligatorio");
@@ -62,7 +75,7 @@ public class Compra {
         if (cantidad <= 0) {
             throw new ReglaDominioException("La cantidad de la compra debe ser positiva");
         }
-        return new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario);
+        return new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario, pedidoId);
     }
 
     /**
@@ -80,7 +93,15 @@ public class Compra {
                                      LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
                                      boolean resenada, boolean puntosAsignados, boolean descargado,
                                      boolean cuponAplicado) {
-        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario);
+        return reconstruir(id, usuarioId, productoId, cantidad, fecha, precioUnitario, estado,
+                resenada, puntosAsignados, descargado, cuponAplicado, null);
+    }
+
+    public static Compra reconstruir(UUID id, UUID usuarioId, UUID productoId, int cantidad,
+                                     LocalDateTime fecha, Precio precioUnitario, EstadoCompra estado,
+                                     boolean resenada, boolean puntosAsignados, boolean descargado,
+                                     boolean cuponAplicado, UUID pedidoId) {
+        Compra compra = new Compra(id, usuarioId, productoId, cantidad, fecha, precioUnitario, pedidoId);
         compra.estado = estado;
         compra.resenada = resenada;
         compra.puntosAsignados = puntosAsignados;
@@ -101,9 +122,28 @@ public class Compra {
         return estado == EstadoCompra.COMPLETADA;
     }
 
+    public boolean estaPendiente() {
+        return estado == EstadoCompra.PENDIENTE;
+    }
+
+    public boolean perteneceAUnPedido() {
+        return pedidoId != null;
+    }
+
     public void asegurarPerteneceA(UUID usuarioId) {
         if (!this.usuarioId.equals(usuarioId)) {
             throw new ReglaDominioException("La compra no pertenece a este usuario");
+        }
+    }
+
+    /**
+     * Las líneas de un pedido se confirman o cancelan con el pedido completo; hacerlo
+     * una por una dejaría el carrito a medias.
+     */
+    public void asegurarNoEsDeUnPedido() {
+        if (perteneceAUnPedido()) {
+            throw new ReglaDominioException(
+                    "La compra pertenece a un pedido: confirma o cancela el pedido completo");
         }
     }
 

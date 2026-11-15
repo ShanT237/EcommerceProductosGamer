@@ -28,6 +28,13 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
     }
 
     @Override
+    public List<Compra> obtenerPorPedidoId(UUID pedidoId) {
+        return compras.values().stream()
+                .filter(c -> pedidoId.equals(c.getPedidoId()))
+                .toList();
+    }
+
+    @Override
     public boolean existeCompraDe(UUID usuarioId, UUID productoId) {
         return compras.values().stream()
                 .anyMatch(c -> c.getUsuarioId().equals(usuarioId)

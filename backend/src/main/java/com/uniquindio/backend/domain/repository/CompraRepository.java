@@ -24,6 +24,12 @@ public interface CompraRepository {
     List<Compra> obtenerPorUsuarioId(UUID usuarioId);
 
     /**
+     * Las líneas (compras) de un pedido. Lista vacía si el pedido no existe.
+     * La usan los casos de uso de pedido para confirmar o cancelar el carrito completo.
+     */
+    List<Compra> obtenerPorPedidoId(UUID pedidoId);
+
+    /**
      * Indica si el usuario ya tiene una compra activa de ese producto.
      * Una compra es activa cuando está PENDIENTE o COMPLETADA; las REEMBOLSADA,
      * CANCELADA y EXPIRADA no cuentan.

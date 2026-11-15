@@ -316,4 +316,38 @@ class CompraTest {
         assertThrows(ReglaDominioException.class, () -> compra.solicitarReembolso(FECHA_COMPRA.plusHours(1)));
         assertEquals(EstadoCompra.CANCELADA, compra.getEstado());
     }
+
+    @Test
+    @DisplayName("Una compra suelta no tiene pedido; una creada con pedidoId lo conserva y se reconstruye igual")
+    void conservaElPedidoId() {
+        UUID pedidoId = UUID.randomUUID();
+        UUID usuarioId = UUID.randomUUID();
+        UUID productoId = UUID.randomUUID();
+
+        Compra suelta = crearCompraValida();
+        Compra deUnPedido = Compra.realizar(UUID.randomUUID(), usuarioId, productoId, 1, FECHA_COMPRA,
+                new Precio(50000), pedidoId);
+        Compra reconstruida = Compra.reconstruir(UUID.randomUUID(), usuarioId, productoId, 1, FECHA_COMPRA,
+                new Precio(50000), EstadoCompra.PENDIENTE, false, false, false, false, pedidoId);
+
+        assertNull(suelta.getPedidoId());
+        assertFalse(suelta.perteneceAUnPedido());
+        assertEquals(pedidoId, deUnPedido.getPedidoId());
+        assertTrue(deUnPedido.perteneceAUnPedido());
+        assertEquals(EstadoCompra.PENDIENTE, deUnPedido.getEstado());
+        assertEquals(pedidoId, reconstruida.getPedidoId());
+        assertNull(Compra.reconstruir(UUID.randomUUID(), usuarioId, productoId, 1, FECHA_COMPRA,
+                new Precio(50000), EstadoCompra.PENDIENTE, false, false, false).getPedidoId());
+    }
+
+    @Test
+    @DisplayName("asegurarNoEsDeUnPedido deja pasar la compra suelta y rechaza la línea de un pedido")
+    void lasLineasDeUnPedidoNoSeOperanPorSeparado() {
+        Compra deUnPedido = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
+                FECHA_COMPRA, new Precio(50000), UUID.randomUUID());
+
+        assertDoesNotThrow(() -> crearCompraValida().asegurarNoEsDeUnPedido());
+        assertThrows(ReglaDominioException.class, deUnPedido::asegurarNoEsDeUnPedido);
+        assertTrue(deUnPedido.estaPendiente());
+    }
 }

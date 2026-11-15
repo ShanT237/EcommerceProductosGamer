@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -207,5 +208,199 @@ class FlujoCompletoIntegracionTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensaje").value(containsString("nombre")));
+    }
+
+    // ------------------------------------------------------------------ Pedidos (carrito)
+
+    /** Publica un producto con nombre único y devuelve su id. */
+    private String publicarProducto(String tokenVendedor, String nombre, int precio, int stock) throws Exception {
+        String json = mockMvc.perform(post("/api/productos")
+                        .header("Authorization", "Bearer " + tokenVendedor)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "nombre": "%s",
+                                  "descripcion": "Producto creado por la prueba de pedidos",
+                                  "precio": %d, "stock": %d,
+                                  "gama": "MEDIA", "exclusividad": "NORMAL" }
+                                """.formatted(nombre, precio, stock)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(json, "$.id");
+    }
+
+    @Test
+    @DisplayName("Flujo real de pedido: 2 productos en un solo POST y se confirman en una sola operación")
+    void pedidoDeDosProductosSeConfirmaEnUnaSolaOperacion() throws Exception {
+        // Arrange
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String teclado = publicarProducto(tokenVendedor, "Teclado-pedido-" + UUID.randomUUID(), 150000, 10);
+        String mouse = publicarProducto(tokenVendedor, "Mouse-pedido-" + UUID.randomUUID(), 80000, 10);
+
+        // Act 1: un solo POST crea una compra PENDIENTE por línea, con el mismo pedidoId
+        String pedidoJson = mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "items": [
+                                    { "productoId": "%s", "cantidad": 2 },
+                                    { "productoId": "%s", "cantidad": 1 }
+                                ] }
+                                """.formatted(teclado, mouse)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.compras.length()").value(2))
+                .andExpect(jsonPath("$.compras[0].estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.compras[1].estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.total").value(380000.0))
+                .andReturn().getResponse().getContentAsString();
+        String pedidoId = JsonPath.read(pedidoJson, "$.pedidoId");
+        String primeraCompra = JsonPath.read(pedidoJson, "$.compras[0].id");
+        String segundaCompra = JsonPath.read(pedidoJson, "$.compras[1].id");
+
+        // Act 2: una sola confirmación completa las dos líneas
+        mockMvc.perform(put("/api/pedidos/{id}/confirmar", pedidoId)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.compras[0].estado").value("COMPLETADA"))
+                .andExpect(jsonPath("$.compras[1].estado").value("COMPLETADA"));
+
+        // Assert: el historial, leído de la base, muestra ambas COMPLETADAS con el mismo pedido
+        mockMvc.perform(get("/api/compras")
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '%s')].estado".formatted(primeraCompra)).value("COMPLETADA"))
+                .andExpect(jsonPath("$[?(@.id == '%s')].estado".formatted(segundaCompra)).value("COMPLETADA"))
+                .andExpect(jsonPath("$[?(@.id == '%s')].pedidoId".formatted(primeraCompra)).value(pedidoId))
+                .andExpect(jsonPath("$[?(@.id == '%s')].pedidoId".formatted(segundaCompra)).value(pedidoId));
+    }
+
+    @Test
+    @DisplayName("Regla real: un pedido con un ítem sin stock responde 422 y no descuenta el stock de ninguno")
+    void pedidoConUnItemSinStockRetorna422YNoDescuentaStock() throws Exception {
+        // Arrange: el segundo producto solo tiene 1 unidad y el pedido pide 5
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String nombreAbundante = "Teclado-abundante-" + UUID.randomUUID();
+        String nombreEscaso = "Mouse-escaso-" + UUID.randomUUID();
+        String abundante = publicarProducto(tokenVendedor, nombreAbundante, 150000, 10);
+        String escaso = publicarProducto(tokenVendedor, nombreEscaso, 80000, 1);
+
+        // Act + Assert: el dominio rechaza el pedido completo
+        mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "items": [
+                                    { "productoId": "%s", "cantidad": 2 },
+                                    { "productoId": "%s", "cantidad": 5 }
+                                ] }
+                                """.formatted(abundante, escaso)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.mensaje").value("No hay suficiente stock disponible"));
+
+        // Assert: ningún stock cambió (se leen de la base con consultas nuevas)
+        mockMvc.perform(get("/api/productos")
+                        .param("texto", nombreAbundante)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].stock").value(10));
+        mockMvc.perform(get("/api/productos")
+                        .param("texto", nombreEscaso)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].stock").value(1));
+
+        // Assert: ninguna compra quedó guardada para esos productos
+        mockMvc.perform(get("/api/compras")
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.productoId == '%s')]".formatted(abundante)).isEmpty())
+                .andExpect(jsonPath("$[?(@.productoId == '%s')]".formatted(escaso)).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Regla real: cancelar un pedido devuelve el stock y una línea del pedido no se confirma por separado")
+    void cancelarPedidoRestituyeStockYLaLineaNoSeOperaSola() throws Exception {
+        // Arrange
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String nombre = "Headset-pedido-" + UUID.randomUUID();
+        String productoId = publicarProducto(tokenVendedor, nombre, 90000, 10);
+
+        String pedidoJson = mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "items": [ { "productoId": "%s", "cantidad": 3 } ] }
+                                """.formatted(productoId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String pedidoId = JsonPath.read(pedidoJson, "$.pedidoId");
+        String compraId = JsonPath.read(pedidoJson, "$.compras[0].id");
+
+        mockMvc.perform(get("/api/productos")
+                        .param("texto", nombre)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(jsonPath("$.contenido[0].stock").value(7));
+
+        // Act 1: la línea del pedido no se confirma ni se cancela sola -> 422
+        mockMvc.perform(put("/api/compras/{id}/confirmar", compraId)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isUnprocessableContent());
+        mockMvc.perform(put("/api/compras/{id}/cancelar", compraId)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isUnprocessableContent());
+
+        // Act 2: cancelar el pedido completo
+        mockMvc.perform(put("/api/pedidos/{id}/cancelar", pedidoId)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.compras[0].estado").value("CANCELADA"));
+
+        // Assert: el stock volvió a 10
+        mockMvc.perform(get("/api/productos")
+                        .param("texto", nombre)
+                        .header("Authorization", "Bearer " + tokenComprador))
+                .andExpect(jsonPath("$.contenido[0].stock").value(10));
+    }
+
+    @Test
+    @DisplayName("Seguridad real: otro comprador no puede confirmar el pedido ajeno (422) y un pedido inexistente da 404")
+    void pedidoAjenoRetorna422YElInexistenteRetorna404() throws Exception {
+        // Arrange: Jose crea su pedido
+        String tokenVendedor = iniciarSesion(VENDEDOR_CORREO, VENDEDOR_CLAVE);
+        String tokenJose = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+        String tokenAna = iniciarSesion(ANA_CORREO, ANA_CLAVE);
+        String productoId = publicarProducto(tokenVendedor, "Mousepad-pedido-" + UUID.randomUUID(), 30000, 5);
+        String pedidoJson = mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenJose)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "items": [ { "productoId": "%s", "cantidad": 1 } ] }
+                                """.formatted(productoId)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String pedidoId = JsonPath.read(pedidoJson, "$.pedidoId");
+
+        // Act + Assert: Ana no puede confirmarlo; un id desconocido es 404
+        mockMvc.perform(put("/api/pedidos/{id}/confirmar", pedidoId)
+                        .header("Authorization", "Bearer " + tokenAna))
+                .andExpect(status().isUnprocessableContent());
+        mockMvc.perform(put("/api/pedidos/{id}/confirmar", UUID.randomUUID())
+                        .header("Authorization", "Bearer " + tokenAna))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Validación real: un pedido sin ítems responde 400")
+    void pedidoSinItemsRetorna400() throws Exception {
+        String tokenComprador = iniciarSesion(COMPRADOR_CORREO, COMPRADOR_CLAVE);
+
+        mockMvc.perform(post("/api/pedidos")
+                        .header("Authorization", "Bearer " + tokenComprador)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"items\": [] }"))
+                .andExpect(status().isBadRequest());
     }
 }

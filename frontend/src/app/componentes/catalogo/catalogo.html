@@ -140,17 +140,8 @@
           <p class="nota">Estás navegando como vendedor. Ingresa con una cuenta de comprador para comprar.</p>
         } @else if (reserva(); as c) {
           <div class="resumen-pago">
-            <p>Reserva creada · {{ c.cantidad }} × {{ precio(c.precioUnitario) }}</p>
-            <strong>Total: {{ precio(c.subtotal) }}</strong>
-            @if (cuponAplicado()) {
-              <p class="muted">Cupón aplicado ✔</p>
-            } @else {
-              <div class="cupon-fila">
-                <input class="entrada form-control" placeholder="Código de cupón (ej. VERANO26)" aria-label="Código de cupón"
-                       [(ngModel)]="cupon" (keydown.enter)="aplicarCupon()">
-                <button type="button" class="btn btn-chico" [disabled]="procesando()" (click)="aplicarCupon()">Aplicar</button>
-              </div>
-            }
+            <p>Reserva creada · {{ unidadesDe(c) }} × {{ precio(c.compras[0].precioUnitario) }}</p>
+            <strong>Total: {{ precio(c.total) }}</strong>
           </div>
           <div class="acciones">
             <button class="btn btn-neon" [disabled]="procesando()" (click)="pagar()">{{ procesando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>

@@ -37,6 +37,9 @@
           <div class="datos">
             <h3>{{ nombreDe(c.productoId) }}</h3>
             <p class="muted">{{ fechaHora(c.fecha) }} · {{ c.cantidad }} × {{ precio(c.precioUnitario) }}</p>
+            @if (c.pedidoId && c.estado === 'PENDIENTE') {
+              <p class="muted">Parte de un pedido: se paga y se cancela completo.</p>
+            }
           </div>
           <div class="monto">
             <strong>{{ precio(c.subtotal) }}</strong>
@@ -46,7 +49,9 @@
             @switch (c.estado) {
               @case ('PENDIENTE') {
                 <button class="btn btn-neon btn-chico" (click)="confirmar(c)">Confirmar pago</button>
-                <button class="btn btn-chico" (click)="abrirDialogo('cupon', c)">Cupón</button>
+                @if (!c.pedidoId) {
+                  <button class="btn btn-chico" (click)="abrirDialogo('cupon', c)">Cupón</button>
+                }
                 <button class="btn btn-chico btn-peligro" (click)="cancelar(c)">Cancelar</button>
               }
               @case ('COMPLETADA') {

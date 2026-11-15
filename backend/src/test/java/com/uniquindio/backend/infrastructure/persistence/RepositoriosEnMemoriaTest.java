@@ -95,4 +95,28 @@ class RepositoriosEnMemoriaTest {
         assertFalse(repository.existeCompraDe(usuarioId, productoId));
         assertFalse(repository.existeCompraActivaDeProducto(productoId));
     }
+
+    @Test
+    @DisplayName("CompraRepositoryEnMemoria devuelve solo las líneas de un pedido y lista vacía si no existe")
+    void obtienePorPedidoId() {
+        CompraRepositoryEnMemoria repository = new CompraRepositoryEnMemoria();
+        UUID usuarioId = UUID.randomUUID();
+        UUID pedidoA = UUID.randomUUID();
+        Compra a1 = Compra.realizar(UUID.randomUUID(), usuarioId, UUID.randomUUID(), 1,
+                LocalDateTime.now(), new Precio(100), pedidoA);
+        Compra a2 = Compra.realizar(UUID.randomUUID(), usuarioId, UUID.randomUUID(), 1,
+                LocalDateTime.now(), new Precio(100), pedidoA);
+        Compra deOtroPedido = Compra.realizar(UUID.randomUUID(), usuarioId, UUID.randomUUID(), 1,
+                LocalDateTime.now(), new Precio(100), UUID.randomUUID());
+        Compra suelta = Compra.realizar(UUID.randomUUID(), usuarioId, UUID.randomUUID(), 1,
+                LocalDateTime.now(), new Precio(100));
+        repository.guardar(a1);
+        repository.guardar(a2);
+        repository.guardar(deOtroPedido);
+        repository.guardar(suelta);
+
+        assertEquals(2, repository.obtenerPorPedidoId(pedidoA).size());
+        assertTrue(repository.obtenerPorPedidoId(pedidoA).containsAll(java.util.List.of(a1, a2)));
+        assertTrue(repository.obtenerPorPedidoId(UUID.randomUUID()).isEmpty());
+    }
 }

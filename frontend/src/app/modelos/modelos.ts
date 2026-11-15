@@ -70,6 +70,15 @@ export interface Compra {
   subtotal: number;
   fecha: string;
   estado: EstadoCompra;
+  /** Pedido al que pertenece la línea; `null` si es una compra suelta (p. ej. un combo). */
+  pedidoId: string | null;
+}
+
+/** Respuesta de `POST /api/pedidos` y de `PUT /api/pedidos/{id}/confirmar|cancelar`: una compra por producto. */
+export interface Pedido {
+  pedidoId: string;
+  compras: Compra[];
+  total: number;
 }
 
 export interface MovimientoPuntos {
