@@ -1,0 +1,25 @@
+.cabecera { margin-bottom: 28px; }
+
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+.esqueleto { height: 320px; border-radius: 20px; border: 1px solid var(--borde); background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%); background-size: 300% 100%; animation: brillo 1.4s infinite; }
+@keyframes brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+.combo { padding: 22px; display: flex; flex-direction: column; gap: 14px; transition: border-color 0.2s; }
+.combo:hover { border-color: rgba(34, 228, 255, 0.35); }
+.encabezado { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.encabezado h3 { font-size: 18px; }
+.desc { font-size: 16px; }
+
+.productos { list-style: none; margin: 0; padding: 12px 0; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
+.productos li { display: flex; justify-content: space-between; gap: 12px; font-size: 16px; }
+
+.precios { display: flex; flex-direction: column; gap: 2px; }
+.precio { font-family: var(--fuente-titulo); font-size: 22px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.ahorro { color: var(--lima); font-size: 15px; }
+
+.compra { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; }
+.cantidad { display: flex; align-items: center; gap: 12px; font-family: var(--fuente-titulo); font-size: 18px; }
+.rojo { color: var(--rojo); font-weight: 700; margin-top: auto; }
+
+.vacio .grande { font-size: 56px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.vacio .btn { margin-top: 14px; }

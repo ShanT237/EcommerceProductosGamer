@@ -7,6 +7,7 @@ import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.RegaloPersis
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,5 +31,11 @@ public class RegaloRepositoryJpa implements RegaloRepository {
     @Override
     public long contarAsignadosA(UUID usuarioId) {
         return dataRepository.countByIdUsuarioAndEstadoNot(usuarioId, EstadoRegalo.CANCELADO);
+    }
+
+    @Override
+    public boolean existePendienteDelCombo(UUID comboId) {
+        return dataRepository.existsByIdComboAndEstadoNotIn(
+                comboId, List.of(EstadoRegalo.ENTREGADO, EstadoRegalo.CANCELADO));
     }
 }

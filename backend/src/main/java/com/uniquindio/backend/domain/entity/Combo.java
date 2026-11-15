@@ -26,11 +26,11 @@ public class Combo {
     @Getter
     private final UUID vendedorId;
     @Getter
-    private final String nombre;
+    private String nombre;
     @Getter
-    private final String descripcion;
+    private String descripcion;
     @Getter
-    private final double descuento;
+    private double descuento;
     private final List<UUID> productos;
 
     // Combo
@@ -48,15 +48,7 @@ public class Combo {
                               double descuento, List<UUID> productosIniciales) {
         Objects.requireNonNull(id, "El id del combo es obligatorio");
         Objects.requireNonNull(vendedorId, "El id del vendedor es obligatorio");
-        if (nombre == null || nombre.isBlank()) {
-            throw new ReglaDominioException("El nombre del combo no puede estar vacío");
-        }
-        if (descripcion == null || descripcion.isBlank()) {
-            throw new ReglaDominioException("La descripción del combo no puede estar vacía");
-        }
-        if (descuento < 0 || descuento >= 100) {
-            throw new ReglaDominioException("El descuento debe ser mayor o igual a 0 y menor que 100");
-        }
+        validarDatos(nombre, descripcion, descuento);
         if (productosIniciales == null || productosIniciales.size() < 2) {
             throw new ReglaDominioException("Un combo debe estar formado por dos o más productos");
         }
@@ -131,6 +123,26 @@ public class Combo {
     public void asegurarPerteneceA(UUID vendedorId) {
         if (!this.vendedorId.equals(vendedorId)) {
             throw new ReglaDominioException("El combo no pertenece al vendedor");
+        }
+    }
+
+    /** Cambia los datos propios del combo; los productos se gestionan con agregar/quitarProducto. */
+    public void modificar(String nombre, String descripcion, double descuento) {
+        validarDatos(nombre, descripcion, descuento);
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.descuento = descuento;
+    }
+
+    private static void validarDatos(String nombre, String descripcion, double descuento) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new ReglaDominioException("El nombre del combo no puede estar vacío");
+        }
+        if (descripcion == null || descripcion.isBlank()) {
+            throw new ReglaDominioException("La descripción del combo no puede estar vacía");
+        }
+        if (descuento < 0 || descuento >= 100) {
+            throw new ReglaDominioException("El descuento debe ser mayor o igual a 0 y menor que 100");
         }
     }
 }

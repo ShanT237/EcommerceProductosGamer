@@ -2,10 +2,15 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.request.ComprarComboRequest;
 import com.uniquindio.backend.application.dto.request.CrearComboRequest;
+import com.uniquindio.backend.application.dto.request.ModificarComboRequest;
+import com.uniquindio.backend.application.dto.response.ComboDetalleResponse;
 import com.uniquindio.backend.application.dto.response.ComboResponse;
 import com.uniquindio.backend.application.dto.response.ComprarComboResponse;
 import com.uniquindio.backend.application.usecase.ComprarComboUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarCombosUseCase;
 import com.uniquindio.backend.application.usecase.CrearComboUseCase;
+import com.uniquindio.backend.application.usecase.EliminarComboUseCase;
+import com.uniquindio.backend.application.usecase.ModificarComboUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductosComboUseCase;
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Compra;
@@ -32,18 +37,41 @@ import java.util.UUID;
 public class ComboController {
 
     private final CrearComboUseCase crearComboUseCase;
+    private final ModificarComboUseCase modificarComboUseCase;
+    private final EliminarComboUseCase eliminarComboUseCase;
     private final ModificarProductosComboUseCase modificarProductosComboUseCase;
     private final ComprarComboUseCase comprarComboUseCase;
+    private final ConsultarCombosUseCase consultarCombosUseCase;
     private final ComboMapper mapper;
 
     public ComboController(CrearComboUseCase crearComboUseCase,
+                           ModificarComboUseCase modificarComboUseCase,
+                           EliminarComboUseCase eliminarComboUseCase,
                            ModificarProductosComboUseCase modificarProductosComboUseCase,
                            ComprarComboUseCase comprarComboUseCase,
+                           ConsultarCombosUseCase consultarCombosUseCase,
                            ComboMapper mapper) {
         this.crearComboUseCase = crearComboUseCase;
+        this.modificarComboUseCase = modificarComboUseCase;
+        this.eliminarComboUseCase = eliminarComboUseCase;
         this.modificarProductosComboUseCase = modificarProductosComboUseCase;
         this.comprarComboUseCase = comprarComboUseCase;
+        this.consultarCombosUseCase = consultarCombosUseCase;
         this.mapper = mapper;
+    }
+
+    // Catálogo de combos comprables (cualquier sesión: comprador o vendedor)
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<List<ComboDetalleResponse>> listar() {
+        return ResponseEntity.ok(mapper.toDetalleResponses(consultarCombosUseCase.todos()));
+    }
+
+    // Combos del vendedor autenticado (incluye los que tienen productos pausados)
+    @PreAuthorize("hasRole('VENDEDOR')")
+    @GetMapping("/mios")
+    public ResponseEntity<List<ComboDetalleResponse>> mios(@AuthenticationPrincipal UUID vendedorId) {
+        return ResponseEntity.ok(mapper.toDetalleResponses(consultarCombosUseCase.deVendedor(vendedorId)));
     }
 
     // CU-07 Crear Combo Gamer (del vendedor autenticado)
@@ -67,6 +95,26 @@ public class ComboController {
                 .toUri();
 
         return ResponseEntity.created(location).body(mapper.toResponse(combo));
+    }
+
+    // Modificar nombre, descripción y descuento (solo el vendedor dueño)
+    @PutMapping("/{id}")
+    public ResponseEntity<ComboResponse> modificar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId,
+            @Valid @RequestBody ModificarComboRequest request) {
+        Combo combo = modificarComboUseCase.ejecutar(
+                id, vendedorId, request.nombre(), request.descripcion(), request.descuento());
+        return ResponseEntity.ok(mapper.toResponse(combo));
+    }
+
+    // Eliminar el combo (solo el vendedor dueño)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId) {
+        eliminarComboUseCase.ejecutar(id, vendedorId);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 
     // CU-23 Modificar Productos de Combo: Añadir (solo el vendedor dueño)

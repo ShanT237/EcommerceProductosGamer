@@ -13,6 +13,7 @@
       <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }" (click)="cerrarMenu()">Inicio</a>
       @if (auth.autenticado()) {
         <a routerLink="/catalogo" routerLinkActive="activo" (click)="cerrarMenu()">Catálogo</a>
+        <a routerLink="/combos" routerLinkActive="activo" (click)="cerrarMenu()">Combos</a>
         @if (auth.rol() === 'COMPRADOR') {
           <a routerLink="/favoritos" routerLinkActive="activo" (click)="cerrarMenu()">Favoritos
             @if (wishlist.productos().length > 0) {

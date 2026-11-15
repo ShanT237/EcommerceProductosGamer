@@ -1,0 +1,30 @@
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+.formulario { padding: 30px; display: flex; flex-direction: column; gap: 18px; }
+.formulario h3, .subtitulo { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+.error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
+
+.seleccion { border: 1px solid var(--borde); border-radius: 12px; padding: 12px 16px; margin: 0; max-height: 260px; overflow-y: auto; }
+.seleccion legend { padding: 0 8px; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--texto-2); }
+.opcion { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 16px; cursor: pointer; }
+.opcion .muted { margin-left: auto; }
+
+.mios { display: flex; flex-direction: column; gap: 14px; }
+.combo { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.encabezado h4 { font-size: 17px; }
+.productos { list-style: none; margin: 0; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
+.productos li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; }
+.precios { display: flex; align-items: baseline; gap: 12px; }
+.precio { font-family: var(--fuente-titulo); font-size: 20px; color: var(--cian); }
+.anadir { display: flex; gap: 8px; }
+.anadir .entrada { flex: 1; }
+
+.vacio .grande { font-size: 48px; color: var(--cian); text-shadow: var(--brillo-cian); }
+
+@media (max-width: 960px) {
+  .dos { grid-template-columns: 1fr; }
+}
+
+.edicion { display: flex; flex-direction: column; gap: 12px; }
+.acciones { display: flex; gap: 8px; }

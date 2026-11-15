@@ -157,4 +157,34 @@ class ComboTest {
         assertEquals(combo1.hashCode(), combo2.hashCode());
         assertNotEquals(combo1, combo3);
     }
+
+    @Test
+    @DisplayName("Modifica nombre, descripción y descuento sin tocar los productos")
+    void modificaLosDatosDelCombo() {
+        UUID p1 = UUID.randomUUID();
+        UUID p2 = UUID.randomUUID();
+        Combo combo = Combo.crear(UUID.randomUUID(), UUID.randomUUID(), "Combo A", "Desc A", 10.0, List.of(p1, p2));
+
+        combo.modificar("Combo B", "Desc B", 25.0);
+
+        assertEquals("Combo B", combo.getNombre());
+        assertEquals("Desc B", combo.getDescripcion());
+        assertEquals(25.0, combo.getDescuento());
+        assertEquals(List.of(p1, p2), combo.getProductos());
+    }
+
+    @Test
+    @DisplayName("Rechaza modificar con datos inválidos y no cambia nada")
+    void modificarRechazaDatosInvalidos() {
+        Combo combo = Combo.crear(UUID.randomUUID(), UUID.randomUUID(), "Combo A", "Desc A", 10.0,
+                List.of(UUID.randomUUID(), UUID.randomUUID()));
+
+        assertThrows(ReglaDominioException.class, () -> combo.modificar(" ", "Desc", 10.0));
+        assertThrows(ReglaDominioException.class, () -> combo.modificar("Nombre", "", 10.0));
+        assertThrows(ReglaDominioException.class, () -> combo.modificar("Nombre", "Desc", -1.0));
+        assertThrows(ReglaDominioException.class, () -> combo.modificar("Nombre", "Desc", 100.0));
+
+        assertEquals("Combo A", combo.getNombre());
+        assertEquals(10.0, combo.getDescuento());
+    }
 }
