@@ -4,8 +4,10 @@ import com.uniquindio.backend.application.usecase.AnadirAWishlistUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarWishlistUseCase;
 import com.uniquindio.backend.application.usecase.QuitarDeWishlistUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.domain.entity.Wishlist;
 import com.uniquindio.backend.domain.exception.ConflictoException;
+import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -23,12 +25,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.comprador;
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.mockMvcConSeguridad;
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -55,6 +60,9 @@ class WishlistControllerTest {
 
     @MockitoBean
     private ConsultarWishlistUseCase consultarWishlistUseCase;
+
+    @MockitoBean
+    private ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -98,6 +106,21 @@ class WishlistControllerTest {
                 .andExpect(jsonPath("$[1].nombre").value("Teclado"));
 
         Mockito.verify(consultarWishlistUseCase).ejecutar(usuarioId);
+    }
+
+    @Test
+    void listarIncluyeLaPromocionVigenteDeLosFavoritos() throws Exception {
+        Producto mouse = producto("Mouse");
+        when(consultarWishlistUseCase.ejecutar(usuarioId)).thenReturn(List.of(mouse, producto("Teclado")));
+        when(consultarPromocionesVigentesUseCase.ejecutar(any())).thenReturn(Map.of(mouse.getId(),
+                Promocion.programar(UUID.randomUUID(), mouse.getId(), 20,
+                        LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30))));
+
+        mockMvc.perform(get("/api/wishlists").with(comprador(usuarioId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].precioPromocional").value(80.0))
+                .andExpect(jsonPath("$[0].porcentajePromocion").value(20.0))
+                .andExpect(jsonPath("$[1].precioPromocional").doesNotExist());
     }
 
     @Test
