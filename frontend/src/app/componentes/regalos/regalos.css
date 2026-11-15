@@ -1,0 +1,35 @@
+.cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 26px; }
+.kpi { padding: 14px 22px; display: flex; flex-direction: column; min-width: 130px; }
+.kpi strong { font-family: var(--fuente-titulo); font-size: 22px; color: var(--cian); text-shadow: var(--brillo-cian); }
+.kpi span { color: var(--texto-2); font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; }
+
+.lista { display: flex; flex-direction: column; gap: 12px; }
+.esqueleto { height: 76px; border-radius: 16px; border: 1px solid var(--borde); background: linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%); background-size: 300% 100%; animation: brillo 1.4s infinite; }
+@keyframes brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+.progreso { padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.resumen { font-size: 19px; }
+.barra { height: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.barra span { display: block; height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--cian), var(--magenta)); transition: width 0.4s; }
+
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.columna { display: flex; flex-direction: column; gap: 14px; }
+.subtitulo { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cian); }
+
+.regalo { padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; transition: opacity 0.2s; }
+.regalo.ocupada { opacity: 0.5; pointer-events: none; }
+.datos { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.datos h4 { font-family: var(--fuente-titulo); font-size: 18px; letter-spacing: 0.06em; color: var(--cian); }
+.pequeno { font-size: 15px; }
+
+.estado { text-transform: capitalize; }
+.estado-elegido { color: var(--ambar); background: rgba(255, 176, 32, 0.12); }
+.estado-enviado { color: var(--cian); background: rgba(34, 228, 255, 0.1); }
+.estado-entregado { color: var(--lima); background: rgba(163, 255, 107, 0.1); }
+.estado-cancelado { color: var(--rojo); background: rgba(255, 77, 109, 0.1); }
+
+.vacio .grande { font-size: 48px; color: var(--cian); text-shadow: var(--brillo-cian); }
+
+@media (max-width: 960px) {
+  .dos { grid-template-columns: 1fr; }
+}
