@@ -4,6 +4,7 @@ import { Compra, Producto } from '../modelos/modelos';
 import { mensajeDeError } from './api.util';
 import { AuthService } from './auth.service';
 import { CompraService } from './compra.service';
+import { precioVigente } from './formato';
 
 export interface ItemCarrito { producto: Producto; cantidad: number }
 export interface FalloPago { producto: Producto; mensaje: string }
@@ -28,7 +29,7 @@ export class CarritoService {
   readonly items = this._items.asReadonly();
   readonly pagando = this._pagando.asReadonly();
   readonly unidades = computed(() => this._items().reduce((suma, i) => suma + i.cantidad, 0));
-  readonly subtotal = computed(() => this._items().reduce((suma, i) => suma + i.producto.precio * i.cantidad, 0));
+  readonly subtotal = computed(() => this._items().reduce((suma, i) => suma + precioVigente(i.producto) * i.cantidad, 0));
 
   // computed compara por valor: el efecto solo corre si cambia de verdad la persona (no por renovar el token).
   private usuarioId = computed(() => this.auth.sesion()?.id ?? null);

@@ -23,9 +23,12 @@
               <div class="datos">
                 <h3>{{ i.producto.nombre }}</h3>
                 <p class="muted">
-                  @if (i.producto.precioOriginal; as original) { <s class="precio-original">{{ precio(original) }}</s> }
-                  {{ precio(i.producto.precio) }} c/u
+                  @if (precioTachado(i.producto); as original) { <s class="precio-original">{{ precio(original) }}</s> }
+                  {{ precio(precioVigente(i.producto)) }} c/u
                 </p>
+                @if (i.producto.porcentajePromocion) {
+                  <span class="etiqueta promo">Promo -{{ i.producto.porcentajePromocion }}%</span>
+                }
                 @if (i.producto.exclusividad === 'EXCLUSIVO') {
                   <span class="etiqueta excl">Exclusivo · máx. 1</span>
                 }
@@ -41,7 +44,7 @@
                         (click)="carrito.cambiarCantidad(i.producto.id, i.cantidad + 1)">+</button>
               </div>
 
-              <strong class="linea">{{ precio(i.producto.precio * i.cantidad) }}</strong>
+              <strong class="linea">{{ precio(precioVigente(i.producto) * i.cantidad) }}</strong>
 
               <button type="button" class="btn btn-chico btn-peligro quitar"
                       [disabled]="carrito.pagando()"

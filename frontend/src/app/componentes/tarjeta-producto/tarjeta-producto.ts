@@ -1,6 +1,6 @@
 import { Component, ElementRef, inject, input, output } from '@angular/core';
 import { Producto } from '../../modelos/modelos';
-import { precio } from '../../servicios/formato';
+import { fechaDia, precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
 
 /** Tarjeta del catálogo con inclinación 3D que sigue al mouse y un brillo que lo acompaña. */
@@ -19,6 +19,9 @@ export class TarjetaProducto {
 
   private elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   protected precio = precio;
+  protected precioVigente = precioVigente;
+  protected precioTachado = precioTachado;
+  protected fechaDia = fechaDia;
 
   protected alAlternar(e: Event) {
     e.stopPropagation(); // que el clic del corazón no abra el detalle
