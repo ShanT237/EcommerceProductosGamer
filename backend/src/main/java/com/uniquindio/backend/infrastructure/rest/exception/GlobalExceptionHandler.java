@@ -5,12 +5,14 @@ import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -35,6 +37,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AutenticacionException.class)
     public ResponseEntity<Map<String, Object>> manejarAutenticacion(AutenticacionException ex) {
         return construirRespuesta(HttpStatus.UNAUTHORIZED, ex.getMessage()); // -> 401
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> manejarEstadoHttp(ResponseStatusException ex) {
+        String mensaje = ex.getReason() != null ? ex.getReason() : "La solicitud no pudo completarse";
+        return construirRespuesta(ex.getStatusCode(), mensaje);
     }
 
     // Falla la validación Jakarta (@Valid) de un Request DTO
@@ -69,7 +77,7 @@ public class GlobalExceptionHandler {
                 "El recurso fue modificado por otra operación. Reintente"); // -> 409
     }
 
-    private ResponseEntity<Map<String, Object>> construirRespuesta(HttpStatus status, String mensaje) {
+    private ResponseEntity<Map<String, Object>> construirRespuesta(HttpStatusCode status, String mensaje) {
         Map<String, Object> cuerpo = Map.of(
                 "timestamp", LocalDateTime.now().toString(),
                 "status", status.value(),
