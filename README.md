@@ -629,7 +629,6 @@ El vendedor publica primero el producto y luego sube su imagen a `POST /api/prod
 - `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
 - Un cupón es de «una vez por comprador», no «una sola compra en total»: mientras queden usos, otros compradores pueden usarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
 - La carga de imágenes depende de configurar Cloudinary (opcional): sin credenciales, o si la subida falla, el producto se publica igual y el catálogo usa la ilustración de respaldo.
-- Las preventas solo se pueden programar y consultar: no hay endpoint para modificarlas o cancelarlas.
 - Hay operaciones del dominio sin caso de uso ni endpoint: expirar una compra (`Compra.expirar`), marcar una descarga (`Compra.marcarDescargado`, por lo que la condición «sin descarga» del reembolso nunca se activa desde la API) y cancelar o notificar un regalo (`Regalo.cancelarRegalo`, `Regalo.notificar`).
 - Un usuario comprador no puede darse de baja (solo existe la baja de vendedor) y el rol `VENDEDOR` no puede editar su perfil ni cambiar su contraseña desde la API.
   Los endpoints de cada operación están en [`docs/api/mapeo-dominio-api.md`](docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`, botón **Authorize** para pegar el token del login).
