@@ -58,6 +58,16 @@
       </div>
     </div>
 
+    <div class="campo">
+      <label for="fp-imagen">Imagen del producto (opcional)</label>
+      <input #selectorImagen id="fp-imagen" class="entrada" type="file" accept="image/png,image/jpeg"
+             [disabled]="publicando()" (change)="seleccionarImagen($event)">
+      <p class="muted">PNG o JPEG, máximo 5 MB. Se sube a Cloudinary al publicar.</p>
+      @if (errorImagen()) {
+        <p class="error-campo" role="alert">{{ errorImagen() }}</p>
+      }
+    </div>
+
     @if (errorServidor()) {
       <p class="error" role="alert">{{ errorServidor() }}</p>
     }
