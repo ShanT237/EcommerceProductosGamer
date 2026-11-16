@@ -56,6 +56,11 @@ export class ProductoService {
     return this.http.put(`${API_URL}/productos/${id}/precio`, { nuevoPrecio });
   }
 
+  /** PUT /productos/{id}/stock: fija el stock disponible (sirve para reponer un producto agotado). */
+  actualizarStock(id: string, stock: number) {
+    return this.http.put(`${API_URL}/productos/${id}/stock`, { stock });
+  }
+
   editarInformacion(id: string, nombre: string, descripcion: string) {
     return this.http.put(`${API_URL}/productos/${id}/informacion`, { nombre, descripcion });
   }

@@ -230,6 +230,18 @@ public class Producto {
     }
 
     /**
+     * El vendedor fija el stock disponible (reposición o corrección). Nunca negativo;
+     * un producto eliminado no se modifica.
+     */
+    public void establecerStock(int nuevoStock) {
+        asegurarNoEliminado();
+        if (nuevoStock < 0) {
+            throw new ReglaDominioException("El stock no puede ser negativo");
+        }
+        this.stock = nuevoStock;
+    }
+
+    /**
      * Regla 3: no se puede eliminar un producto que tenga compras activas.
      * Cuando no tiene compras activas se marca como eliminado lógicamente.
      */

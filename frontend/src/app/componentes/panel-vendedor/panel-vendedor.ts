@@ -93,6 +93,7 @@ export class PanelVendedor implements OnInit {
   protected editNombre = signal('');
   protected editDescripcion = signal('');
   protected editPrecio = signal<number | null>(null);
+  protected editStock = signal<number | null>(null);
   protected guardando = signal(false);
   /** Id del producto cuya visibilidad se está cambiando (evita dobles clics en Pausar/Reactivar). */
   protected cambiandoVisibilidad = signal<string | null>(null);
@@ -165,6 +166,7 @@ export class PanelVendedor implements OnInit {
     this.editNombre.set(p.nombre);
     this.editDescripcion.set(p.descripcion);
     this.editPrecio.set(p.precio);
+    this.editStock.set(p.stock);
   }
 
   protected cerrarEdicion() { if (!this.guardando()) this.editando.set(null); }
@@ -175,25 +177,36 @@ export class PanelVendedor implements OnInit {
     if (!this.editNombre().trim() || !this.editDescripcion().trim()) return this.toast.error('El nombre y la descripción son obligatorios.');
     const precioNuevo = this.editPrecio();
     if (precioNuevo == null || precioNuevo <= 0) return this.toast.error('El precio debe ser mayor a cero.');
+    const stockNuevo = this.editStock();
+    if (stockNuevo == null || !Number.isInteger(stockNuevo) || stockNuevo < 0) {
+      return this.toast.error('El stock debe ser un número entero de cero o más.');
+    }
 
     this.guardando.set(true);
+    const fallo = (e: unknown) => { this.guardando.set(false); this.toast.error(mensajeDeError(e)); this.cargarMisProductos(); };
+    const terminar = () => {
+      this.guardando.set(false);
+      this.editando.set(null);
+      this.toast.ok('Producto actualizado.');
+      this.cargarMisProductos();
+    };
+    const guardarStock = () => {
+      if (stockNuevo !== p.stock) {
+        this.productos.actualizarStock(p.id, stockNuevo).subscribe({ next: terminar, error: fallo });
+      } else {
+        terminar();
+      }
+    };
+    const guardarPrecio = () => {
+      if (!p.precioOriginal && precioNuevo !== p.precio) {
+        this.productos.modificarPrecio(p.id, precioNuevo).subscribe({ next: guardarStock, error: fallo });
+      } else {
+        guardarStock();
+      }
+    };
+
     this.productos.editarInformacion(p.id, this.editNombre().trim(), this.editDescripcion().trim()).subscribe({
-      next: () => {
-        const despues = () => {
-          this.guardando.set(false);
-          this.editando.set(null);
-          this.toast.ok('Producto actualizado.');
-          this.cargarMisProductos();
-        };
-        if (!p.precioOriginal && precioNuevo !== p.precio) {
-          this.productos.modificarPrecio(p.id, precioNuevo).subscribe({
-            next: despues,
-            error: (e) => { this.guardando.set(false); this.toast.error(mensajeDeError(e)); this.cargarMisProductos(); },
-          });
-        } else {
-          despues();
-        }
-      },
+      next: guardarPrecio,
       error: (e) => { this.guardando.set(false); this.toast.error(mensajeDeError(e)); },
     });
   }
