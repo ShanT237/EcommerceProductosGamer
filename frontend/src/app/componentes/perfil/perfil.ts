@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../servicios/auth.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
@@ -12,7 +12,7 @@ import { mensajeDeError } from '../../servicios/api.util';
   templateUrl: './perfil.html',
   styleUrl: './perfil.css',
 })
-export class Perfil {
+export class Perfil implements OnInit {
   protected auth = inject(AuthService);
   private usuarios = inject(UsuarioService);
   private toast = inject(ToastService);
@@ -20,7 +20,9 @@ export class Perfil {
 
   // ---- datos personales ----
   protected nombre = signal('');
-  protected correo = signal(this.auth.sesion()?.correo ?? '');
+  protected correo = signal('');
+  protected correoOriginal = signal(''); // correo guardado en el servidor
+  protected cargandoPerfil = signal(true);
   protected guardandoPerfil = signal(false);
   protected errorPerfil = signal('');
 
@@ -31,12 +33,27 @@ export class Perfil {
   protected guardandoClave = signal(false);
   protected errorClave = signal('');
 
+  ngOnInit() {
+    this.usuarios.obtenerPerfil().subscribe({
+      next: (p) => {
+        this.nombre.set(p.nombre);
+        this.correo.set(p.correo);
+        this.correoOriginal.set(p.correo);
+        this.cargandoPerfil.set(false);
+      },
+      error: (e) => {
+        this.cargandoPerfil.set(false);
+        this.errorPerfil.set(mensajeDeError(e));
+      },
+    });
+  }
+
   protected async guardarPerfil() {
     this.errorPerfil.set('');
     if (!this.nombre().trim()) return this.errorPerfil.set('Escribe tu nombre.');
     if (!this.correo().trim()) return this.errorPerfil.set('Escribe tu correo.');
 
-    const cambioCorreo = this.correo().trim() !== this.auth.sesion()?.correo;
+    const cambioCorreo = this.correo().trim().toLowerCase() !== this.correoOriginal().toLowerCase();
     if (cambioCorreo) {
       const acepto = await this.confirmacion.pedir({
         titulo: 'Cambiar correo',
@@ -55,6 +72,7 @@ export class Perfil {
           this.toast.info('Perfil actualizado. Ingresa de nuevo con tu nuevo correo.');
           this.auth.cerrarSesion();
         } else {
+          this.correoOriginal.set(this.correo().trim());
           this.toast.ok('Perfil actualizado.');
         }
       },
