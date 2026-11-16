@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Marketplace Gamer - Entrega 2 (flujo punta a punta)",
-    "description": "Requiere el backend corriendo (bootRun) con datos de data.sql. Ejecutar la carpeta A en orden. Cambiar baseUrl si el puerto no es 8080.",
+    "description": "Requiere el backend corriendo (bootRun) con datos de data.sql. Ejecutar las carpetas A, D y E en orden (B y C son independientes de D). Cambiar baseUrl si el puerto no es 8080.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -874,6 +874,2068 @@
           ]
         }
       ]
+    },
+    {
+      "name": "D. Pedido y cupón (carrito todo o nada)",
+      "description": "Requiere haber corrido la carpeta A (usa tokenVendedor, tokenComprador y productoId). Cada ejecución crea un cupón con código nuevo.",
+      "item": [
+        {
+          "name": "1. Crear cupón (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cupones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cupones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoCupon}}\",\n  \"porcentaje\": 10,\n  \"vence\": \"2099-12-31\",\n  \"usosMaximos\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Crea un cupón propio con un código único por ejecución."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"codigoCupon\", \"PM\" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear cupón: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Empieza con 0 usos\", function () { pm.expect(pm.response.json().usos).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Publicar un segundo producto (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teclado Postman D\",\n  \"descripcion\": \"Teclado mecanico para probar pedidos\",\n  \"precio\": 120000,\n  \"stock\": 5,\n  \"gama\": \"MEDIA\",\n  \"exclusividad\": \"NORMAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Publica un segundo producto con stock 5. Guarda su id en productoId2."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Publicar: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"productoId2\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Vista previa del cupón (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cupones/{{codigoCupon}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cupones",
+                "{{codigoCupon}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "La vista previa no gasta ningún uso."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vista previa: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Sigue con 0 usos\", function () { pm.expect(pm.response.json().usos).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Pedido de 2 ítems con cupón (COMPRADOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productoId\": \"{{productoId}}\", \"cantidad\": 1 },\n    { \"productoId\": \"{{productoId2}}\", \"cantidad\": 1 }\n  ],\n  \"codigoCupon\": \"{{codigoCupon}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Un solo pedido con dos líneas y un cupón. Guarda el pedidoId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear pedido: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.collectionVariables.set(\"pedidoId\", r.pedidoId);",
+                  "pm.test(\"Tiene 2 líneas con el mismo pedido\", function () { pm.expect(r.compras.length).to.eql(2); });",
+                  "pm.test(\"El cupón se aplicó\", function () { pm.expect(r.cuponAplicado).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Confirmar el pedido (COMPRADOR)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "confirmar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Confirma todas las líneas en una sola operación."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Confirmar pedido: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Todas las líneas quedan COMPLETADA\", function () { pm.response.json().compras.forEach(function (c) { pm.expect(c.estado).to.eql(\"COMPLETADA\"); }); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. El cupón consumió un solo uso (VENDEDOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cupones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cupones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Con 2 ítems el cupón gasta exactamente 1 uso (uno por pedido, no uno por ítem)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar cupones: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "var c = pm.response.json().find(function (x) { return x.codigo === pm.collectionVariables.get(\"codigoCupon\"); });",
+                  "pm.test(\"Un solo uso por pedido\", function () { pm.expect(c.usos).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. ERROR: reutilizar el cupón -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productoId\": \"{{productoId2}}\", \"cantidad\": 1 }\n  ],\n  \"codigoCupon\": \"{{codigoCupon}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cada comprador usa un cupón una sola vez."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cupón ya usado: responde 422\", function () { pm.response.to.have.status(422); });",
+                  "pm.test(\"El mensaje menciona el cupón\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"cup\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. ERROR: último ítem sin stock -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productoId\": \"{{productoId}}\", \"cantidad\": 1 },\n    { \"productoId\": \"{{productoId2}}\", \"cantidad\": 9999 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "El segundo ítem pide más que el stock: el pedido completo se rechaza."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sin stock: responde 422\", function () { pm.response.to.have.status(422); });",
+                  "pm.test(\"El mensaje menciona el stock\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"stock\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. El stock no cambió por el pedido rechazado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos?texto=Postman&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ],
+              "query": [
+                {
+                  "key": "texto",
+                  "value": "Postman"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "El segundo producto tenía 5 unidades y el pedido del paso 4 compró 1: deben quedar 4. El pedido rechazado del paso 8 no descontó nada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Catálogo: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "var p = pm.response.json().contenido.find(function (x) { return x.id === pm.collectionVariables.get(\"productoId2\"); });",
+                  "pm.test(\"Stock = 4 (solo el pedido del paso 4)\", function () { pm.expect(p.stock).to.eql(4); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "E. Módulos de consulta y gestión (wishlist, notificaciones, promociones, combos, preventas, regalos y metas)",
+      "description": "Requiere haber corrido las carpetas A y D (usa tokenVendedor, tokenComprador y productoId2). Publica su propio producto en cada ejecución y deja limpios los descuentos, promociones y combos que crea; el regalo, la meta (desactivada) y la preventa quedan registrados. El paso de elegir un regalo (`PUT /api/regalos/{id}/asignar`) exige 5 compras completadas y no se prueba aquí.",
+      "item": [
+        {
+          "name": "1. Mis productos incluye pausados (VENDEDOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/mios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "mios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "GET /api/productos/mios: todos los productos del vendedor, activos y pausados."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Mis productos: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Es una lista con el campo pausado\", function () { var l = pm.response.json(); pm.expect(l).to.be.an(\"array\"); if (l.length) { pm.expect(l[0]).to.have.property(\"pausado\"); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Publicar un producto para esta carpeta (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Postman E\",\n  \"descripcion\": \"Producto para probar promociones, preventas y regalos\",\n  \"precio\": 90000,\n  \"stock\": 5,\n  \"gama\": \"MEDIA\",\n  \"exclusividad\": \"NORMAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Publicar: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"productoId3\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Programar promoción de temporada (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/promociones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "promociones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId3}}\",\n  \"porcentaje\": 10,\n  \"desde\": \"{{fechaDesde}}\",\n  \"hasta\": \"{{fechaHasta}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var h = new Date(); var f = new Date(h.getTime() + 30*24*3600*1000);",
+                  "pm.collectionVariables.set(\"fechaDesde\", h.toISOString().substring(0,10));",
+                  "pm.collectionVariables.set(\"fechaHasta\", f.toISOString().substring(0,10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Programar promoción: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"promocionId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Listar promociones del vendedor (VENDEDOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/promociones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "promociones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar promociones: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Incluye la promoción creada con el nombre del producto\", function () { var p = pm.response.json().find(function (x) { return x.id === pm.collectionVariables.get(\"promocionId\"); }); pm.expect(p).to.not.be.undefined; pm.expect(p.productoNombre).to.eql(\"Mouse Postman E\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. ERROR: promoción solapada -> 409 (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/promociones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "promociones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId3}}\",\n  \"porcentaje\": 5,\n  \"desde\": \"{{fechaDesde}}\",\n  \"hasta\": \"{{fechaHasta}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Solapada: responde 409\", function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Modificar la promoción (VENDEDOR)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/promociones/{{promocionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "promociones",
+                "{{promocionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"porcentaje\": 15,\n  \"desde\": \"{{fechaDesde}}\",\n  \"hasta\": \"{{fechaHasta}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Modificar promoción: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Porcentaje 15\", function () { pm.expect(pm.response.json().porcentaje).to.eql(15); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Quitar la promoción (VENDEDOR)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/promociones/{{promocionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "promociones",
+                "{{promocionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Quitar promoción: responde 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Wishlist: añadir el producto (COMPRADOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/wishlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "wishlists"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId3}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "201 la primera vez; 409 si ya estaba."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Añadir a wishlist: responde 201/409\", function () { pm.expect([201, 409]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Wishlist: listar (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/wishlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "wishlists"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar wishlist: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Contiene el producto\", function () { var ids = pm.response.json().map(function (p) { return p.id; }); pm.expect(ids).to.include(pm.collectionVariables.get(\"productoId3\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Descuento inmediato (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/descuentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "descuentos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId3}}\",\n  \"porcentaje\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Notifica a quienes tienen el producto en su wishlist."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Aplicar descuento: responde 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11. Notificaciones del comprador (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notificaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar notificaciones: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "var l = pm.response.json();",
+                  "pm.test(\"Hay al menos una notificación\", function () { pm.expect(l.length).to.be.above(0); });",
+                  "pm.collectionVariables.set(\"notificacionId\", l[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12. Marcar la notificación como leída (COMPRADOR)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notificaciones/{{notificacionId}}/leida",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones",
+                "{{notificacionId}}",
+                "leida"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Marcar leída: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"leida = true\", function () { pm.expect(pm.response.json().leida).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13. ERROR: el vendedor no ve notificaciones -> 403",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notificaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rol equivocado: responde 403\", function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14. Quitar el descuento (VENDEDOR)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/descuentos/{{productoId3}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "descuentos",
+                "{{productoId3}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Quitar descuento: responde 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15. ERROR: quitar un descuento que no existe -> 422",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/descuentos/{{productoId3}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "descuentos",
+                "{{productoId3}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sin descuento activo: responde 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16. Crear combo con 2 productos propios (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/combos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "combos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Combo Postman E\",\n  \"descripcion\": \"Dos productos con descuento\",\n  \"descuento\": 20,\n  \"productoIds\": [\"{{productoId2}}\", \"{{productoId3}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear combo: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"comboId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17. Listar combos (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/combos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "combos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar combos: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Incluye el combo con precio rebajado\", function () { var c = pm.response.json().find(function (x) { return x.id === pm.collectionVariables.get(\"comboId\"); }); pm.expect(c).to.not.be.undefined; pm.expect(c.precioConDescuento).to.be.below(c.precioSinDescuento); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18. Mis combos (VENDEDOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/combos/mios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "combos",
+                "mios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Mis combos: responde 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19. ERROR: el comprador no ve combos/mios -> 403",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/combos/mios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "combos",
+                "mios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rol equivocado: responde 403\", function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20. Modificar el combo (VENDEDOR)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/combos/{{comboId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "combos",
+                "{{comboId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Combo Postman E (editado)\",\n  \"descripcion\": \"Descripción editada\",\n  \"descuento\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Modificar combo: responde 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "21. Crear regalo con un producto propio (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/regalos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "regalos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId3}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear regalo: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"regaloId\", pm.response.json().id);",
+                  "pm.test(\"Nace DISPONIBLE\", function () { pm.expect(pm.response.json().estado).to.eql(\"DISPONIBLE\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "22. Regalos disponibles (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/regalos/disponibles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "regalos",
+                "disponibles"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Disponibles: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Incluye el regalo\", function () { var ids = pm.response.json().map(function (r) { return r.id; }); pm.expect(ids).to.include(pm.collectionVariables.get(\"regaloId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "23. Progreso de regalos (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/regalos/progreso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "regalos",
+                "progreso"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Progreso: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Trae los campos del progreso\", function () { var p = pm.response.json(); pm.expect(p).to.have.property(\"comprasCompletadas\"); pm.expect(p.comprasPorRegalo).to.eql(5); pm.expect(p.comprasParaSiguiente).to.be.within(1,5); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "24. Mis regalos (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/regalos/mios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "regalos",
+                "mios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Mis regalos: responde 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "25. Regalos por enviar (VENDEDOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/regalos/por-enviar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "regalos",
+                "por-enviar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Por enviar: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Un regalo DISPONIBLE aún no está por enviar\", function () { var ids = pm.response.json().map(function (r) { return r.id; }); pm.expect(ids).to.not.include(pm.collectionVariables.get(\"regaloId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "26. ERROR: enviar un regalo que nadie eligió -> 422",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/regalos/{{regaloId}}/enviar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "regalos",
+                "{{regaloId}}",
+                "enviar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Enviar sin destinatario: responde 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "27. Eliminar el combo (VENDEDOR)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/combos/{{comboId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "combos",
+                "{{comboId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Eliminar combo: responde 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "28. Programar preventa de mañana (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/preventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "preventas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId3}}\",\n  \"fechaLanzamiento\": \"{{fechaPreventa}}\",\n  \"descripcion\": \"Lanzamiento de ensayo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var m = new Date(new Date().getTime() + 2*24*3600*1000);",
+                  "pm.collectionVariables.set(\"fechaPreventa\", m.toISOString().substring(0,10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Programar preventa: responde 201\", function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "29. Listar preventas futuras (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/preventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "preventas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar preventas: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Incluye la preventa y va ordenada por fecha\", function () { var l = pm.response.json(); var ids = l.map(function (p) { return p.productoId; }); pm.expect(ids).to.include(pm.collectionVariables.get(\"productoId3\")); for (var i = 1; i < l.length; i++) { pm.expect(l[i-1].fechaLanzamiento <= l[i].fechaLanzamiento).to.eql(true); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "30. ERROR: preventa con fecha pasada -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/preventas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "preventas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": \"{{productoId2}}\",\n  \"fechaLanzamiento\": \"2020-01-01\",\n  \"descripcion\": \"Fecha pasada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Fecha pasada: responde 422\", function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "31. Crear meta de recompensa (VENDEDOR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/metas-recompensa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metas-recompensa"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comprasRequeridas\": 5,\n  \"productoRegaloId\": \"{{productoId3}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear meta: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"metaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "32. Metas activas (COMPRADOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/metas-recompensa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metas-recompensa"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar metas: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Incluye la meta y ordena por umbral\", function () { var l = pm.response.json(); pm.expect(l.map(function (m) { return m.id; })).to.include(pm.collectionVariables.get(\"metaId\")); for (var i = 1; i < l.length; i++) { pm.expect(l[i-1].comprasRequeridas <= l[i].comprasRequeridas).to.eql(true); } });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "33. Cambiar el umbral de la meta (VENDEDOR)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/metas-recompensa/{{metaId}}/umbral",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metas-recompensa",
+                "{{metaId}}",
+                "umbral"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevoUmbral\": 8\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cambiar umbral: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Umbral 8\", function () { pm.expect(pm.response.json().comprasRequeridas).to.eql(8); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "34. ERROR: meta con umbral 0 -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/metas-recompensa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metas-recompensa"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comprasRequeridas\": 0,\n  \"productoRegaloId\": \"{{productoId3}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Umbral inválido: responde 400\", function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "35. Desactivar la meta (VENDEDOR)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/metas-recompensa/{{metaId}}/desactivar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metas-recompensa",
+                "{{metaId}}",
+                "desactivar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Desactivar meta: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"activa = false\", function () { pm.expect(pm.response.json().activa).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -899,6 +2961,54 @@
     },
     {
       "key": "compraId",
+      "value": ""
+    },
+    {
+      "key": "codigoCupon",
+      "value": ""
+    },
+    {
+      "key": "productoId2",
+      "value": ""
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    },
+    {
+      "key": "productoId3",
+      "value": ""
+    },
+    {
+      "key": "promocionId",
+      "value": ""
+    },
+    {
+      "key": "comboId",
+      "value": ""
+    },
+    {
+      "key": "regaloId",
+      "value": ""
+    },
+    {
+      "key": "metaId",
+      "value": ""
+    },
+    {
+      "key": "notificacionId",
+      "value": ""
+    },
+    {
+      "key": "fechaDesde",
+      "value": ""
+    },
+    {
+      "key": "fechaHasta",
+      "value": ""
+    },
+    {
+      "key": "fechaPreventa",
       "value": ""
     }
   ]
