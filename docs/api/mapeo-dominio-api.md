@@ -29,6 +29,12 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `Producto.aplicarDescuento(...)` | POST | `/api/descuentos` | VENDEDOR | 200 OK |
 | `Promocion.programar(...)` | POST | `/api/promociones` | VENDEDOR | 201 Created |
 | `Preventa.programar(...)` | POST | `/api/preventas` | VENDEDOR | 201 Created |
+| Consultar preventas futuras | GET | `/api/preventas` | Cualquiera | 200 OK |
+| Consultar mis productos (activos y pausados) | GET | `/api/productos/mios` | VENDEDOR | 200 OK |
+| `Producto.quitarDescuento()` | DELETE | `/api/descuentos/{productoId}` | VENDEDOR | 200 OK |
+| Consultar promociones de temporada del vendedor | GET | `/api/promociones` | VENDEDOR | 200 OK |
+| `Promocion.reprogramar(...)` | PUT | `/api/promociones/{id}` | VENDEDOR | 200 OK |
+| Quitar una promoción | DELETE | `/api/promociones/{id}` | VENDEDOR | 204 No Content |
 
 ## Compras
 
@@ -38,34 +44,59 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `Compra.confirmar()` | PUT | `/api/compras/{id}/confirmar` | COMPRADOR | 200 OK |
 | `Compra.cancelar()` | PUT | `/api/compras/{id}/cancelar` | COMPRADOR | 200 OK |
 | `Compra.solicitarReembolso(...)` | PUT | `/api/compras/{id}/reembolso` | COMPRADOR | 200 OK |
-| `Compra.aplicarCupon(...)` | PUT | `/api/compras/{id}/cupon` | COMPRADOR | 200 OK |
 | Consultar historial de compras | GET | `/api/compras` | COMPRADOR | 200 OK |
-| Crear operación del carrito | POST | `/api/pedidos` | COMPRADOR | 201 Created |
+| Crear pedido (carrito completo, cupón opcional) | POST | `/api/pedidos` | COMPRADOR | 201 Created |
 | Confirmar pedido o combo | PUT | `/api/pedidos/{id}/confirmar` | COMPRADOR | 200 OK |
 | Cancelar pedido o combo | PUT | `/api/pedidos/{id}/cancelar` | COMPRADOR | 200 OK |
 | Reembolsar pedido o combo completo | PUT | `/api/pedidos/{id}/reembolso` | COMPRADOR | 200 OK |
 | Comprar combo | POST | `/api/combos/{id}/comprar` | COMPRADOR | 201 Created |
+
+## Cupones
+
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `Cupon.crear(...)` | POST | `/api/cupones` | VENDEDOR | 201 Created |
+| Consultar los cupones del vendedor | GET | `/api/cupones` | VENDEDOR | 200 OK |
+| Vista previa de un cupón (no gasta un uso) | GET | `/api/cupones/{codigo}` | COMPRADOR | 200 OK |
 
 ## Combos, wishlist, reseñas y puntos
 
 | Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
 |---|---|---|---|---|
 | `Combo.crear(...)` | POST | `/api/combos` | VENDEDOR | 201 Created |
+| Consultar combos con todos sus productos visibles | GET | `/api/combos` | Cualquiera | 200 OK |
+| Consultar los combos del vendedor | GET | `/api/combos/mios` | VENDEDOR | 200 OK |
+| `Combo.modificar(...)` | PUT | `/api/combos/{id}` | VENDEDOR | 200 OK |
+| Eliminar un combo | DELETE | `/api/combos/{id}` | VENDEDOR | 204 No Content |
 | `Combo.agregarProducto(...)` | PUT | `/api/combos/{id}/productos/{productoId}` | VENDEDOR | 200 OK |
 | `Combo.quitarProducto(...)` | DELETE | `/api/combos/{id}/productos/{productoId}` | VENDEDOR | 200 OK |
+| Consultar wishlist | GET | `/api/wishlists` | COMPRADOR | 200 OK |
 | `Wishlist.agregarProducto(...)` | POST | `/api/wishlists` | COMPRADOR | 201 Created |
 | `Wishlist.quitarProducto(...)` | DELETE | `/api/wishlists/{productoId}` | COMPRADOR | 200 OK |
 | `Resena.crear(...)` | POST | `/api/resenas` | COMPRADOR | 201 Created |
 | `Usuario.redimirPuntos(...)` | POST | `/api/puntos/redimir` | COMPRADOR | 200 OK |
 | Consultar historial de puntos | GET | `/api/puntos/historial` | COMPRADOR | 200 OK |
 
+## Notificaciones
+
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| Consultar notificaciones (más reciente primero) | GET | `/api/notificaciones` | COMPRADOR | 200 OK |
+| `Notificacion.marcarComoLeida()` | PUT | `/api/notificaciones/{id}/leida` | COMPRADOR | 200 OK |
+
 ## Regalos y metas de recompensa
 
 | Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
 |---|---|---|---|---|
+| `Regalo.crear(...)` | POST | `/api/regalos` | VENDEDOR | 201 Created |
+| Consultar regalos disponibles | GET | `/api/regalos/disponibles` | COMPRADOR | 200 OK |
+| Consultar mis regalos | GET | `/api/regalos/mios` | COMPRADOR | 200 OK |
+| Consultar progreso de regalos | GET | `/api/regalos/progreso` | COMPRADOR | 200 OK |
+| Consultar regalos por enviar | GET | `/api/regalos/por-enviar` | VENDEDOR | 200 OK |
 | `Regalo.elegir(...)` (asignar por meta) | PUT | `/api/regalos/{id}/asignar` | COMPRADOR | 200 OK |
-| `Regalo.enviar()` | PUT | `/api/regalos/{id}/enviar` | VENDEDOR | 200 OK |
+| `Regalo.enviar()` (solo el vendedor dueño) | PUT | `/api/regalos/{id}/enviar` | VENDEDOR | 200 OK |
 | `Regalo.confirmarEntrega(...)` | PUT | `/api/regalos/{id}/entrega` | COMPRADOR | 200 OK |
+| Consultar metas activas | GET | `/api/metas-recompensa` | Cualquiera | 200 OK |
 | `MetaRecompensa.crear(...)` | POST | `/api/metas-recompensa` | VENDEDOR | 201 Created |
 | `MetaRecompensa.actualizarUmbral(...)` | PUT | `/api/metas-recompensa/{id}/umbral` | VENDEDOR | 200 OK |
 | `MetaRecompensa.desactivar()` | PUT | `/api/metas-recompensa/{id}/desactivar` | VENDEDOR | 200 OK |
@@ -97,8 +128,23 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `GET /api/productos` | Filtros opcionales por query: `texto`, `categoria`, `gama`, `precioMin`, `precioMax`, `soloPreventa`. Paginación: `page` (desde 0, por defecto 0) y `size` (1–100, por defecto 20) |
 | `POST /api/compras` | `productoId`, `cantidad` |
 | `POST /api/wishlists` | `productoId` |
-| `PUT /api/compras/{id}/cupon` | `codigo` |
-| `POST /api/pedidos` | `items` (`productoId`, `cantidad`) y `codigoCupon` opcional |
+| `POST /api/descuentos` | `productoId` y `porcentaje` (mayor a 0 y menor que 100) |
+| `POST /api/promociones` | `productoId`, `porcentaje` (mayor a 0 y menor que 100), `desde` y `hasta` (AAAA-MM-DD) |
+| `PUT /api/promociones/{id}` | `porcentaje`, `desde` y `hasta` |
+| `PUT /api/combos/{id}` | `nombre`, `descripcion` y `descuento` (de 0 a menos de 100) |
+| `POST /api/resenas` | `idCompra`, `valorCalificacion` (1 a 5) y `comentario` (obligatorio, máximo 500 caracteres) |
+| `POST /api/valoraciones-vendedor` | `compraId`, `estrellas` (1 a 5) y `comentario` opcional (máximo 500 caracteres) |
+| `POST /api/puntos/redimir` | `cantidad` (mayor a 0) |
+| `DELETE /api/descuentos/{productoId}` · `DELETE /api/promociones/{id}` · `DELETE /api/combos/{id}` | Sin cuerpo; el id sale de la URL y el vendedor, del token |
+| `POST /api/pedidos` | `items` (`productoId`, `cantidad`; entre 1 y 50 líneas) y `codigoCupon` opcional. Responde `pedidoId`, `compras`, `total` y `cuponAplicado` |
+| `PUT /api/pedidos/{id}/confirmar` · `/cancelar` · `/reembolso` | Sin cuerpo; actúan sobre todas las líneas del pedido |
+| `POST /api/cupones` | `codigo`, `porcentaje` (mayor a 0 y menor que 100), `vence` (AAAA-MM-DD) y `usosMaximos` |
+| `POST /api/combos` | `nombre`, `descripcion`, `descuento` y `productoIds` (al menos dos) |
+| `POST /api/preventas` | `productoId`, `fechaLanzamiento` y `descripcion` |
+| `POST /api/regalos` | `productoId` o `comboId` (exactamente uno) |
+| `POST /api/metas-recompensa` | `comprasRequeridas` y `productoRegaloId` |
+| `PUT /api/metas-recompensa/{id}/umbral` | `nuevoUmbral` |
+| `PUT /api/notificaciones/{id}/leida` | Sin cuerpo |
 | `POST /api/combos/{id}/comprar` | `cantidad` y `codigoCupon` opcional |
 | `PUT /api/regalos/{id}/asignar` | Sin cuerpo |
 | `PUT /api/regalos/{id}/enviar` | Sin cuerpo |
@@ -119,6 +165,12 @@ Cada operación del dominio y el endpoint REST que la expone.
 - **Búsqueda paginada:** `GET /api/productos` solo devuelve productos visibles (no eliminados ni pausados). `texto` busca en nombre y descripción sin distinguir mayúsculas; `soloPreventa=true` devuelve los productos cuya preventa aún no ha llegado a su fecha de lanzamiento. La respuesta trae `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. Los filtros y la paginación se ejecutan en la base de datos (JPQL). Una página o un tamaño fuera de rango responde 422.
 - **Operaciones de compra:** las líneas de un pedido o combo comparten `pedidoId`; confirmación, cancelación y reembolso se realizan sobre todas las líneas. El historial muestra el pedido como `producto1 + producto2` y conserva el nombre del combo comprado.
 - **Cupón para combos:** se calcula sobre el precio unitario ya rebajado por el combo, no se combina con promociones de producto y consume un uso por combo.
+- **Pedido atómico:** `POST /api/pedidos` valida todas las líneas antes de descontar stock. Con una lista vacía, una cantidad no positiva o un producto repetido responde 400 o 422; si una línea no tiene stock responde 422 sin descontar nada ni guardar compras. Las líneas de un pedido no se confirman ni cancelan por separado (422); el reembolso puede pedirse por línea o por pedido.
+- **Cupón en un pedido:** consume un solo uso por pedido (no uno por ítem) y cada comprador puede usarlo una sola vez. Un cupón sin dueño (`vendedorId` nulo, como `VERANO26`) descuenta todos los ítems; uno con dueño solo descuenta los de su vendedor. Vencido, agotado, ya usado o sin ítems aplicables: 422; si el código no existe: 404. En todos los casos sin tocar el stock. `GET /api/cupones/{codigo}` es solo una vista previa y no gasta un uso. `PUT /api/compras/{id}/cupon` ya no existe.
+- **Descuentos, promociones y combos del vendedor:** `POST /api/descuentos` aplica un descuento inmediato y notifica a las wishlists; `DELETE /api/descuentos/{productoId}` lo quita (el producto vuelve a su precio anterior, sin notificar) y responde 422 si no tenía descuento. Con un descuento activo el precio no se puede cambiar. `PUT` y `DELETE /api/promociones/{id}` aplican las mismas reglas que al crear (sin solapamiento, solo el vendedor dueño); quitar una promoción no cambia el precio base. `DELETE /api/combos/{id}` responde 422 si hay un regalo sin cerrar que referencie el combo.
+- **Productos del vendedor:** `GET /api/productos/mios` devuelve todos sus productos, activos y pausados (con el campo `pausado`) y su promoción vigente; el catálogo público `GET /api/productos` solo muestra los visibles.
+- **Metas de recompensa:** `GET /api/metas-recompensa` lista solo las activas, por umbral ascendente. Son informativas: la asignación de regalos usa la regla fija de 5 compras completadas.
+- **Lecturas sin pantalla previa:** `GET /api/wishlists` devuelve `[]` si no hay wishlist y omite productos eliminados o pausados; `GET /api/preventas` solo lista lanzamientos estrictamente posteriores a hoy; `GET /api/combos` solo muestra combos con todos sus productos visibles.
 - **Ranking de más vendidos:** agrupa en la base de datos las unidades vendidas de compras `COMPLETADA` (`JOIN`, `GROUP BY` y `SUM`), ordena por unidades (desempate por nombre) e incluye la calificación promedio de cada producto. Sin `vendedorId` lista todo el marketplace; los productos sin ventas no aparecen.
 - **Errores** (cuerpo JSON `{timestamp, status, mensaje}`):
   | Código | Cuándo |
@@ -130,5 +182,5 @@ Cada operación del dominio y el endpoint REST que la expone.
   | 409 | Duplicidad (correo, documento, preventa, promoción solapada, reseña o valoración repetida, producto repetido en wishlist o combo), violación de integridad o conflicto de concurrencia |
   | 422 | Una regla de negocio del dominio se violó (stock insuficiente, reembolso fuera de plazo, transición de estado no permitida, paginación fuera de rango, etc.) |
 
-- **No existe un rol ADMIN.** Las operaciones de administración se resolvieron así: metas de recompensa y envío de regalos son de `VENDEDOR`; `mas-vendidos` y el reporte global están abiertos a cualquier sesión autenticada.
+- **No existe un rol ADMIN.** Las operaciones de administración se resolvieron así: las metas de recompensa son de `VENDEDOR` (cualquier vendedor puede gestionarlas) y el envío de regalos es del vendedor dueño del producto o combo; `mas-vendidos` y el reporte global están abiertos a cualquier sesión autenticada.
 - Los parámetros de los endpoints que no están en la tabla de cuerpos están en Swagger.
