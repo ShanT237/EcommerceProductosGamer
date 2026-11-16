@@ -37,4 +37,27 @@ export class PreventaService {
       this.cargada.set(true);
     }));
   }
+
+  /** Cambia la fecha de lanzamiento y la descripción de una preventa que aún no se ha lanzado. */
+  modificar(id: string, fechaLanzamiento: string, descripcion: string): Observable<Preventa> {
+    return this.http.put<Preventa>(`${API_URL}/preventas/${id}`, {
+      fechaLanzamiento,
+      descripcion,
+    }).pipe(tap((preventa) => {
+      this.futuras.update((actuales) => new Map(actuales).set(preventa.productoId, preventa));
+    }));
+  }
+
+  /** Cancela una preventa que aún no se ha lanzado: el producto vuelve a poder comprarse. */
+  cancelar(id: string): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/preventas/${id}`).pipe(tap(() => {
+      this.futuras.update((actuales) => {
+        const restantes = new Map(actuales);
+        for (const [productoId, preventa] of restantes) {
+          if (preventa.id === id) restantes.delete(productoId);
+        }
+        return restantes;
+      });
+    }));
+  }
 }

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @TestPropertySource(properties = "spring.sql.init.mode=never")
@@ -55,5 +56,48 @@ class PreventaRepositoryJpaTest {
         entityManager.clear();
 
         assertEquals(List.of(), preventaRepository.obtenerFuturas(HOY));
+    }
+
+    @Test
+    void obtenerPorIdDevuelveLaPreventaOVacio() {
+        Preventa preventa = guardar(HOY.plusDays(3));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals(preventa.getId(), preventaRepository.obtenerPorId(preventa.getId()).orElseThrow().getId());
+        assertTrue(preventaRepository.obtenerPorId(UUID.randomUUID()).isEmpty());
+    }
+
+    @Test
+    void guardarUnaPreventaExistenteActualizaFechaYDescripcion() {
+        Preventa preventa = guardar(HOY.plusDays(3));
+        entityManager.flush();
+        entityManager.clear();
+
+        Preventa guardada = preventaRepository.obtenerPorId(preventa.getId()).orElseThrow();
+        guardada.reprogramar(HOY.plusDays(20), "Reprogramada", HOY);
+        preventaRepository.guardar(guardada);
+        entityManager.flush();
+        entityManager.clear();
+
+        Preventa actualizada = preventaRepository.obtenerPorId(preventa.getId()).orElseThrow();
+        assertEquals(HOY.plusDays(20), actualizada.getFechaLanzamiento());
+        assertEquals("Reprogramada", actualizada.getDescripcion());
+        assertEquals(1, preventaRepository.obtenerFuturas(HOY).size());
+    }
+
+    @Test
+    void eliminarBorraLaPreventaYNoFallaSiNoExiste() {
+        Preventa preventa = guardar(HOY.plusDays(3));
+        entityManager.flush();
+        entityManager.clear();
+
+        preventaRepository.eliminar(preventa.getId());
+        preventaRepository.eliminar(UUID.randomUUID());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertTrue(preventaRepository.obtenerPorId(preventa.getId()).isEmpty());
+        assertTrue(preventaRepository.obtenerPorProductoId(preventa.getProductoId()).isEmpty());
     }
 }

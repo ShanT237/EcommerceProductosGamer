@@ -19,6 +19,11 @@ public class PreventaRepositoryJpa implements PreventaRepository {
     private final PreventaPersistenceMapper mapper;
 
     @Override
+    public Optional<Preventa> obtenerPorId(UUID id) {
+        return dataRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
     public Optional<Preventa> obtenerPorProductoId(UUID productoId) {
         return dataRepository.findByProductoId(productoId).map(mapper::toDomain);
     }
@@ -40,5 +45,10 @@ public class PreventaRepositoryJpa implements PreventaRepository {
     @Override
     public void guardar(Preventa preventa) {
         dataRepository.save(mapper.toEntity(preventa));
+    }
+
+    @Override
+    public void eliminar(UUID id) {
+        dataRepository.deleteById(id);
     }
 }

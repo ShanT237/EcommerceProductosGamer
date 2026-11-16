@@ -1,17 +1,22 @@
 <section class="preventas">
   <form class="panel formulario" (ngSubmit)="programar()">
-    <h2>Programar preventa</h2>
+    <h2>{{ editandoId() ? 'Editar preventa' : 'Programar preventa' }}</h2>
     <p class="muted">El producto no se podrá comprar ni añadir al carrito hasta su fecha de lanzamiento.</p>
 
     <div class="campo">
       <label for="producto-preventa">Producto</label>
-      <select id="producto-preventa" name="productoId" class="entrada" [(ngModel)]="productoId"
-              [disabled]="guardando() || !servicio.cargada()">
-        <option value="">Elige un producto…</option>
-        @for (producto of productosDisponibles(); track producto.id) {
-          <option [value]="producto.id">{{ producto.nombre }}</option>
-        }
-      </select>
+      @if (editandoId()) {
+        <input id="producto-preventa" class="entrada" type="text" disabled
+               [value]="productoEditando()?.nombre ?? 'Producto'">
+      } @else {
+        <select id="producto-preventa" name="productoId" class="entrada" [(ngModel)]="productoId"
+                [disabled]="guardando() || !servicio.cargada()">
+          <option value="">Elige un producto…</option>
+          @for (producto of productosDisponibles(); track producto.id) {
+            <option [value]="producto.id">{{ producto.nombre }}</option>
+          }
+        </select>
+      }
     </div>
 
     <div class="campo">
@@ -29,9 +34,20 @@
 
     @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
 
-    <button class="btn btn-neon" type="submit" [disabled]="guardando() || !servicio.cargada()">
-      {{ guardando() ? 'Programando…' : 'Programar preventa' }}
-    </button>
+    <div class="botones">
+      <button class="btn btn-neon" type="submit" [disabled]="guardando() || !servicio.cargada()">
+        @if (editandoId()) {
+          {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+        } @else {
+          {{ guardando() ? 'Programando…' : 'Programar preventa' }}
+        }
+      </button>
+      @if (editandoId()) {
+        <button type="button" class="btn cancelar-edicion" [disabled]="guardando()" (click)="cancelarEdicion()">
+          Descartar cambios
+        </button>
+      }
+    </div>
   </form>
 
   <section class="panel listado">
@@ -47,9 +63,21 @@
             <h3>{{ item.producto?.nombre ?? 'Producto' }}</h3>
             <p class="muted">{{ item.preventa.descripcion }}</p>
           </div>
-          <time [attr.datetime]="item.preventa.fechaLanzamiento">
-            {{ fechaDia(item.preventa.fechaLanzamiento) }}
-          </time>
+          <div class="lateral">
+            <time [attr.datetime]="item.preventa.fechaLanzamiento">
+              {{ fechaDia(item.preventa.fechaLanzamiento) }}
+            </time>
+            <div class="acciones">
+              <button type="button" class="btn btn-chico editar-preventa"
+                      [disabled]="guardando() || cancelandoId() === item.preventa.id"
+                      (click)="editar(item.preventa)">Editar</button>
+              <button type="button" class="btn btn-chico btn-peligro cancelar-preventa"
+                      [disabled]="cancelandoId() === item.preventa.id"
+                      (click)="cancelar(item.preventa, item.producto?.nombre ?? 'Producto')">
+                {{ cancelandoId() === item.preventa.id ? 'Cancelando…' : 'Cancelar' }}
+              </button>
+            </div>
+          </div>
         </article>
       }
     }
