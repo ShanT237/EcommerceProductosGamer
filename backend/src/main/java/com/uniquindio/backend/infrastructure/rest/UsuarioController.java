@@ -7,6 +7,7 @@ import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.infrastructure.rest.mapper.UsuarioMapper;
 import com.uniquindio.backend.application.dto.request.EditarPerfilRequest;
 import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
+import com.uniquindio.backend.application.usecase.ObtenerPerfilUseCase;
 import com.uniquindio.backend.application.dto.request.CambiarContrasenaRequest;
 import com.uniquindio.backend.application.usecase.CambiarContrasenaUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -27,15 +28,18 @@ public class UsuarioController {
 
     private final RegistrarUsuarioUseCase registrarUsuarioUseCase;
     private final EditarPerfilUseCase editarPerfilUseCase;
+    private final ObtenerPerfilUseCase obtenerPerfilUseCase;
     private final CambiarContrasenaUseCase cambiarContrasenaUseCase;
     private final UsuarioMapper mapper;
 
     public UsuarioController(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                              EditarPerfilUseCase editarPerfilUseCase,
+                             ObtenerPerfilUseCase obtenerPerfilUseCase,
                              CambiarContrasenaUseCase cambiarContrasenaUseCase,
                              UsuarioMapper mapper) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.editarPerfilUseCase = editarPerfilUseCase;
+        this.obtenerPerfilUseCase = obtenerPerfilUseCase;
         this.cambiarContrasenaUseCase = cambiarContrasenaUseCase;
         this.mapper = mapper;
     }
@@ -60,6 +64,13 @@ public class UsuarioController {
                 .buildAndExpand(usuario.getId())
                 .toUri();
         return ResponseEntity.created(location).body(response); // 201 = created
+    }
+
+    // CU-26 Consultar Perfil del usuario autenticado (para precargar el formulario)
+    @PreAuthorize("hasRole('COMPRADOR')")
+    @GetMapping("/me")
+    public ResponseEntity<RegistrarUsuarioResponse> obtenerPerfil(@AuthenticationPrincipal UUID usuarioId) {
+        return ResponseEntity.ok(mapper.toRegistrarResponse(obtenerPerfilUseCase.ejecutar(usuarioId))); // 200 OK
     }
 
     // CU-26 Editar Perfil (nombre y correo) del usuario autenticado
