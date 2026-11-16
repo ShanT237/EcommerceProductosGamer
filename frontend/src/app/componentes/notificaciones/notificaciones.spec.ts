@@ -64,6 +64,19 @@ describe('Notificaciones (pantalla)', () => {
     expect(filas()[0].textContent).toContain('El producto n1 ha bajado de precio');
   });
 
+  it('muestraLaEtiquetaDelTipoYResaltaLasAlertasDelVendedor', () => {
+    abrirConLista([
+      notificacion('n1'),
+      { ...notificacion('n2'), tipo: 'STOCK_AGOTADO', productoId: 'p2', mensaje: "Tu producto 'Mouse' se agotó." },
+      { ...notificacion('n3'), tipo: 'META_ALCANZADA', productoId: null, mensaje: 'Alcanzaste la meta' },
+    ]);
+
+    const etiquetas = Array.from(fixture.nativeElement.querySelectorAll('.tipo')) as HTMLElement[];
+    expect(etiquetas.map((e) => e.textContent?.trim())).toEqual(['Descuento', 'Agotado', 'Meta']);
+    expect(etiquetas[1].classList).toContain('alerta');
+    expect(etiquetas[2].classList).not.toContain('alerta');
+  });
+
   it('alHacerClicLlamaAlPutYBajaElContador', () => {
     abrirConLista([notificacion('n1'), notificacion('n2')]);
     expect(servicio.noLeidas()).toBe(2);

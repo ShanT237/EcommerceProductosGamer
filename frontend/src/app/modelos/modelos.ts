@@ -147,10 +147,16 @@ export interface ImagenProductoSubida {
   imagenUrl: string;
 }
 
+/** Avisos del comprador (wishlist, metas, regalos) y del vendedor (stock, ventas, reembolsos, reseñas). */
+export type TipoNotificacion =
+  | 'DESCUENTO' | 'STOCK_DISPONIBLE' | 'PREVENTA_DISPONIBLE' | 'META_ALCANZADA' | 'REGALO_ENVIADO'
+  | 'STOCK_BAJO' | 'STOCK_AGOTADO' | 'NUEVA_VENTA' | 'REEMBOLSO_SOLICITADO' | 'NUEVA_RESENA' | 'NUEVA_VALORACION';
+
 export interface Notificacion {
   id: string;
-  productoId: string;
-  tipo: 'DESCUENTO';
+  /** Opcional: avisos como META_ALCANZADA no se refieren a un producto. */
+  productoId: string | null;
+  tipo: TipoNotificacion;
   mensaje: string;
   fecha: string;
   leida: boolean;

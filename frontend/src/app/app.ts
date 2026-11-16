@@ -18,7 +18,7 @@ export class App {
   protected auth = inject(AuthService);
   protected toast = inject(ToastService);
   protected carrito = inject(CarritoService);
-  protected notificaciones = inject(NotificacionService); // al inyectarlo carga los avisos del comprador
+  protected notificaciones = inject(NotificacionService); // al inyectarlo carga los avisos de la sesión (comprador o vendedor)
   protected wishlist = inject(WishlistService);
   private confirmacion = inject(ConfirmacionService);
   protected menuAbierto = signal(false);

@@ -6,8 +6,9 @@ import { Notificacion } from '../modelos/modelos';
 import { AuthService } from './auth.service';
 
 /**
- * Notificaciones del comprador (avisos de descuento de su wishlist).
- * Carga sola cuando la sesión es COMPRADOR y se vacía al cambiar de usuario.
+ * Notificaciones de la sesión activa, sea COMPRADOR (descuentos, stock y preventas de su wishlist,
+ * metas y regalos) o VENDEDOR (stock bajo, ventas, reembolsos, reseñas y valoraciones).
+ * Carga sola al iniciar sesión y se vacía al cambiar de usuario.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificacionService {
@@ -20,15 +21,11 @@ export class NotificacionService {
   readonly noLeidas = computed(() => this._notificaciones().filter((n) => !n.leida).length);
 
   // computed compara por valor: el efecto solo corre si cambia de verdad la persona (no por renovar el token).
-  // Un vendedor no tiene notificaciones, así que para él vale null.
-  private compradorId = computed(() => {
-    const sesion = this.auth.sesion();
-    return sesion?.rol === 'COMPRADOR' ? sesion.id : null;
-  });
+  private usuarioId = computed(() => this.auth.sesion()?.id ?? null);
 
   constructor() {
     effect(() => {
-      const id = this.compradorId();
+      const id = this.usuarioId();
       untracked(() => {
         this._notificaciones.set([]);
         if (id) this.cargar().subscribe({ error: () => undefined });
@@ -38,11 +35,11 @@ export class NotificacionService {
 
   /** GET /notificaciones: reemplaza la lista local (más reciente primero, como la manda el backend). */
   cargar(): Observable<Notificacion[]> {
-    const solicitante = this.compradorId();
+    const solicitante = this.usuarioId();
     return this.http.get<Notificacion[]>(`${API_URL}/notificaciones`).pipe(
       tap((lista) => {
         // Si la sesión cambió mientras llegaba la respuesta, se descarta para no mostrar datos de otra persona.
-        if (this.compradorId() === solicitante) this._notificaciones.set(lista);
+        if (this.usuarioId() === solicitante) this._notificaciones.set(lista);
       }),
     );
   }
