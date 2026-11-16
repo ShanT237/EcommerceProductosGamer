@@ -1,4 +1,4 @@
-<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" role="img" [attr.aria-label]="nombre()" class="gama-{{ gama() }}">
+<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" role="img" [attr.aria-label]="nombre()" class="gama-{{ gama() }}" [style.visibility]="imagenMostrada() ? 'hidden' : 'visible'">
   <defs>
     <radialGradient [attr.id]="uid + '-halo'" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
@@ -91,3 +91,6 @@
     }
   }
 </svg>
+@if (imagenMostrada(); as url) {
+  <img class="imagen-real" [src]="url" [alt]="nombre()" (error)="marcarImagenFallida(url)">
+}

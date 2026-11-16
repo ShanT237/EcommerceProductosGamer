@@ -1,5 +1,7 @@
 :host { display: block; width: 100%; }
 svg { width: 100%; height: auto; display: block; overflow: visible; }
+.imagen-real { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+:host { position: relative; }
 .flota { animation: flota 6s ease-in-out infinite; transform-origin: center; }
 @keyframes flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 .tecla { animation: parpadeo 3.5s ease-in-out infinite; }
