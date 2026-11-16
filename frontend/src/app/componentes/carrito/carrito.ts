@@ -102,7 +102,29 @@ export class Carrito {
         this.router.navigateByUrl('/mis-compras');
         return;
       }
+      if (r.pedidoSinCancelar) {
+        // La cancelación también falló: no se puede asegurar que el stock se liberó ni que el pedido no siga pendiente.
+        this.toast.error(
+          `No se pudo completar el pago: ${r.error}. Además no se pudo cancelar el pedido: puede seguir pendiente con el stock reservado. ` +
+            'Reintenta la cancelación o revísalo en Mis compras.',
+        );
+        return;
+      }
       this.toast.error(`No se pudo completar el pago: ${r.error}. No se cobró nada y tu carrito sigue igual.`);
+    });
+  }
+
+  protected reintentarCancelacion() {
+    this.carrito.reintentarCancelacion().subscribe((desenlace) => {
+      if (desenlace === 'CANCELADO') {
+        this.toast.ok('Pedido cancelado y stock liberado. Tu carrito sigue igual: puedes volver a pagar.');
+      } else if (desenlace === 'PAGADO') {
+        this.toast.ok('El pedido sí se había confirmado: tu compra quedó pagada.');
+        this.quitarCupon();
+        this.router.navigateByUrl('/mis-compras');
+      } else {
+        this.toast.error('Sigue sin poder cancelarse el pedido. Inténtalo de nuevo o revísalo en Mis compras.');
+      }
     });
   }
 }

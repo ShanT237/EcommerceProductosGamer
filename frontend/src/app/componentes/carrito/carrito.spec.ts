@@ -141,6 +141,34 @@ describe('Carrito (pantalla)', () => {
     expect(boton().disabled).toBe(false);
   });
 
+  it('si falla confirmar y también cancelar, avisa del pedido sin cancelar y permite reintentar', async () => {
+    const putCancelar = () => ({ method: 'PUT', url: `${API_URL}/pedidos/ped1/cancelar` });
+    carrito.agregar(producto({ id: 'a' }));
+    fixture.detectChanges();
+
+    boton().click();
+    await esperar();
+    http.expectOne(postPedido()).flush(pedido(compra('cA', 'a')));
+    http.expectOne(putConfirmar()).flush({ mensaje: MENSAJE_STOCK }, { status: 422, statusText: 'Unprocessable Content' });
+    http.expectOne(putCancelar()).flush({ mensaje: 'x' }, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+
+    const error = toast.toasts().find((t) => t.tipo === 'error');
+    expect(error?.texto).toContain(MENSAJE_STOCK);
+    expect(error?.texto).toContain('no se pudo cancelar el pedido');
+    expect(error?.texto).not.toContain('No se cobró nada');
+    expect(fixture.nativeElement.querySelector('.alerta-reserva')).not.toBeNull();
+    expect(boton().disabled).toBe(true);
+
+    (fixture.nativeElement.querySelector('button.reintentar-cancelacion') as HTMLButtonElement).click();
+    http.expectOne(putCancelar()).flush(pedido({ ...compra('cA', 'a'), estado: 'CANCELADA' }));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.alerta-reserva')).toBeNull();
+    expect(boton().disabled).toBe(false);
+    expect(carrito.items().map((i) => i.producto.id)).toEqual(['a']);
+  });
+
   it('un pago completo hace un solo POST con todos los ítems y navega a /mis-compras', async () => {
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     carrito.agregar(producto({ id: 'a' }));

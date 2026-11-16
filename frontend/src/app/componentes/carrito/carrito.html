@@ -91,8 +91,19 @@
       } @else {
         <div class="fila total"><span class="muted">Subtotal</span><strong>{{ precio(carrito.subtotal()) }}</strong></div>
       }
+      @if (carrito.pedidoSinCancelar()) {
+        <div class="alerta-reserva" role="alert">
+          <p><strong>Hay un pedido sin cancelar.</strong> El pago falló y tampoco se pudo cancelar el pedido: puede seguir pendiente con el stock reservado. No se puede pagar de nuevo hasta resolverlo.</p>
+          <div class="acciones-reserva">
+            <button type="button" class="btn btn-chico reintentar-cancelacion"
+                    [disabled]="carrito.pagando()"
+                    (click)="reintentarCancelacion()">{{ carrito.pagando() ? 'Reintentando…' : 'Reintentar cancelación' }}</button>
+            <a routerLink="/mis-compras" class="btn btn-chico">Ver mis compras</a>
+          </div>
+        </div>
+      }
       <button type="button" class="btn btn-neon pagar"
-              [disabled]="carrito.pagando() || carrito.items().length === 0"
+              [disabled]="carrito.pagando() || carrito.items().length === 0 || !!carrito.pedidoSinCancelar()"
               (click)="pagar()">{{ carrito.pagando() ? 'Procesando…' : 'Pagar (simulado)' }}</button>
       <p class="muted nota">No hay pasarela de pago real. El pago es todo o nada: si un producto falla, no se cobra ninguno y tu carrito queda como estaba.</p>
     </aside>
