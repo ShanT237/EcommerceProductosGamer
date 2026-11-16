@@ -9,15 +9,15 @@
       <h3>Datos personales</h3>
       <div class="campo">
         <label for="nombre">Nombre</label>
-        <input id="nombre" name="nombre" class="entrada" maxlength="100" [(ngModel)]="nombre">
+        <input id="nombre" name="nombre" class="entrada" maxlength="100" [(ngModel)]="nombre" [disabled]="cargandoPerfil()">
       </div>
       <div class="campo">
         <label for="correo">Correo</label>
-        <input id="correo" name="correo" class="entrada" type="email" maxlength="150" [(ngModel)]="correo">
+        <input id="correo" name="correo" class="entrada" type="email" maxlength="150" [(ngModel)]="correo" [disabled]="cargandoPerfil()">
       </div>
       <p class="muted nota">Si cambias el correo, tendrás que ingresar de nuevo.</p>
       @if (errorPerfil()) { <p class="error">{{ errorPerfil() }}</p> }
-      <button class="btn btn-neon" type="submit" [disabled]="guardandoPerfil()">{{ guardandoPerfil() ? 'Guardando…' : 'Guardar cambios' }}</button>
+      <button class="btn btn-neon" type="submit" [disabled]="guardandoPerfil() || cargandoPerfil()">{{ guardandoPerfil() ? 'Guardando…' : 'Guardar cambios' }}</button>
     </form>
 
     <form class="panel caja aparece" (ngSubmit)="cambiarClave()">
