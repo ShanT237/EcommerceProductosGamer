@@ -5,7 +5,7 @@ import com.uniquindio.backend.domain.entity.Preventa;
 import java.time.LocalDate;
 import java.util.UUID;
 
-// Usado en: POST /api/preventas
+// Usado en: POST /api/preventas y PUT /api/preventas/{id}
 public record PreventaResponse(
         UUID id,
         UUID productoId,

@@ -110,4 +110,53 @@ class PreventaTest {
         assertEquals(preventa1.hashCode(), preventa2.hashCode());
         assertNotEquals(preventa1, preventa3);
     }
+
+    @Test
+    @DisplayName("reprogramar cambia fecha y descripción de una preventa futura")
+    void reprogramarCambiaFechaYDescripcion() {
+        LocalDate hoy = LocalDate.of(2026, 10, 20);
+        Preventa preventa = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(),
+                hoy.plusDays(5), "Original", hoy);
+
+        preventa.reprogramar(hoy.plusDays(30), "Nueva descripción", hoy);
+
+        assertEquals(hoy.plusDays(30), preventa.getFechaLanzamiento());
+        assertEquals("Nueva descripción", preventa.getDescripcion());
+    }
+
+    @Test
+    @DisplayName("reprogramar exige fecha estrictamente futura y descripción no vacía, sin alterar la preventa")
+    void reprogramarValidaDatosYNoAlteraLaPreventa() {
+        LocalDate hoy = LocalDate.of(2026, 10, 20);
+        LocalDate original = hoy.plusDays(5);
+        Preventa preventa = Preventa.programar(UUID.randomUUID(), UUID.randomUUID(), original, "Original", hoy);
+
+        assertThrows(ReglaDominioException.class, () -> preventa.reprogramar(hoy, "Hoy", hoy));
+        assertThrows(ReglaDominioException.class, () -> preventa.reprogramar(hoy.minusDays(1), "Ayer", hoy));
+        assertThrows(ReglaDominioException.class, () -> preventa.reprogramar(null, "Sin fecha", hoy));
+        assertThrows(ReglaDominioException.class, () -> preventa.reprogramar(hoy.plusDays(9), "", hoy));
+        assertThrows(ReglaDominioException.class, () -> preventa.reprogramar(hoy.plusDays(9), "   ", hoy));
+        assertThrows(ReglaDominioException.class, () -> preventa.reprogramar(hoy.plusDays(9), null, hoy));
+
+        assertEquals(original, preventa.getFechaLanzamiento());
+        assertEquals("Original", preventa.getDescripcion());
+    }
+
+    @Test
+    @DisplayName("Una preventa ya lanzada no se puede reprogramar ni cancelar")
+    void preventaLanzadaNoSePuedeModificar() {
+        LocalDate hoy = LocalDate.of(2026, 10, 20);
+        Preventa enLaFecha = Preventa.reconstruir(UUID.randomUUID(), UUID.randomUUID(), hoy, "Hoy");
+        Preventa yaPasada = Preventa.reconstruir(UUID.randomUUID(), UUID.randomUUID(), hoy.minusDays(3), "Pasada");
+
+        assertThrows(ReglaDominioException.class,
+                () -> enLaFecha.reprogramar(hoy.plusDays(10), "Nueva", hoy));
+        assertThrows(ReglaDominioException.class,
+                () -> yaPasada.reprogramar(hoy.plusDays(10), "Nueva", hoy));
+        assertThrows(ReglaDominioException.class, () -> enLaFecha.asegurarNoLanzada(hoy, "cancelar"));
+        assertThrows(ReglaDominioException.class, () -> yaPasada.asegurarNoLanzada(hoy, "cancelar"));
+
+        Preventa futura = Preventa.reconstruir(UUID.randomUUID(), UUID.randomUUID(), hoy.plusDays(1), "Mañana");
+        assertDoesNotThrow(() -> futura.asegurarNoLanzada(hoy, "cancelar"));
+    }
 }

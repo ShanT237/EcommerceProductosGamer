@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface PreventaRepository {
 
+    Optional<Preventa> obtenerPorId(UUID id);
+
     /** Usado por CU-37 para rechazar una segunda preventa del mismo producto. */
     Optional<Preventa> obtenerPorProductoId(UUID productoId);
 
@@ -19,4 +21,7 @@ public interface PreventaRepository {
     List<Preventa> obtenerLanzadasEn(LocalDate fecha);
 
     void guardar(Preventa preventa);
+
+    /** Elimina la preventa (cancelación); si el id no existe no hace nada. */
+    void eliminar(UUID id);
 }

@@ -1,7 +1,10 @@
 package com.uniquindio.backend.infrastructure.rest;
 
-import com.uniquindio.backend.application.usecase.ProgramarPreventaUseCase;
+import com.uniquindio.backend.application.usecase.CancelarPreventaUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarPreventasUseCase;
+import com.uniquindio.backend.application.usecase.ModificarPreventaUseCase;
+import com.uniquindio.backend.application.usecase.ProgramarPreventaUseCase;
+import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.entity.Preventa;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
@@ -25,7 +28,10 @@ import static com.uniquindio.backend.infrastructure.rest.SesionTest.comprador;
 import static com.uniquindio.backend.infrastructure.rest.SesionTest.vendedor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -49,6 +55,12 @@ class PreventaControllerTest {
 
     @MockitoBean
     private ConsultarPreventasUseCase consultarPreventasUseCase;
+
+    @MockitoBean
+    private ModificarPreventaUseCase modificarPreventaUseCase;
+
+    @MockitoBean
+    private CancelarPreventaUseCase cancelarPreventaUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -138,5 +150,117 @@ class PreventaControllerTest {
                         .content(cuerpo("", "Lanzamiento")))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    // ---------------------------------------------------------------- modificar
+
+    private String cuerpoModificar(String descripcion) {
+        return """
+            { "fechaLanzamiento": "2026-12-01", "descripcion": "%s" }
+            """.formatted(descripcion);
+    }
+
+    @Test
+    void modificarUsaElVendedorDelTokenYElIdDeLaUrl() throws Exception {
+        UUID preventaId = UUID.randomUUID();
+        when(modificarPreventaUseCase.ejecutar(preventaId, vendedorId, LANZAMIENTO, "Nueva descripción"))
+                .thenReturn(Preventa.reconstruir(preventaId, productoId, LANZAMIENTO, "Nueva descripción"));
+
+        mockMvc.perform(put("/api/preventas/{id}", preventaId)
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar("Nueva descripción")))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.id").value(preventaId.toString()))
+                .andExpect(jsonPath("$.fechaLanzamiento").value("2026-12-01"))
+                .andExpect(jsonPath("$.descripcion").value("Nueva descripción"));
+
+        Mockito.verify(modificarPreventaUseCase)
+                .ejecutar(preventaId, vendedorId, LANZAMIENTO, "Nueva descripción");
+    }
+
+    @Test
+    void modificarConDescripcionVaciaRetorna400() throws Exception {
+        mockMvc.perform(put("/api/preventas/{id}", UUID.randomUUID())
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar("")))
+                .andExpect(status().isBadRequest());              // 400
+
+        Mockito.verifyNoInteractions(modificarPreventaUseCase);
+    }
+
+    @Test
+    void modificarUnaPreventaYaLanzadaRetorna422() throws Exception {
+        UUID preventaId = UUID.randomUUID();
+        when(modificarPreventaUseCase.ejecutar(preventaId, vendedorId, LANZAMIENTO, "Tarde"))
+                .thenThrow(new ReglaDominioException("La preventa ya fue lanzada y no se puede modificar"));
+
+        mockMvc.perform(put("/api/preventas/{id}", preventaId)
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar("Tarde")))
+                .andExpect(status().isUnprocessableContent())     // 422
+                .andExpect(jsonPath("$.mensaje").value("La preventa ya fue lanzada y no se puede modificar"));
+    }
+
+    @Test
+    void modificarSinTokenRetorna401YComoCompradorRetorna403() throws Exception {
+        mockMvc.perform(put("/api/preventas/{id}", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar("Sin token")))
+                .andExpect(status().isUnauthorized());            // 401
+
+        mockMvc.perform(put("/api/preventas/{id}", UUID.randomUUID())
+                        .with(comprador(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoModificar("Comprador")))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(modificarPreventaUseCase);
+    }
+
+    // ---------------------------------------------------------------- cancelar
+
+    @Test
+    void cancelarUsaElVendedorDelTokenYDevuelve204() throws Exception {
+        UUID preventaId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/preventas/{id}", preventaId).with(vendedor(vendedorId)))
+                .andExpect(status().isNoContent());               // 204
+
+        Mockito.verify(cancelarPreventaUseCase).ejecutar(preventaId, vendedorId);
+    }
+
+    @Test
+    void cancelarUnaPreventaYaLanzadaRetorna422() throws Exception {
+        UUID preventaId = UUID.randomUUID();
+        doThrow(new ReglaDominioException("La preventa ya fue lanzada y no se puede cancelar"))
+                .when(cancelarPreventaUseCase).ejecutar(preventaId, vendedorId);
+
+        mockMvc.perform(delete("/api/preventas/{id}", preventaId).with(vendedor(vendedorId)))
+                .andExpect(status().isUnprocessableContent())     // 422
+                .andExpect(jsonPath("$.mensaje").value("La preventa ya fue lanzada y no se puede cancelar"));
+    }
+
+    @Test
+    void cancelarUnaPreventaInexistenteRetorna404() throws Exception {
+        UUID preventaId = UUID.randomUUID();
+        doThrow(new java.util.NoSuchElementException("La preventa no existe"))
+                .when(cancelarPreventaUseCase).ejecutar(preventaId, vendedorId);
+
+        mockMvc.perform(delete("/api/preventas/{id}", preventaId).with(vendedor(vendedorId)))
+                .andExpect(status().isNotFound());                // 404
+    }
+
+    @Test
+    void cancelarSinTokenRetorna401YComoCompradorRetorna403() throws Exception {
+        mockMvc.perform(delete("/api/preventas/{id}", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());            // 401
+
+        mockMvc.perform(delete("/api/preventas/{id}", UUID.randomUUID()).with(comprador(UUID.randomUUID())))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(cancelarPreventaUseCase);
     }
 }
