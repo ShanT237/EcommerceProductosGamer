@@ -18,6 +18,9 @@ export class ProductoService {
   /** Catálogo completo en memoria (sirve para mostrar nombres en compras y "mis productos"). */
   readonly catalogo = signal<Producto[]>([]);
 
+  /** Productos del vendedor autenticado, activos Y pausados (el catálogo público oculta los pausados). */
+  readonly misProductos = signal<Producto[]>([]);
+
   buscar(filtro: FiltroCatalogo, pagina = 0, tamano = 8) {
     let params = new HttpParams().set('page', pagina).set('size', tamano);
     if (filtro.texto?.trim()) params = params.set('texto', filtro.texto.trim());
@@ -31,6 +34,11 @@ export class ProductoService {
 
   cargarCatalogo() {
     return this.buscar({}, 0, 100).pipe(tap((p) => this.catalogo.set(p.contenido)));
+  }
+
+  /** GET /productos/mios: todos los productos propios no eliminados, con `pausado` para poder reactivarlos. */
+  cargarMisProductos() {
+    return this.http.get<Producto[]>(`${API_URL}/productos/mios`).pipe(tap((l) => this.misProductos.set(l)));
   }
 
   publicar(p: NuevoProducto) {

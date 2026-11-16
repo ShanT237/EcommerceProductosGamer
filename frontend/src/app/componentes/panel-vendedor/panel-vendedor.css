@@ -68,3 +68,9 @@
 .estado.vigente { color: var(--lima); background: rgba(163, 255, 107, 0.12); }
 .estado.programada { color: var(--cian); background: rgba(0, 229, 255, 0.1); }
 .estado.vencida { color: var(--texto-2); background: rgba(255, 255, 255, 0.06); }
+
+/* Producto pausado: sigue en la lista, pero atenuado y con su estado a la vista */
+.etiqueta.pausado { color: var(--ambar); background: rgba(255, 176, 32, 0.12); border: 1px solid rgba(255, 176, 32, 0.35); }
+.aviso-pausado { color: var(--ambar); font-size: 15px; }
+.fila.pausado { border-style: dashed; border-color: rgba(255, 176, 32, 0.35); }
+.fila.pausado .mini, .fila.pausado .cifras, .fila.pausado .datos h3, .fila.pausado .datos > p.muted { opacity: 0.55; }
