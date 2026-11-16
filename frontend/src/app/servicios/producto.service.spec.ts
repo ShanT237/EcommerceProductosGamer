@@ -129,3 +129,29 @@ describe('ProductoService (mis productos)', () => {
     expect(servicio.catalogo().map((p) => p.id)).toEqual(['publico']);
   });
 });
+
+describe('ProductoService (imagen de producto)', () => {
+  let servicio: ProductoService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    servicio = TestBed.inject(ProductoService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('subirImagen envía el archivo como multipart al producto indicado', () => {
+    const archivo = new File(['imagen'], 'mouse.png', { type: 'image/png' });
+    let url: string | undefined;
+    servicio.subirImagen('p1', archivo).subscribe((respuesta) => (url = respuesta.imagenUrl));
+
+    const req = http.expectOne({ method: 'POST', url: `${API_URL}/productos/p1/imagen` });
+    expect(req.request.body).toBeInstanceOf(FormData);
+    expect((req.request.body as FormData).get('archivo')).toBe(archivo);
+    req.flush({ productoId: 'p1', imagenUrl: 'https://res.cloudinary.com/demo/image/upload/mouse.png' });
+
+    expect(url).toBe('https://res.cloudinary.com/demo/image/upload/mouse.png');
+  });
+});

@@ -35,6 +35,8 @@ export interface Producto {
   promocionHasta?: string | null;
   /** `true` si el vendedor lo pausó (no se ve en el catálogo público). Solo lo trae `GET /productos/mios`. */
   pausado?: boolean;
+  /** URL HTTPS de Cloudinary; ausente en productos publicados sin fotografía. */
+  imagenUrl?: string | null;
 }
 
 /** Respuesta de `POST /api/descuentos` y `DELETE /api/descuentos/{productoId}`. */
@@ -138,6 +140,11 @@ export interface NuevoProducto {
   stock: number;
   gama: Gama;
   exclusividad: Exclusividad;
+}
+
+export interface ImagenProductoSubida {
+  productoId: string;
+  imagenUrl: string;
 }
 
 export interface Notificacion {

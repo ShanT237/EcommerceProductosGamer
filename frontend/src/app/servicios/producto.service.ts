@@ -4,6 +4,7 @@ import { tap } from 'rxjs';
 import { API_URL } from '../config';
 import {
   FiltroCatalogo,
+  ImagenProductoSubida,
   NuevoProducto,
   Pagina,
   Producto,
@@ -43,6 +44,12 @@ export class ProductoService {
 
   publicar(p: NuevoProducto) {
     return this.http.post<Producto>(`${API_URL}/productos`, p);
+  }
+
+  subirImagen(id: string, archivo: File) {
+    const cuerpo = new FormData();
+    cuerpo.append('archivo', archivo);
+    return this.http.post<ImagenProductoSubida>(`${API_URL}/productos/${id}/imagen`, cuerpo);
   }
 
   modificarPrecio(id: string, nuevoPrecio: number) {
