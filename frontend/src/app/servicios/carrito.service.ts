@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import { CompraService } from './compra.service';
 import { precioVigente } from './formato';
 
+const PREFIJO_CLAVE = 'gamerzone.carrito.';
+
 export interface ItemCarrito { producto: Producto; cantidad: number }
 /**
  * `error` es `null` si el pago se completó; si no, trae el mensaje del backend y el carrito queda intacto.
@@ -42,12 +44,49 @@ export class CarritoService {
 
   constructor() {
     effect(() => {
-      this.usuarioId();
+      const id = this.usuarioId();
       untracked(() => {
-        this._items.set([]);
+        this._items.set(id ? this.leer(id) : []);
         this._pedidoSinCancelar.set(null);
       });
     });
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        const id = this.usuarioId();
+        if (id && e.key === PREFIJO_CLAVE + id && !this._pagando()) this._items.set(this.leer(id));
+      });
+    }
+  }
+
+  private clave(id: string) { return PREFIJO_CLAVE + id; }
+
+  private leer(id: string): ItemCarrito[] {
+    try {
+      const crudo = localStorage.getItem(this.clave(id));
+      const lista: unknown = crudo ? JSON.parse(crudo) : [];
+      if (!Array.isArray(lista)) return [];
+      return lista.filter(
+        (i): i is ItemCarrito =>
+          !!i && typeof i.producto?.id === 'string' && Number.isInteger(i.cantidad) && i.cantidad >= 1,
+      );
+    } catch {
+      return []; // JSON corrupto o sin almacenamiento
+    }
+  }
+
+  private escribir(items: ItemCarrito[]): void {
+    const id = this.usuarioId();
+    if (!id) return;
+    try {
+      if (items.length) localStorage.setItem(this.clave(id), JSON.stringify(items));
+      else localStorage.removeItem(this.clave(id));
+    } catch { /* cuota llena o sin almacenamiento: el carrito sigue funcionando en memoria */ }
+  }
+
+  private fijar(items: ItemCarrito[]): void {
+    this._items.set(items);
+    this.escribir(items);
   }
 
   /** Máximo de unidades que se pueden pedir: un exclusivo solo admite una. */
@@ -58,37 +97,44 @@ export class CarritoService {
   agregar(p: Producto, cantidad = 1): void {
     const limite = this.limiteDe(p);
     if (limite < 1) return;
-
     const existente = this._items().find((i) => i.producto.id === p.id);
     const total = Math.min(Math.trunc(cantidad) + (existente?.cantidad ?? 0), limite);
     if (!(total >= 1)) return;
 
-    if (existente) {
-      this._items.update((lista) => lista.map((i) => (i.producto.id === p.id ? { producto: p, cantidad: total } : i)));
-    } else {
-      this._items.update((lista) => [...lista, { producto: p, cantidad: total }]);
-    }
+    this.fijar(
+      existente
+        ? this._items().map((i) => (i.producto.id === p.id ? { producto: p, cantidad: total } : i))
+        : [...this._items(), { producto: p, cantidad: total }],
+    );
   }
 
   cambiarCantidad(productoId: string, cantidad: number): void {
     const item = this._items().find((i) => i.producto.id === productoId);
     if (!item) return;
-
     const nueva = Math.min(Math.trunc(cantidad), this.limiteDe(item.producto));
-    if (!(nueva >= 1)) {
-      this.quitar(productoId);
-      return;
-    }
-    this._items.update((lista) => lista.map((i) => (i.producto.id === productoId ? { ...i, cantidad: nueva } : i)));
+    if (!(nueva >= 1)) return this.quitar(productoId);
+    this.fijar(this._items().map((i) => (i.producto.id === productoId ? { ...i, cantidad: nueva } : i)));
   }
 
   quitar(productoId: string): void {
-    this._items.update((lista) => lista.filter((i) => i.producto.id !== productoId));
+    this.fijar(this._items().filter((i) => i.producto.id !== productoId));
   }
 
   vaciar(): void {
-    this._items.set([]);
+    this.fijar([]);
   }
+
+  sincronizar(catalogo: Producto[]): void {
+    const porId = new Map(catalogo.map((p) => [p.id, p]));
+    const actualizados = this._items().flatMap((i) => {
+      const fresco = porId.get(i.producto.id);
+      if (!fresco) return [i];
+      const limite = this.limiteDe(fresco);
+      return limite < 1 ? [] : [{ producto: fresco, cantidad: Math.min(i.cantidad, limite) }];
+    });
+    this.fijar(actualizados);
+  }
+
 
   /**
    * Paga todo el carrito como un solo pedido (POST /pedidos y luego PUT /confirmar). Es todo o nada:
@@ -131,7 +177,7 @@ export class CarritoService {
         ),
         catchError((e) => of<ResultadoPago>({ compras: [], error: mensajeDeError(e) })),
         tap((r) => {
-          if (!r.error) this._items.set([]);
+          if (!r.error) this.fijar([])
         }),
         finalize(() => this._pagando.set(false)),
       );
@@ -164,7 +210,7 @@ export class CarritoService {
         ),
         tap((desenlace) => {
           if (desenlace !== 'PENDIENTE') this._pedidoSinCancelar.set(null);
-          if (desenlace === 'PAGADO') this._items.set([]);
+          if (desenlace === 'PAGADO') this.fijar([]);
         }),
         finalize(() => this._pagando.set(false)),
       );

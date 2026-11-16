@@ -137,9 +137,9 @@ Un comprador añade productos desde el modal del catálogo con **Añadir al carr
 
 **Limitaciones:**
 
-- El carrito vive solo en el navegador: no persiste al recargar la página y se vacía al cerrar sesión o cambiar de usuario.
-- El precio del carrito es el que tenía el producto al añadirlo; el precio definitivo (promoción vigente y cupón incluidos) lo fija el backend al reservar.
-- La vista previa del cupón es una estimación; el total definitivo es el que devuelve `POST /api/pedidos`.
+- El carrito se guarda en el localStorage del navegador, separado por usuario: sobrevive a recargas y al cierre de sesión, y se recupera al volver a entrar con la misma cuenta. No se comparte entre dispositivos ni navegadores.
+- Al abrir /carrito se refrescan precio y stock desde el catálogo y las cantidades se ajustan al stock actual. El precio definitivo (promoción vigente y cupón incluidos) lo sigue fijando el backend al reservar.
+- La vista previa del cupón es una estimación; el total definitivo es el que devuelve POST /api/pedidos.
 
 ### Panel del vendedor
 
@@ -614,7 +614,6 @@ El vendedor publica primero el producto y luego sube su imagen a `POST /api/prod
 - **No existe un rol ADMIN.** Las metas de recompensa quedan restringidas a `VENDEDOR`, aunque conceptualmente son de administración; como las metas son globales, **cualquier vendedor puede crear, cambiar o desactivar cualquier meta**. El envío de regalos (CU-24) ya no sufre esto: solo lo hace el vendedor dueño del producto o combo del regalo.
 - **Las metas no gobiernan la asignación de regalos.** Se gestionan y se muestran (`GET /api/metas-recompensa`, pantalla de regalos), pero la regla real es un regalo por cada 5 compras completadas (`Usuario.COMPRAS_POR_REGALO`).
 - `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
-- El carrito del frontend no persiste (ver la sección [2.1](#21-frontend-carrito-y-pantallas)). El pago, en cambio, **sí es atómico**: `POST /api/pedidos` valida todas las líneas antes de descontar stock, así que un ítem que falla no deja compras a medias.
 - Un cupón es de «una vez por comprador», no «una sola compra en total»: mientras queden usos, otros compradores pueden usarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
 - La carga de imágenes depende de configurar Cloudinary (opcional): sin credenciales, o si la subida falla, el producto se publica igual y el catálogo usa la ilustración de respaldo.
 - Las notificaciones solo son de tipo `DESCUENTO` (producto de la wishlist que baja de precio).
