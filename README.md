@@ -332,7 +332,20 @@ Categorías habilitadas en el catálogo:
 | **Meta de recompensa** | Umbral de compras completadas ligado a un producto regalo. Hoy es informativa: no cambia la regla de 5 compras por regalo. |
 | **Exclusividad** | Condición de un producto especial: cada usuario puede comprarlo una sola vez y de a una unidad. |
 | **Unidades** | Cantidad disponible de un producto para su venta (nunca negativa; cero significa agotado). |
- 
+
+## Tipos de notificación
+| Destinatario | Tipo | Cuándo se genera |
+|---|---|---|
+| Comprador | `DESCUENTO` (ya existía) | El vendedor rebaja un producto de su wishlist |
+| Comprador | `STOCK_DISPONIBLE` | Producto de su wishlist estaba en 0 y vuelve a tener stock (cancelación o reembolso) |
+| Comprador | `PREVENTA_DISPONIBLE` | Llega la fecha de lanzamiento de una preventa de su wishlist (job diario 00:05 + al arrancar; no duplica) |
+| Comprador | `META_ALCANZADA` | Sus compras COMPLETADAS cruzan un múltiplo de 5 (confirmar compra o pedido) |
+| Comprador | `REGALO_ENVIADO` | El vendedor marca el regalo como enviado |
+| Vendedor | `STOCK_BAJO` | El stock de un producto cruza hacia abajo el umbral (5) |
+| Vendedor | `STOCK_AGOTADO` | El stock llega a 0 |
+| Vendedor | `NUEVA_VENTA` | Compra individual, pedido o combo con un producto suyo |
+| Vendedor | `REEMBOLSO_SOLICITADO` | Reembolso individual o de pedido sobre un producto suyo |
+| Vendedor | `NUEVA_RESENA` / `NUEVA_VALORACION` | Reseña de producto / valoración del vendedor |
 ---
 
 ## 8. Reglas de Negocio e Invariantes del Dominio
@@ -616,7 +629,6 @@ El vendedor publica primero el producto y luego sube su imagen a `POST /api/prod
 - `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
 - Un cupón es de «una vez por comprador», no «una sola compra en total»: mientras queden usos, otros compradores pueden usarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
 - La carga de imágenes depende de configurar Cloudinary (opcional): sin credenciales, o si la subida falla, el producto se publica igual y el catálogo usa la ilustración de respaldo.
-- Las notificaciones solo son de tipo `DESCUENTO` (producto de la wishlist que baja de precio).
 - Las preventas solo se pueden programar y consultar: no hay endpoint para modificarlas o cancelarlas.
 - Hay operaciones del dominio sin caso de uso ni endpoint: expirar una compra (`Compra.expirar`), marcar una descarga (`Compra.marcarDescargado`, por lo que la condición «sin descarga» del reembolso nunca se activa desde la API) y cancelar o notificar un regalo (`Regalo.cancelarRegalo`, `Regalo.notificar`).
 - Un usuario comprador no puede darse de baja (solo existe la baja de vendedor) y el rol `VENDEDOR` no puede editar su perfil ni cambiar su contraseña desde la API.
