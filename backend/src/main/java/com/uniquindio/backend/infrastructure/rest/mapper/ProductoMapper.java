@@ -34,6 +34,15 @@ public class ProductoMapper {
         );
     }
 
+    public ActualizarStockProductoResponse toStockResponse(Producto producto) {
+        return new ActualizarStockProductoResponse(
+                producto.getId(),
+                producto.getVendedorId(),
+                producto.getNombre(),
+                producto.getStock()
+        );
+    }
+
     public EditarInformacionProductoResponse toEditarInformacionResponse(Producto producto) {
         return new EditarInformacionProductoResponse(
                 producto.getId(),

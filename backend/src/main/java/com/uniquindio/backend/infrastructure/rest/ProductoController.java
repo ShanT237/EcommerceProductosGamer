@@ -1,5 +1,8 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.dto.request.ActualizarStockProductoRequest;
+import com.uniquindio.backend.application.dto.response.ActualizarStockProductoResponse;
+import com.uniquindio.backend.application.usecase.ActualizarStockProductoUseCase;
 import com.uniquindio.backend.application.dto.request.PublicarProductoRequest;
 import com.uniquindio.backend.application.dto.response.PublicarProductoResponse;
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
@@ -52,6 +55,7 @@ public class ProductoController {
     private final PublicarProductoUseCase publicarProductoUseCase;
     private final EliminarProductoUseCase eliminarProductoUseCase;
     private final ModificarProductoUseCase modificarProductoUseCase;
+    private final ActualizarStockProductoUseCase actualizarStockProductoUseCase;
     private final EditarInformacionProductoUseCase editarInformacionProductoUseCase;
     private final CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase;
     private final BuscarProductosUseCase buscarProductosUseCase;
@@ -63,6 +67,7 @@ public class ProductoController {
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
                               EliminarProductoUseCase eliminarProductoUseCase,
                               ModificarProductoUseCase modificarProductoUseCase,
+                              ActualizarStockProductoUseCase actualizarStockProductoUseCase,
                               EditarInformacionProductoUseCase editarInformacionProductoUseCase,
                               CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase,
                               BuscarProductosUseCase buscarProductosUseCase,
@@ -73,6 +78,7 @@ public class ProductoController {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
         this.modificarProductoUseCase = modificarProductoUseCase;
+        this.actualizarStockProductoUseCase = actualizarStockProductoUseCase;
         this.editarInformacionProductoUseCase = editarInformacionProductoUseCase;
         this.cambiarVisibilidadProductoUseCase = cambiarVisibilidadProductoUseCase;
         this.buscarProductosUseCase = buscarProductosUseCase;
@@ -131,6 +137,16 @@ public class ProductoController {
             @Valid @RequestBody ModificarProductoRequest request) {
         Producto producto = modificarProductoUseCase.ejecutar(id, vendedorId, request.nuevoPrecio());
         return ResponseEntity.ok(mapper.toModificarResponse(producto)); // 200 OK
+    }
+
+    // Actualizar stock (reponer un producto agotado o corregir unidades)
+    @PutMapping("/{id}/stock")
+    public ResponseEntity<ActualizarStockProductoResponse> actualizarStock(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId,
+            @Valid @RequestBody ActualizarStockProductoRequest request) {
+        Producto producto = actualizarStockProductoUseCase.ejecutar(id, vendedorId, request.stock());
+        return ResponseEntity.ok(mapper.toStockResponse(producto)); // 200 OK
     }
 
     // CU-06 Eliminar Producto (eliminación lógica, Regla 3) del vendedor autenticado
