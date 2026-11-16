@@ -44,7 +44,7 @@ export class CombosVendedor implements OnInit {
 
   // ---- edición de un combo existente ----
   /** Producto elegido en el selector "Añadir" de cada combo (por id de combo). */
-  protected porAnadir = signal<Record<string, string>>({});
+  protected porAnadir = signal<Partial<Record<string, string>>>({});
   /** Combo que tiene una operación en curso (evita dobles clics). */
   protected ocupado = signal<string | null>(null);
 
