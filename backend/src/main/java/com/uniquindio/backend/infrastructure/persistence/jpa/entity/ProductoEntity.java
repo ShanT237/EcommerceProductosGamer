@@ -58,4 +58,7 @@ public class ProductoEntity {
     // Nullable: las filas anteriores a CU-20 (p. ej. data.sql) no traen categoria.
     @Column(length = 50)
     private String categoria;
+
+    @Column(name = "imagen_url", length = 1000)
+    private String imagenUrl;
 }

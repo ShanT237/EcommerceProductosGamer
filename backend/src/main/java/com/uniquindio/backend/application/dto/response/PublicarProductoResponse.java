@@ -14,5 +14,6 @@ public record PublicarProductoResponse(
         double precio,
         int stock,
         Gama gama,
-        Exclusividad exclusividad
+        Exclusividad exclusividad,
+        String imagenUrl
 ) {}

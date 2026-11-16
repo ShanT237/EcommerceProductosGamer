@@ -21,5 +21,6 @@ public record BuscarProductoResponse(
         Double porcentajeDescuento,   // porcentaje del descuento activo; null si no hay
         Double precioPromocional,     // precio que se cobrará con la promoción de temporada vigente hoy; null si no hay
         Double porcentajePromocion,   // porcentaje de esa promoción; null si no hay
-        LocalDate promocionHasta      // último día de la promoción (inclusive); null si no hay
+        LocalDate promocionHasta,     // último día de la promoción (inclusive); null si no hay
+        String imagenUrl
 ) {}

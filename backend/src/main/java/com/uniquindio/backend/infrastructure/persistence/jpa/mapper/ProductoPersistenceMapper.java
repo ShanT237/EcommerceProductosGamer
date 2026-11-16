@@ -22,6 +22,7 @@ public class ProductoPersistenceMapper {
         entity.setEliminado(producto.isEliminado());
         entity.setPausado(producto.isPausado());
         entity.setCategoria(producto.getCategoria());
+        entity.setImagenUrl(producto.getImagenUrl());
         return entity;
     }
 
@@ -41,6 +42,7 @@ public class ProductoPersistenceMapper {
                 entity.isPausado(),
                 (entity.getCategoria() == null || entity.getCategoria().isBlank())
                         ? Producto.CATEGORIA_POR_DEFECTO
-                        : entity.getCategoria());
+                        : entity.getCategoria(),
+                entity.getImagenUrl());
     }
 }
