@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.ComboRepository;
@@ -23,6 +24,7 @@ public class EnviarRegaloUseCase {
     private final RegaloRepository regaloRepository;
     private final ProductoRepository productoRepository;
     private final ComboRepository comboRepository;
+    private final NotificadorEventos notificador;
 
     public Regalo ejecutar(UUID regaloId, UUID vendedorId) {
         Regalo regalo = regaloRepository.obtenerPorId(regaloId)
@@ -35,6 +37,7 @@ public class EnviarRegaloUseCase {
         regalo.enviar();
 
         regaloRepository.guardar(regalo);
+        notificador.regaloEnviado(regalo);
 
         return regalo;
     }

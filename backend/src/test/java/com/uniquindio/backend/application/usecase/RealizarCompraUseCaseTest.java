@@ -61,7 +61,7 @@ class RealizarCompraUseCaseTest {
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(fecha.atTime(10, 0).atZone(zona).toInstant(), zona);
         RealizarCompraUseCase useCase = new RealizarCompraUseCase(productoRepository,
-                compraRepository, usuarioRepository, vendedorRepository, preventaRepository, promocionRepository, reloj);
+                compraRepository, usuarioRepository, vendedorRepository, preventaRepository, promocionRepository, reloj, TestNotificador.nuevo());
         return useCase.ejecutar(usuarioId, p.getId(), cantidad);
     }
 

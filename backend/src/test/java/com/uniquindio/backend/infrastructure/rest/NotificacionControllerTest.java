@@ -118,11 +118,14 @@ class NotificacionControllerTest {
     }
 
     @Test
-    void vendedorRetorna403() throws Exception {
+    void vendedorPuedeListarYMarcarSusNotificaciones() throws Exception {
         mockMvc.perform(get("/api/notificaciones").with(vendedor(usuarioId)))
-                .andExpect(status().isForbidden());                 // 403
+                .andExpect(status().isOk());                        // 200
 
+        // El caso de uso (mock) no encuentra la notificación: 404 prueba que el rol sí pasó la seguridad
+        when(marcarNotificacionLeidaUseCase.ejecutar(notificacionId, usuarioId))
+                .thenThrow(new NoSuchElementException("La notificación no existe"));
         mockMvc.perform(put("/api/notificaciones/{id}/leida", notificacionId).with(vendedor(usuarioId)))
-                .andExpect(status().isForbidden());                 // 403
+                .andExpect(status().isNotFound());                  // 404
     }
 }

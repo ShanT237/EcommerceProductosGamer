@@ -35,7 +35,7 @@ class SubirResenaUseCaseTest {
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(LocalDateTime.of(2026, 10, 1, 10, 0).atZone(zona).toInstant(), zona);
         useCase = new SubirResenaUseCase(compraRepository, new ResenaRepositoryEnMemoria(),
-                usuarioRepository, movimientos, reloj);
+                usuarioRepository, movimientos, new ProductoRepositoryEnMemoria(), reloj, TestNotificador.nuevo());
 
         usuarioId = UUID.randomUUID();
         usuarioRepository.guardar(Usuario.registrar(usuarioId, "Gamer", "g@test.com"));

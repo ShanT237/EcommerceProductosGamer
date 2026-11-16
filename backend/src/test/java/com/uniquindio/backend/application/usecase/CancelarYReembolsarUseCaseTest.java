@@ -39,9 +39,9 @@ class CancelarYReembolsarUseCaseTest {
     void setUp() {
         compraRepository = new CompraRepositoryEnMemoria();
         productoRepository = new ProductoRepositoryEnMemoria();
-        cancelarUseCase = new CancelarCompraUseCase(compraRepository, productoRepository);
-        confirmarUseCase = new ConfirmarCompraUseCase(compraRepository);
-        reembolsoUseCase = new SolicitarReembolsoUseCase(compraRepository, productoRepository, RELOJ);
+        cancelarUseCase = new CancelarCompraUseCase(compraRepository, productoRepository, TestNotificador.nuevo());
+        confirmarUseCase = new ConfirmarCompraUseCase(compraRepository, TestNotificador.nuevo());
+        reembolsoUseCase = new SolicitarReembolsoUseCase(compraRepository, productoRepository, RELOJ, TestNotificador.nuevo());
     }
 
     @Test

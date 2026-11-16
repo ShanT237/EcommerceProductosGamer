@@ -1,5 +1,7 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.domain.repository.ProductoRepository;
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.MovimientoPuntos;
 import com.uniquindio.backend.domain.entity.Resena;
@@ -32,7 +34,9 @@ public class SubirResenaUseCase {
     private final ResenaRepository resenaRepository;
     private final UsuarioRepository usuarioRepository;
     private final MovimientoPuntosRepository movimientoRepository;
+    private final ProductoRepository productoRepository;
     private final Clock clock;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public Resena ejecutar(UUID idCompra, UUID idUsuario, int valorCalificacion, String comentario) {
@@ -66,6 +70,9 @@ public class SubirResenaUseCase {
         compraRepository.guardar(compra);
         usuarioRepository.guardar(usuario);
         movimientoRepository.guardar(MovimientoPuntos.ganado(idUsuario, puntos, LocalDateTime.now(clock)));
+
+        productoRepository.obtenerPorId(compra.getProductoId())
+                .ifPresent(producto -> notificador.nuevaResena(producto, valorCalificacion));
 
         return resena;
     }

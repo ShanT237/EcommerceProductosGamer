@@ -31,6 +31,13 @@ public class PreventaRepositoryJpa implements PreventaRepository {
     }
 
     @Override
+    public List<Preventa> obtenerLanzadasEn(LocalDate fecha) {
+        return dataRepository.findByFechaLanzamiento(fecha).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public void guardar(Preventa preventa) {
         dataRepository.save(mapper.toEntity(preventa));
     }

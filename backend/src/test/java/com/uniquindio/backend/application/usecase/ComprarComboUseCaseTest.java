@@ -49,7 +49,7 @@ class ComprarComboUseCaseTest {
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(HOY.atTime(10, 0).atZone(zona).toInstant(), zona);
         useCase = new ComprarComboUseCase(comboRepository, productoRepository, compraRepository,
-                usuarioRepository, vendedorRepository, preventaRepository, cuponRepository, reloj);
+                usuarioRepository, vendedorRepository, preventaRepository, cuponRepository, reloj, TestNotificador.nuevo());
 
         vendedor = Vendedor.registrar(UUID.randomUUID(), "GamerZone", "v@g.com", TipoVendedor.EMPRESA, "900");
         vendedorRepository.guardar(vendedor);
@@ -97,16 +97,16 @@ class ComprarComboUseCaseTest {
         UUID pedidoId = compras.get(0).getPedidoId();
 
         assertThrows(ReglaDominioException.class,
-                () -> new ConfirmarCompraUseCase(compraRepository).ejecutar(compras.get(0).getId(), usuarioId));
+                () -> new ConfirmarCompraUseCase(compraRepository, TestNotificador.nuevo()).ejecutar(compras.get(0).getId(), usuarioId));
         assertThrows(ReglaDominioException.class,
-                () -> new CancelarCompraUseCase(compraRepository, productoRepository)
+                () -> new CancelarCompraUseCase(compraRepository, productoRepository, TestNotificador.nuevo())
                         .ejecutar(compras.get(0).getId(), usuarioId));
-        List<Compra> confirmadas = new ConfirmarPedidoUseCase(compraRepository).ejecutar(pedidoId, usuarioId);
+        List<Compra> confirmadas = new ConfirmarPedidoUseCase(compraRepository, TestNotificador.nuevo()).ejecutar(pedidoId, usuarioId);
         assertTrue(confirmadas.stream().allMatch(c -> c.getEstado() == EstadoCompra.COMPLETADA));
 
         List<Compra> reembolsadas = new SolicitarReembolsoPedidoUseCase(compraRepository, productoRepository,
                 Clock.fixed(HOY.plusDays(1).atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant(),
-                        ZoneId.systemDefault()))
+                        ZoneId.systemDefault()), TestNotificador.nuevo())
                 .ejecutar(pedidoId, usuarioId);
         assertTrue(reembolsadas.stream().allMatch(c -> c.getEstado() == EstadoCompra.REEMBOLSADA));
         assertEquals(5, teclado.getStock());
@@ -117,7 +117,7 @@ class ComprarComboUseCaseTest {
     void cancelarComboRestituyeElStockDeTodosLosProductos() {
         List<Compra> compras = useCase.ejecutar(usuarioId, combo.getId(), 1);
 
-        List<Compra> canceladas = new CancelarPedidoUseCase(compraRepository, productoRepository)
+        List<Compra> canceladas = new CancelarPedidoUseCase(compraRepository, productoRepository, TestNotificador.nuevo())
                 .ejecutar(compras.get(0).getPedidoId(), usuarioId);
 
         assertTrue(canceladas.stream().allMatch(c -> c.getEstado() == EstadoCompra.CANCELADA));

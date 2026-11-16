@@ -15,5 +15,8 @@ public interface PreventaRepository {
     /** Preventas con fecha de lanzamiento estrictamente posterior a hoy. */
     List<Preventa> obtenerFuturas(LocalDate hoy);
 
+    /** Preventas cuya fecha de lanzamiento es exactamente {@code fecha}. */
+    List<Preventa> obtenerLanzadasEn(LocalDate fecha);
+
     void guardar(Preventa preventa);
 }

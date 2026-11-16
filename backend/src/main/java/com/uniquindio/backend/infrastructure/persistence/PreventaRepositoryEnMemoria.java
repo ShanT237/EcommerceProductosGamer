@@ -29,6 +29,13 @@ public class PreventaRepositoryEnMemoria implements PreventaRepository {
     }
 
     @Override
+    public List<Preventa> obtenerLanzadasEn(LocalDate fecha) {
+        return preventas.values().stream()
+                .filter(preventa -> preventa.getFechaLanzamiento().isEqual(fecha))
+                .toList();
+    }
+
+    @Override
     public void guardar(Preventa preventa) {
         preventas.put(preventa.getId(), preventa);
     }

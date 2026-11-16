@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class ConfirmarCompraUseCase {
 
     private final CompraRepository compraRepository;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public Compra ejecutar(UUID idCompra, UUID usuarioId) {
@@ -27,9 +29,11 @@ public class ConfirmarCompraUseCase {
         compra.asegurarPerteneceA(usuarioId);
         compra.asegurarNoEsDeUnPedido();
 
+        long completadasAntes = compraRepository.contarCompletadasDe(usuarioId);
         compra.confirmar();
 
         compraRepository.guardar(compra);
+        notificador.metaAlcanzada(usuarioId, completadasAntes, compraRepository.contarCompletadasDe(usuarioId));
 
         return compra;
     }
