@@ -252,7 +252,7 @@ describe('CarritoService', () => {
       expect(carrito.pagando()).toBe(false);
     });
 
-    it('reporta el error de confirmar aunque la cancelación también falle', () => {
+    it('si la cancelación también falla informa el pedido sin cancelar y no lo oculta', () => {
       carrito.agregar(producto({ id: 'a' }));
 
       const resultados: ResultadoPago[] = [];
@@ -263,6 +263,8 @@ describe('CarritoService', () => {
       http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'otro error' }, { status: 500, statusText: 'Server Error' });
 
       expect(resultados[0].error).toBe(MENSAJE_STOCK);
+      expect(resultados[0].pedidoSinCancelar).toBe('ped1');
+      expect(carrito.pedidoSinCancelar()).toBe('ped1');
       expect(carrito.items().length).toBe(1);
       expect(carrito.pagando()).toBe(false);
     });
@@ -293,6 +295,95 @@ describe('CarritoService', () => {
       http.expectNone(postPedido());
       expect(resultados.length).toBe(0);
       expect(carrito.pagando()).toBe(false);
+    });
+  });
+
+  describe('pedido sin cancelar (falló confirmar y cancelar)', () => {
+    const fallo500 = { status: 500, statusText: 'Server Error' };
+    const getCompras = () => ({ method: 'GET', url: `${API_URL}/compras` });
+
+    function pagarConCancelacionFallida(): ResultadoPago[] {
+      carrito.agregar(producto({ id: 'a' }));
+      const resultados: ResultadoPago[] = [];
+      carrito.pagar().subscribe((r) => resultados.push(r));
+      http.expectOne(postPedido()).flush(pedido([compra('cA', 'a')]));
+      http.expectOne(putPedido('ped1', 'confirmar')).flush({ mensaje: MENSAJE_STOCK }, sinStock);
+      http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'otro error' }, fallo500);
+      return resultados;
+    }
+
+    it('bloquea un nuevo pago mientras el pedido siga sin cancelar (no duplica la reserva)', () => {
+      pagarConCancelacionFallida();
+
+      const otros: ResultadoPago[] = [];
+      carrito.pagar().subscribe((r) => otros.push(r));
+
+      http.expectNone(postPedido());
+      expect(otros[0].pedidoSinCancelar).toBe('ped1');
+      expect(otros[0].error).toContain('no se pudo cancelar');
+    });
+
+    it('reintentar y lograr cancelar libera el bloqueo y conserva el carrito', () => {
+      pagarConCancelacionFallida();
+
+      const desenlaces: string[] = [];
+      carrito.reintentarCancelacion().subscribe((d) => desenlaces.push(d));
+      http.expectOne(putPedido('ped1', 'cancelar')).flush(pedido([{ ...compra('cA', 'a'), estado: 'CANCELADA' }]));
+
+      expect(desenlaces).toEqual(['CANCELADO']);
+      expect(carrito.pedidoSinCancelar()).toBeNull();
+      expect(carrito.items().length).toBe(1);
+      expect(carrito.pagando()).toBe(false);
+    });
+
+    it('si cancelar vuelve a fallar pero el pedido ya estaba cancelado, reconcilia como cancelado', () => {
+      pagarConCancelacionFallida();
+
+      const desenlaces: string[] = [];
+      carrito.reintentarCancelacion().subscribe((d) => desenlaces.push(d));
+      http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'x' }, fallo500);
+      http.expectOne(getCompras()).flush([{ ...compra('cA', 'a'), estado: 'CANCELADA' }]);
+
+      expect(desenlaces).toEqual(['CANCELADO']);
+      expect(carrito.pedidoSinCancelar()).toBeNull();
+    });
+
+    it('si el pedido en realidad se confirmó, reconcilia como pagado y vacía el carrito', () => {
+      pagarConCancelacionFallida();
+
+      const desenlaces: string[] = [];
+      carrito.reintentarCancelacion().subscribe((d) => desenlaces.push(d));
+      http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'x' }, fallo500);
+      http.expectOne(getCompras()).flush([{ ...compra('cA', 'a'), estado: 'COMPLETADA' }]);
+
+      expect(desenlaces).toEqual(['PAGADO']);
+      expect(carrito.pedidoSinCancelar()).toBeNull();
+      expect(carrito.items().length).toBe(0);
+    });
+
+    it('si sigue pendiente conserva el bloqueo para poder reintentar otra vez', () => {
+      pagarConCancelacionFallida();
+
+      const desenlaces: string[] = [];
+      carrito.reintentarCancelacion().subscribe((d) => desenlaces.push(d));
+      http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'x' }, fallo500);
+      http.expectOne(getCompras()).flush([compra('cA', 'a')]);
+
+      expect(desenlaces).toEqual(['PENDIENTE']);
+      expect(carrito.pedidoSinCancelar()).toBe('ped1');
+      expect(carrito.pagando()).toBe(false);
+    });
+
+    it('si tampoco se puede consultar el estado queda pendiente (no asume nada)', () => {
+      pagarConCancelacionFallida();
+
+      const desenlaces: string[] = [];
+      carrito.reintentarCancelacion().subscribe((d) => desenlaces.push(d));
+      http.expectOne(putPedido('ped1', 'cancelar')).flush({ mensaje: 'x' }, fallo500);
+      http.expectOne(getCompras()).flush({ mensaje: 'x' }, fallo500);
+
+      expect(desenlaces).toEqual(['PENDIENTE']);
+      expect(carrito.pedidoSinCancelar()).toBe('ped1');
     });
   });
 

@@ -34,3 +34,6 @@
   .cantidad, .linea, .quitar { grid-column: 1 / -1; }
   .linea { text-align: left; }
 }
+.alerta-reserva { display: flex; flex-direction: column; gap: 10px; color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 12px 14px; border-radius: 10px; font-size: 15px; line-height: 1.35; }
+.alerta-reserva p { margin: 0; }
+.acciones-reserva { display: flex; flex-wrap: wrap; gap: 8px; }

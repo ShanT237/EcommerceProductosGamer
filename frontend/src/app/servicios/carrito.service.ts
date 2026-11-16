@@ -7,8 +7,15 @@ import { CompraService } from './compra.service';
 import { precioVigente } from './formato';
 
 export interface ItemCarrito { producto: Producto; cantidad: number }
-/** `error` es `null` si el pago se completó; si no, trae el mensaje del backend y el carrito queda intacto. */
-export interface ResultadoPago { compras: Compra[]; error: string | null }
+/**
+ * `error` es `null` si el pago se completó; si no, trae el mensaje del backend y el carrito queda intacto.
+ * `pedidoSinCancelar` trae el id del pedido solo cuando además falló su cancelación: en ese caso el pedido
+ * puede seguir pendiente con el stock reservado y hay que reintentar la cancelación o revisarlo.
+ */
+export interface ResultadoPago { compras: Compra[]; error: string | null; pedidoSinCancelar?: string | null }
+
+/** Estado real de un pedido tras reintentar su cancelación. */
+export type DesenlacePedido = 'CANCELADO' | 'PAGADO' | 'PENDIENTE';
 
 /**
  * Carrito de compra simulado. Vive solo en el frontend (no persiste al recargar).
@@ -21,9 +28,12 @@ export class CarritoService {
 
   private _items = signal<ItemCarrito[]>([]);
   private _pagando = signal(false);
+  private _pedidoSinCancelar = signal<string | null>(null);
 
   readonly items = this._items.asReadonly();
   readonly pagando = this._pagando.asReadonly();
+  /** Pedido cuya cancelación falló: mientras exista no se permite pagar otra vez (duplicaría la reserva). */
+  readonly pedidoSinCancelar = this._pedidoSinCancelar.asReadonly();
   readonly unidades = computed(() => this._items().reduce((suma, i) => suma + i.cantidad, 0));
   readonly subtotal = computed(() => this._items().reduce((suma, i) => suma + precioVigente(i.producto) * i.cantidad, 0));
 
@@ -33,7 +43,10 @@ export class CarritoService {
   constructor() {
     effect(() => {
       this.usuarioId();
-      untracked(() => this._items.set([]));
+      untracked(() => {
+        this._items.set([]);
+        this._pedidoSinCancelar.set(null);
+      });
     });
   }
 
@@ -87,6 +100,14 @@ export class CarritoService {
     return defer(() => {
       const items = this._items();
       if (this._pagando() || items.length === 0) return EMPTY;
+      const pendiente = this._pedidoSinCancelar();
+      if (pendiente) {
+        return of<ResultadoPago>({
+          compras: [],
+          error: 'Tienes un pedido anterior que no se pudo cancelar. Reintenta su cancelación o revísalo en Mis compras antes de pagar de nuevo',
+          pedidoSinCancelar: pendiente,
+        });
+      }
 
       this._pagando.set(true);
       const pedido$ = this.compras.crearPedido(items.map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad })), cupon);
@@ -94,11 +115,16 @@ export class CarritoService {
         switchMap((pedido) =>
           this.compras.confirmarPedido(pedido.pedidoId).pipe(
             map((confirmado): ResultadoPago => ({ compras: confirmado.compras, error: null })),
-            // Si falla la confirmación se cancela el pedido para devolver el stock; se informa el error original.
+            // Si falla la confirmación se cancela el pedido para devolver el stock. Si la cancelación también
+            // falla NO se oculta: el pedido puede seguir pendiente con el stock reservado, así que se recuerda
+            // su id (bloquea nuevos pagos) y se informa junto al error original.
             catchError((e) =>
               this.compras.cancelarPedido(pedido.pedidoId).pipe(
-                catchError(() => of(null)),
-                map((): ResultadoPago => ({ compras: [], error: mensajeDeError(e) })),
+                map((): ResultadoPago => ({ compras: [], error: mensajeDeError(e), pedidoSinCancelar: null })),
+                catchError(() => {
+                  this._pedidoSinCancelar.set(pedido.pedidoId);
+                  return of<ResultadoPago>({ compras: [], error: mensajeDeError(e), pedidoSinCancelar: pedido.pedidoId });
+                }),
               ),
             ),
           ),
@@ -106,6 +132,39 @@ export class CarritoService {
         catchError((e) => of<ResultadoPago>({ compras: [], error: mensajeDeError(e) })),
         tap((r) => {
           if (!r.error) this._items.set([]);
+        }),
+        finalize(() => this._pagando.set(false)),
+      );
+    });
+  }
+
+  /**
+   * Reintenta cancelar el pedido que quedó sin cancelar. Si el PUT vuelve a fallar, consulta el estado real
+   * del pedido (GET /compras) para reconciliar: ya cancelado → libera el bloqueo; ya pagado (la confirmación
+   * sí llegó al servidor) → vacía el carrito; sigue pendiente o no se pudo consultar → conserva el bloqueo.
+   */
+  reintentarCancelacion(): Observable<DesenlacePedido> {
+    return defer(() => {
+      const id = this._pedidoSinCancelar();
+      if (!id || this._pagando()) return EMPTY;
+
+      this._pagando.set(true);
+      return this.compras.cancelarPedido(id).pipe(
+        map((): DesenlacePedido => 'CANCELADO'),
+        catchError(() =>
+          this.compras.listar().pipe(
+            map((todas): DesenlacePedido => {
+              const lineas = todas.filter((c) => c.pedidoId === id);
+              if (lineas.length > 0 && lineas.every((c) => c.estado === 'CANCELADA')) return 'CANCELADO';
+              if (lineas.some((c) => c.estado === 'COMPLETADA' || c.estado === 'REEMBOLSADA')) return 'PAGADO';
+              return 'PENDIENTE';
+            }),
+            catchError(() => of<DesenlacePedido>('PENDIENTE')),
+          ),
+        ),
+        tap((desenlace) => {
+          if (desenlace !== 'PENDIENTE') this._pedidoSinCancelar.set(null);
+          if (desenlace === 'PAGADO') this._items.set([]);
         }),
         finalize(() => this._pagando.set(false)),
       );
