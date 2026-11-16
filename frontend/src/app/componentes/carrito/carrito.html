@@ -17,7 +17,7 @@
           @for (i of carrito.items(); track i.producto.id) {
             <article class="panel item aparece">
               <div class="mini">
-                <app-arte-producto [nombre]="i.producto.nombre" [categoria]="i.producto.categoria" [gama]="i.producto.gama" />
+                <app-arte-producto [nombre]="i.producto.nombre" [categoria]="i.producto.categoria" [gama]="i.producto.gama" [imagenUrl]="i.producto.imagenUrl ?? null" />
               </div>
 
               <div class="datos">

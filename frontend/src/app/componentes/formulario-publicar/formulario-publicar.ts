@@ -1,7 +1,7 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, OnDestroy, output, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
 import { Exclusividad, Gama, Producto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { ProductoService } from '../../servicios/producto.service';
@@ -25,7 +25,7 @@ function sinSoloEspacios(control: AbstractControl): ValidationErrors | null {
   templateUrl: './formulario-publicar.html',
   styleUrl: './formulario-publicar.css',
 })
-export class FormularioPublicar {
+export class FormularioPublicar implements OnDestroy {
   private fb = inject(NonNullableFormBuilder);
   private productos = inject(ProductoService);
   private toast = inject(ToastService);
@@ -55,6 +55,11 @@ export class FormularioPublicar {
 
   protected publicando = signal(false);
   protected errorServidor = signal('');
+  protected archivoImagen = signal<File | null>(null);
+  protected imagenPrevia = signal<string | null>(null);
+  protected errorImagen = signal('');
+  private selectorImagen = viewChild<ElementRef<HTMLInputElement>>('selectorImagen');
+  private urlPrevia: string | null = null;
 
   private valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
@@ -70,8 +75,45 @@ export class FormularioPublicar {
       gama: v.gama ?? 'MEDIA',
       exclusividad: v.exclusividad ?? 'NORMAL',
       categoria: null,
+      imagenUrl: this.imagenPrevia(),
     };
   });
+
+  protected seleccionarImagen(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    const archivo = input.files?.[0] ?? null;
+    this.errorImagen.set('');
+    if (!archivo) return;
+    if (!['image/jpeg', 'image/png'].includes(archivo.type)) {
+      this.archivoImagen.set(null);
+      this.liberarImagenPrevia();
+      this.errorImagen.set('Selecciona una imagen PNG o JPEG.');
+      input.value = '';
+      return;
+    }
+    if (archivo.size > 5 * 1024 * 1024) {
+      this.archivoImagen.set(null);
+      this.liberarImagenPrevia();
+      this.errorImagen.set('La imagen no puede superar los 5 MB.');
+      input.value = '';
+      return;
+    }
+
+    this.liberarImagenPrevia();
+    this.archivoImagen.set(archivo);
+    this.urlPrevia = URL.createObjectURL(archivo);
+    this.imagenPrevia.set(this.urlPrevia);
+  }
+
+  private liberarImagenPrevia() {
+    if (this.urlPrevia) URL.revokeObjectURL(this.urlPrevia);
+    this.urlPrevia = null;
+    this.imagenPrevia.set(null);
+  }
+
+  ngOnDestroy() {
+    this.liberarImagenPrevia();
+  }
 
   protected enviar() {
     if (this.publicando()) return;
@@ -83,6 +125,7 @@ export class FormularioPublicar {
     }
 
     const v = this.form.getRawValue();
+    const archivo = this.archivoImagen();
     this.publicando.set(true);
     this.productos
       .publicar({
@@ -93,11 +136,32 @@ export class FormularioPublicar {
         gama: v.gama,
         exclusividad: v.exclusividad,
       })
-      .pipe(finalize(() => this.publicando.set(false)))
+      .pipe(
+        switchMap((producto) => {
+          if (!archivo) return of({ producto, errorImagen: null });
+          return this.productos.subirImagen(producto.id, archivo).pipe(
+            map((respuesta) => ({
+              producto: { ...producto, imagenUrl: respuesta.imagenUrl },
+              errorImagen: null,
+            })),
+            catchError((e) => of({ producto, errorImagen: mensajeDeError(e) })),
+          );
+        }),
+        finalize(() => this.publicando.set(false)),
+      )
       .subscribe({
-        next: (producto) => {
+        next: ({ producto, errorImagen }) => {
           this.form.reset(this.valoresIniciales);
-          this.toast.ok('¡Producto publicado!');
+          this.archivoImagen.set(null);
+          this.errorImagen.set('');
+          const selector = this.selectorImagen();
+          if (selector) selector.nativeElement.value = '';
+          this.liberarImagenPrevia();
+          if (errorImagen) {
+            this.toast.error(`Producto publicado, pero no se pudo guardar la imagen: ${errorImagen}`);
+          } else {
+            this.toast.ok('¡Producto publicado!');
+          }
           this.publicado.emit(producto);
         },
         error: (e) => this.errorServidor.set(mensajeDeError(e)),

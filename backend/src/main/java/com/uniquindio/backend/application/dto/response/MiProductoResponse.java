@@ -23,5 +23,6 @@ public record MiProductoResponse(
         Double precioPromocional,
         Double porcentajePromocion,
         LocalDate promocionHasta,
-        boolean pausado               // true = el vendedor lo pausó y no se ve en el catálogo público
+        boolean pausado,              // true = el vendedor lo pausó y no se ve en el catálogo público
+        String imagenUrl
 ) {}

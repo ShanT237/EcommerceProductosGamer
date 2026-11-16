@@ -20,7 +20,8 @@ public class ProductoMapper {
                 producto.getPrecio(),
                 producto.getStock(),
                 producto.getGama(),
-                producto.getExclusividad()
+                producto.getExclusividad(),
+                producto.getImagenUrl()
         );
     }
 
@@ -83,7 +84,8 @@ public class ProductoMapper {
                 producto.getPorcentajeDescuento(),
                 precioPromocional,
                 porcentajePromocion,
-                promocionHasta
+                promocionHasta,
+                producto.getImagenUrl()
         );
     }
 
@@ -94,7 +96,7 @@ public class ProductoMapper {
                 b.id(), b.vendedorId(), b.nombre(), b.descripcion(), b.precio(), b.stock(),
                 b.gama(), b.exclusividad(), b.categoria(), b.precioOriginal(), b.porcentajeDescuento(),
                 b.precioPromocional(), b.porcentajePromocion(), b.promocionHasta(),
-                producto.isPausado()
+                producto.isPausado(), producto.getImagenUrl()
         );
     }
 

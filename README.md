@@ -117,7 +117,7 @@ No hay pasarela de pago: pagar significa crear y confirmar cada compra con los e
 
 ### Publicar un producto (formulario reactivo)
 
-En **Mi tienda → Publicar**, el vendedor llena un formulario reactivo que valida antes de enviar: nombre y descripción obligatorios, precio mayor a cero y stock entero de cero o más. Si hay errores no se envía ninguna petición y cada campo muestra su aviso. Al enviar, el botón queda bloqueado ("Publicando…") y, si el backend rechaza la petición, se muestra su mensaje (por ejemplo `403` si el rol no corresponde o `422` si el vendedor está dado de baja). Una vista previa muestra cómo quedará la tarjeta en el catálogo.
+En **Mi tienda → Publicar**, el vendedor llena un formulario reactivo que valida antes de enviar: nombre y descripción obligatorios, precio mayor a cero y stock entero de cero o más. Puede añadir una imagen PNG/JPEG de hasta 5 MB; Spring Boot la sube a Cloudinary y guarda solo la URL en el producto. Si la carga falla, el producto queda publicado con la ilustración de respaldo y se informa el error. Una vista previa muestra cómo quedará la tarjeta en el catálogo.
 
 ### Mensajes de error
 
@@ -432,6 +432,28 @@ DB_USERNAME=usuario DB_PASSWORD=contraseña \
 ```
 
 El perfil `mariadb` no carga los datos de demo (`spring.sql.init.mode=never`): los usuarios y vendedores se crean con los endpoints de registro.
+
+### Imágenes de producto (Cloudinary)
+
+La carga es opcional. Para habilitarla, configura en `backend/.env` las tres variables `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` y `CLOUDINARY_API_SECRET`, o bien la variable única `CLOUDINARY_URL` con el formato estándar `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`. No guardes estas credenciales en Git ni las envíes desde Angular:
+
+```bash
+cd backend
+# Crea o edita el archivo .env ignorado por Git y define:
+# Configura una de estas dos opciones:
+# CLOUDINARY_CLOUD_NAME=...
+# CLOUDINARY_API_KEY=...
+# CLOUDINARY_API_SECRET=...
+# CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+set -a
+. ./.env
+set +a
+./gradlew bootRun
+```
+
+En Windows PowerShell, asigna al entorno la misma opción que configuraste en `.env` antes de iniciar `.\gradlew.bat bootRun`; PowerShell no carga `.env` automáticamente.
+
+El vendedor publica primero el producto y luego sube su imagen a `POST /api/productos/{id}/imagen` como `multipart/form-data` en el campo `archivo`. El backend acepta PNG/JPEG de hasta 5 MB, firma la petición a Cloudinary y persiste la URL HTTPS; el catálogo muestra la imagen o conserva la ilustración si no hay imagen o falla su carga.
 
 El catálogo se busca con `GET /api/productos?texto=mouse&categoria=Perifericos&page=0&size=20`; la respuesta contiene `contenido`, `pagina`, `tamano`, `totalElementos` y `totalPaginas`. `GET /api/reportes/mas-vendidos` agrupa ventas completadas en la base de datos.
 

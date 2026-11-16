@@ -24,11 +24,17 @@ import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarMisProductosUseCase;
 import com.uniquindio.backend.application.dto.response.MiProductoResponse;
+import com.uniquindio.backend.application.dto.response.SubirImagenProductoResponse;
+import com.uniquindio.backend.application.usecase.SubirImagenProductoUseCase;
 
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
@@ -36,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.net.URI;
 import java.util.UUID;
+import java.io.IOException;
 
 @PreAuthorize("hasRole('VENDEDOR')")
 @RestController
@@ -50,6 +57,7 @@ public class ProductoController {
     private final BuscarProductosUseCase buscarProductosUseCase;
     private final ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
     private final ConsultarMisProductosUseCase consultarMisProductosUseCase;
+    private final SubirImagenProductoUseCase subirImagenProductoUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
@@ -60,6 +68,7 @@ public class ProductoController {
                               BuscarProductosUseCase buscarProductosUseCase,
                               ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase,
                               ConsultarMisProductosUseCase consultarMisProductosUseCase,
+                              SubirImagenProductoUseCase subirImagenProductoUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
@@ -69,7 +78,22 @@ public class ProductoController {
         this.buscarProductosUseCase = buscarProductosUseCase;
         this.consultarPromocionesVigentesUseCase = consultarPromocionesVigentesUseCase;
         this.consultarMisProductosUseCase = consultarMisProductosUseCase;
+        this.subirImagenProductoUseCase = subirImagenProductoUseCase;
         this.mapper = mapper;
+    }
+
+    @PostMapping(path = "/{id}/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SubirImagenProductoResponse> subirImagen(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId,
+            @RequestParam("archivo") MultipartFile archivo) {
+        try {
+            String imagenUrl = subirImagenProductoUseCase.ejecutar(
+                    id, vendedorId, archivo.getBytes(), archivo.getOriginalFilename());
+            return ResponseEntity.ok(new SubirImagenProductoResponse(id, imagenUrl));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen");
+        }
     }
 
     // CU-04 Publicar Producto

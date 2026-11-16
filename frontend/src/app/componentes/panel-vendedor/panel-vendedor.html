@@ -70,7 +70,7 @@
           <div class="lista">
             @for (p of misProductos(); track p.id) {
               <article class="panel fila" [class.pausado]="p.pausado">
-                <div class="mini"><app-arte-producto [nombre]="p.nombre" [categoria]="p.categoria" [gama]="p.gama" /></div>
+                <div class="mini"><app-arte-producto [nombre]="p.nombre" [categoria]="p.categoria" [gama]="p.gama" [imagenUrl]="p.imagenUrl ?? null" /></div>
                 <div class="datos">
                   <h3>{{ p.nombre }}</h3>
                   <p class="muted">{{ p.descripcion }}</p>

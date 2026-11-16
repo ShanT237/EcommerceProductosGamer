@@ -110,7 +110,7 @@
       <button class="cerrar" (click)="cerrar()" aria-label="Cerrar">✕</button>
 
       <div class="modal-arte">
-        <app-arte-producto [nombre]="p.nombre" [categoria]="p.categoria" [gama]="p.gama" />
+        <app-arte-producto [nombre]="p.nombre" [categoria]="p.categoria" [gama]="p.gama" [imagenUrl]="p.imagenUrl ?? null" />
       </div>
 
       <div class="modal-info">

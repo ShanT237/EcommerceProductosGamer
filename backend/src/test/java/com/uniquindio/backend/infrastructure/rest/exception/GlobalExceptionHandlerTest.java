@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -27,5 +28,16 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, r.getStatusCode());
         assertEquals(409, r.getBody().get("status"));
+    }
+
+    @Test
+    void excepcionConEstadoHttpConservaSuEstadoYMensaje() {
+        var r = handler.manejarEstadoHttp(
+                new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Cloudinary no pudo completar la carga"));
+
+        assertEquals(HttpStatus.BAD_GATEWAY, r.getStatusCode());
+        assert r.getBody() != null;
+        assertEquals(502, r.getBody().get("status"));
+        assertEquals("Cloudinary no pudo completar la carga", r.getBody().get("mensaje"));
     }
 }

@@ -7,6 +7,7 @@ import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCa
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
+import com.uniquindio.backend.application.usecase.SubirImagenProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -40,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -81,6 +84,9 @@ class ProductoControllerTest {
     private ConsultarMisProductosUseCase consultarMisProductosUseCase;
 
     @MockitoBean
+    private SubirImagenProductoUseCase subirImagenProductoUseCase;
+
+    @MockitoBean
     private EmisorToken emisorToken;
 
     @BeforeEach
@@ -120,6 +126,22 @@ class ProductoControllerTest {
 
         Mockito.verify(publicarProductoUseCase).ejecutar(any(), eq(vendedorId), eq("Mouse"),
                 eq("Mouse RGB"), eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL));
+    }
+
+    @Test
+    void subirImagenRespondeConLaUrlDelProducto() throws Exception {
+        String imagenUrl = "https://res.cloudinary.com/demo/image/upload/producto.png";
+        when(subirImagenProductoUseCase.ejecutar(eq(productoId), eq(vendedorId), any(), eq("producto.png")))
+                .thenReturn(imagenUrl);
+        MockMultipartFile archivo = new MockMultipartFile(
+                "archivo", "producto.png", MediaType.IMAGE_PNG_VALUE, new byte[]{1, 2, 3});
+
+        mockMvc.perform(multipart("/api/productos/{id}/imagen", productoId)
+                        .file(archivo)
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productoId").value(productoId.toString()))
+                .andExpect(jsonPath("$.imagenUrl").value(imagenUrl));
     }
 
     @Test

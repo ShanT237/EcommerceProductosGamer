@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { Gama } from '../../modelos/modelos';
 
 let contador = 0;
@@ -18,6 +18,12 @@ export class ArteProducto {
   nombre = input.required<string>();
   categoria = input<string | null>(null);
   gama = input<Gama>('MEDIA');
+  imagenUrl = input<string | null>(null);
+  private imagenFallida = signal<string | null>(null);
+  protected imagenMostrada = computed(() => {
+    const url = this.imagenUrl();
+    return url && this.imagenFallida() !== url ? url : null;
+  });
 
   // Cada instancia necesita ids propios: si se repiten, todas las tarjetas heredarían el color de la primera.
   protected readonly uid = `arte${contador++}`;
@@ -36,6 +42,10 @@ export class ArteProducto {
     if (/control|mando|gamepad|joystick/.test(t)) return 'control';
     return 'cristal';
   });
+
+  protected marcarImagenFallida(url: string) {
+    this.imagenFallida.set(url);
+  }
 
   protected teclas = Array.from({ length: 36 }, (_, i) => ({
     x: 38 + (i % 12) * 13.2,

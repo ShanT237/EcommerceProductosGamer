@@ -36,6 +36,7 @@ public class Producto {
     private final String categoria;
     private boolean eliminado;
     private boolean pausado;
+    private String imagenUrl;
 
     private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
                      double precio, int stock, Gama gama, Exclusividad exclusividad, String categoria) {
@@ -113,12 +114,28 @@ public class Producto {
                                        double precio, int stock, Gama gama, Exclusividad exclusividad,
                                        boolean eliminado, Double precioOriginal, boolean pausado,
                                        String categoria) {
+        return reconstruir(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                eliminado, precioOriginal, pausado, categoria, null);
+    }
+
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado, Double precioOriginal, boolean pausado,
+                                       String categoria, String imagenUrl) {
         Producto producto = new Producto(id, vendedorId, nombre, descripcion,
                 precio, stock, gama, exclusividad, categoria);
         producto.eliminado = eliminado;
         producto.precioOriginal = precioOriginal;
         producto.pausado = pausado;
+        producto.imagenUrl = imagenUrl;
         return producto;
+    }
+
+    public void asignarImagenUrl(String imagenUrl) {
+        if (imagenUrl == null || imagenUrl.isBlank() || imagenUrl.length() > 1000) {
+            throw new ReglaDominioException("La URL de la imagen no es válida");
+        }
+        this.imagenUrl = imagenUrl;
     }
 
     public boolean esExclusivo() {

@@ -7,6 +7,7 @@ import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCa
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
 import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
+import com.uniquindio.backend.application.usecase.SubirImagenProductoUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
@@ -81,6 +82,9 @@ class EliminarProductoControllerTest {
 
     @MockitoBean
     private ConsultarMisProductosUseCase consultarMisProductosUseCase;
+
+    @MockitoBean
+    private SubirImagenProductoUseCase subirImagenProductoUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
