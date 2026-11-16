@@ -1,9 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { Combo, EstadoRegalo, ProgresoRegalos, Regalo } from '../../modelos/modelos';
+import { Combo, EstadoRegalo, MetaRecompensa, ProgresoRegalos, Regalo } from '../../modelos/modelos';
 import { mensajeDeError } from '../../servicios/api.util';
 import { ComboService } from '../../servicios/combo.service';
 import { fechaHora } from '../../servicios/formato';
+import { MetaService } from '../../servicios/meta.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { RegaloService } from '../../servicios/regalo.service';
 import { ToastService } from '../../servicios/toast.service';
@@ -18,6 +19,7 @@ export class Regalos implements OnInit {
   private servicio = inject(RegaloService);
   private productos = inject(ProductoService);
   private combosApi = inject(ComboService);
+  private metasApi = inject(MetaService);
   private toast = inject(ToastService);
   protected fechaHora = fechaHora;
 
@@ -25,6 +27,8 @@ export class Regalos implements OnInit {
   protected disponibles = signal<Regalo[]>([]);
   protected mios = signal<Regalo[]>([]);
   protected combos = signal<Combo[]>([]);
+  /** Metas activas, solo informativas: no cambian cuándo se desbloquea el regalo. */
+  protected metas = signal<MetaRecompensa[]>([]);
   protected cargando = signal(true);
   protected error = signal('');
   /** Id del regalo con una petición en curso (bloquea los botones para evitar dobles clics). */
@@ -44,6 +48,7 @@ export class Regalos implements OnInit {
     // Los nombres de producto y combo se piden aparte: si fallan, solo se muestra un texto genérico.
     this.productos.cargarCatalogo().subscribe({ error: () => undefined });
     this.combosApi.listar().subscribe({ next: (c) => this.combos.set(c), error: () => undefined });
+    this.metasApi.listar().subscribe({ next: (m) => this.metas.set(m), error: () => undefined });
   }
 
   protected cargar() {
@@ -81,6 +86,10 @@ export class Regalos implements OnInit {
       return this.productos.catalogo().find((p) => p.id === r.idProducto)?.nombre ?? 'Producto de regalo';
     }
     return this.combos().find((c) => c.id === r.idCombo)?.nombre ?? 'Combo de regalo';
+  }
+
+  protected nombreMeta(m: MetaRecompensa): string {
+    return this.productos.catalogo().find((p) => p.id === m.productoRegaloId)?.nombre ?? 'Producto de regalo';
   }
 
   protected tipoDe(r: Regalo): string {

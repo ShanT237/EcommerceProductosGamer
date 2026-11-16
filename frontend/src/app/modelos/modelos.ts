@@ -271,3 +271,17 @@ export interface NuevoRegalo {
   productoId?: string;
   comboId?: string;
 }
+
+/** Meta de recompensa (`/api/metas-recompensa`): al llegar a `comprasRequeridas` compras se ofrece `productoRegaloId`. */
+export interface MetaRecompensa {
+  id: string;
+  comprasRequeridas: number;
+  productoRegaloId: string;
+  activa: boolean;
+}
+
+/** Cuerpo de `POST /api/metas-recompensa`. */
+export interface NuevaMeta {
+  comprasRequeridas: number;
+  productoRegaloId: string;
+}
