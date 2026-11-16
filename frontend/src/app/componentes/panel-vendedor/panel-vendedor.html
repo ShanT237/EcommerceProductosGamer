@@ -262,6 +262,13 @@
           <p class="muted pequeno">Tiene un descuento activo: quítalo para poder cambiar el precio.</p>
         }
       </div>
+      <div class="campo">
+        <label for="es">Stock</label>
+        <input id="es" name="es" class="entrada" type="number" min="0" step="1" [(ngModel)]="editStock">
+        @if (p.stock <= 0) {
+          <p class="muted pequeno">Producto agotado: ingresa las unidades disponibles para volver a venderlo.</p>
+        }
+      </div>
       <div class="acciones">
         <button class="btn btn-neon" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar cambios' }}</button>
         <button class="btn" type="button" (click)="cerrarEdicion()">Cancelar</button>
