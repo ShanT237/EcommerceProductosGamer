@@ -1,5 +1,6 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.usecase.ConsultarMetasUseCase;
 import com.uniquindio.backend.application.usecase.GestionarMetasRecompensaUseCase;
 import com.uniquindio.backend.domain.entity.MetaRecompensa;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
@@ -17,6 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -24,6 +26,7 @@ import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -42,6 +45,9 @@ class MetaRecompensaControllerTest {
 
     @MockitoBean
     private GestionarMetasRecompensaUseCase gestionarMetasUseCase;
+
+    @MockitoBean
+    private ConsultarMetasUseCase consultarMetasUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -169,5 +175,39 @@ class MetaRecompensaControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         Mockito.verifyNoInteractions(gestionarMetasUseCase);
+    }
+
+    @Test
+    void listarDevuelve200ParaComprador() throws Exception {
+        MetaRecompensa m1 = MetaRecompensa.crear(UUID.randomUUID(), 3, productoId);
+        MetaRecompensa m2 = MetaRecompensa.crear(UUID.randomUUID(), 10, productoId);
+        when(consultarMetasUseCase.ejecutar()).thenReturn(List.of(m1, m2));
+
+        mockMvc.perform(get("/api/metas-recompensa")
+                        .with(comprador(sesionId)))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].comprasRequeridas").value(3))
+                .andExpect(jsonPath("$[1].comprasRequeridas").value(10))
+                .andExpect(jsonPath("$[0].activa").value(true));
+    }
+
+    @Test
+    void listarDevuelve200ParaVendedor() throws Exception {
+        when(consultarMetasUseCase.ejecutar()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/metas-recompensa")
+                        .with(vendedor(sesionId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void listarSinTokenRetorna401() throws Exception {
+        mockMvc.perform(get("/api/metas-recompensa"))
+                .andExpect(status().isUnauthorized())             // 401
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(consultarMetasUseCase);
     }
 }
