@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Marketplace Gamer - Entrega 2 (flujo punta a punta)",
-    "description": "Requiere el backend corriendo (bootRun) con datos de data.sql. Ejecutar la carpeta A en orden. Cambiar baseUrl si el puerto no es 8080.",
+    "description": "Requiere el backend corriendo (bootRun) con datos de data.sql. Ejecutar la carpeta A en orden (deja los tokens y productoId), luego B, C y D. La carpeta D prueba el pedido del carrito: un solo POST con varios items, cupon de un uso por pedido y por comprador, y el rechazo todo o nada. Cambiar baseUrl si el puerto no es 8080.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -874,6 +874,554 @@
           ]
         }
       ]
+    },
+    {
+      "name": "D. Pedido, cupon y todo o nada (requiere la carpeta A)",
+      "item": [
+        {
+          "name": "D1. Vendedor publica un segundo producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mousepad XL de ensayo\",\n  \"descripcion\": \"Superficie de tela, 90x40 cm\",\n  \"precio\": 60000,\n  \"stock\": 3,\n  \"gama\": \"MEDIA\",\n  \"exclusividad\": \"NORMAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Requiere la carpeta A (tokens y productoId). Guarda el id en producto2Id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Publicar: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set(\"producto2Id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D2. Vendedor crea un cupon propio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cupones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cupones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{cuponCodigo}}\",\n  \"porcentaje\": 10,\n  \"vence\": \"{{cuponVence}}\",\n  \"usosMaximos\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "El codigo y el vencimiento se generan en el pre-request para poder repetir la carpeta sin 409 (codigo duplicado)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"cuponCodigo\", \"ENS\" + Date.now().toString(36).toUpperCase());",
+                  "pm.collectionVariables.set(\"cuponVence\", new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear cupon: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Nace sin usos\", function () { pm.expect(pm.response.json().usos).to.eql(0); });",
+                  "pm.test(\"Es un cupon de vendedor (con dueno)\", function () { pm.expect(pm.response.json().vendedorId).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D3. Pedido de 2 items con cupon (un solo POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productoId\": \"{{productoId}}\", \"cantidad\": 1 },\n    { \"productoId\": \"{{producto2Id}}\", \"cantidad\": 1 }\n  ],\n  \"codigoCupon\": \"{{cuponCodigo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Crear pedido: responde 201\", function () { pm.response.to.have.status(201); });",
+                  "const r = pm.response.json();",
+                  "pm.collectionVariables.set(\"pedidoId\", r.pedidoId);",
+                  "pm.collectionVariables.set(\"lineaId\", r.compras[0].id);",
+                  "pm.test(\"Una compra PENDIENTE por item con el mismo pedidoId\", function () { pm.expect(r.compras.length).to.eql(2); r.compras.forEach(function (c) { pm.expect(c.estado).to.eql(\"PENDIENTE\"); pm.expect(c.pedidoId).to.eql(r.pedidoId); }); });",
+                  "pm.test(\"El cupon se aplico\", function () { pm.expect(r.cuponAplicado).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D4. El cupon consumio UN solo uso (no uno por item)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cupones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cupones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenVendedor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar cupones: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"usos == 1 con un pedido de 2 items\", function () { const c = pm.response.json().find(function (x) { return x.codigo === pm.collectionVariables.get(\"cuponCodigo\"); }); pm.expect(c).to.not.be.undefined; pm.expect(c.usos).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D5. ERROR: confirmar una sola linea del pedido -> 422",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/compras/{{lineaId}}/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "compras",
+                "{{lineaId}}",
+                "confirmar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Las lineas de un pedido o combo solo se confirman, cancelan o reembolsan con el pedido completo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Linea de pedido: responde 422\", function () { pm.response.to.have.status(422); });",
+                  "pm.test(\"El mensaje pide operar el pedido completo\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"pedido\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D6. Confirmar el pedido completo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "confirmar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Confirmar pedido: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Todas las lineas quedan COMPLETADA\", function () { pm.response.json().compras.forEach(function (c) { pm.expect(c.estado).to.eql(\"COMPLETADA\"); }); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D7. ERROR: el mismo comprador reutiliza el cupon -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [ { \"productoId\": \"{{producto2Id}}\", \"cantidad\": 1 } ],\n  \"codigoCupon\": \"{{cuponCodigo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cupon ya usado: responde 422\", function () { pm.response.to.have.status(422); });",
+                  "pm.test(\"El mensaje dice que ya lo uso\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"Ya usaste\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D8. ERROR: un item sin stock rechaza todo el pedido -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productoId\": \"{{producto2Id}}\", \"cantidad\": 1 },\n    { \"productoId\": \"{{productoId}}\", \"cantidad\": 9999 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "El segundo item no tiene stock: no se descuenta ni el del primero ni se guarda ninguna compra."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sin stock: responde 422\", function () { pm.response.to.have.status(422); });",
+                  "pm.test(\"El mensaje menciona el stock\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"stock\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D9. Vista previa del cupon por otro comprador (Ana) -> 200",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cupones/{{cuponCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cupones",
+                "{{cuponCodigo}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAna}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Ana no ha usado el cupon, asi que puede verlo. Requiere haber corrido la carpeta A (tokenAna)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vista previa: responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"No consume usos: sigue en 1 (el 422 de D8 no gasto nada)\", function () { pm.expect(pm.response.json().usos).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D10. Pedido sin items -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenComprador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pedido vacio: responde 400\", function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D11. Pedido sin token -> 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [ { \"productoId\": \"{{productoId}}\", \"cantidad\": 1 } ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sin token: responde 401\", function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -899,6 +1447,26 @@
     },
     {
       "key": "compraId",
+      "value": ""
+    },
+    {
+      "key": "producto2Id",
+      "value": ""
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    },
+    {
+      "key": "lineaId",
+      "value": ""
+    },
+    {
+      "key": "cuponCodigo",
+      "value": ""
+    },
+    {
+      "key": "cuponVence",
       "value": ""
     }
   ]
