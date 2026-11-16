@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 import com.uniquindio.backend.application.usecase.CambiarVisibilidadProductoUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarMisProductosUseCase;
 import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCase;
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
@@ -77,6 +78,9 @@ class EliminarProductoControllerTest {
 
     @MockitoBean
     private ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
+
+    @MockitoBean
+    private ConsultarMisProductosUseCase consultarMisProductosUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;

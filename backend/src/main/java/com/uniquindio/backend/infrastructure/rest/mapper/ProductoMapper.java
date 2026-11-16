@@ -87,6 +87,17 @@ public class ProductoMapper {
         );
     }
 
+    /** Listado del propio vendedor: lo mismo que el catálogo, más el estado `pausado`. */
+    public MiProductoResponse toMiProductoResponse(Producto producto, Promocion promocion) {
+        BuscarProductoResponse b = toBuscarResponse(producto, promocion);
+        return new MiProductoResponse(
+                b.id(), b.vendedorId(), b.nombre(), b.descripcion(), b.precio(), b.stock(),
+                b.gama(), b.exclusividad(), b.categoria(), b.precioOriginal(), b.porcentajeDescuento(),
+                b.precioPromocional(), b.porcentajePromocion(), b.promocionHasta(),
+                producto.isPausado()
+        );
+    }
+
     public ProductoStockBajoResponse toStockBajoResponse(Producto producto) {
         return ProductoStockBajoResponse.desde(producto);
     }

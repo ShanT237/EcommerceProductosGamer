@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 import com.uniquindio.backend.application.usecase.CambiarVisibilidadProductoUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarMisProductosUseCase;
 import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCase;
 import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
 import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
@@ -75,6 +76,9 @@ class ProductoControllerTest {
 
     @MockitoBean
     private ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
+
+    @MockitoBean
+    private ConsultarMisProductosUseCase consultarMisProductosUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -297,5 +301,66 @@ class ProductoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contenido[0].precioPromocional").doesNotExist())
                 .andExpect(jsonPath("$.contenido[0].promocionHasta").doesNotExist());
+    }
+
+    // ===================== mis productos (panel del vendedor) =====================
+
+    @Test
+    void listarMiosUsaElVendedorDelTokenEIncluyeLosPausados() throws Exception {
+        Producto activo = producto();
+        Producto pausado = Producto.publicar(UUID.randomUUID(), vendedorId, "Teclado", "Teclado RGB",
+                200, 3, Gama.ALTA, Exclusividad.NORMAL);
+        pausado.pausar();
+        when(consultarMisProductosUseCase.ejecutar(vendedorId)).thenReturn(List.of(activo, pausado));
+
+        mockMvc.perform(get("/api/productos/mios").with(vendedor(vendedorId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].nombre").value("Mouse"))
+                .andExpect(jsonPath("$[0].pausado").value(false))
+                .andExpect(jsonPath("$[1].nombre").value("Teclado"))
+                .andExpect(jsonPath("$[1].pausado").value(true));
+
+        Mockito.verify(consultarMisProductosUseCase).ejecutar(vendedorId);
+    }
+
+    @Test
+    void listarMiosIncluyeLaPromocionVigente() throws Exception {
+        when(consultarMisProductosUseCase.ejecutar(vendedorId)).thenReturn(List.of(producto()));
+        when(consultarPromocionesVigentesUseCase.ejecutar(any())).thenReturn(Map.of(productoId,
+                Promocion.programar(UUID.randomUUID(), productoId, 15,
+                        LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30))));
+
+        mockMvc.perform(get("/api/productos/mios").with(vendedor(vendedorId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].precioPromocional").value(85.0))
+                .andExpect(jsonPath("$[0].porcentajePromocion").value(15.0));
+    }
+
+    @Test
+    void listarMiosSinProductosDevuelveListaVacia() throws Exception {
+        when(consultarMisProductosUseCase.ejecutar(vendedorId)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/productos/mios").with(vendedor(vendedorId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void listarMiosSinTokenRetorna401() throws Exception {
+        mockMvc.perform(get("/api/productos/mios"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(consultarMisProductosUseCase);
+    }
+
+    @Test
+    void unCompradorNoPuedeListarMiosRetorna403() throws Exception {
+        mockMvc.perform(get("/api/productos/mios").with(comprador(UUID.randomUUID())))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(consultarMisProductosUseCase);
     }
 }

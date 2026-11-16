@@ -4,7 +4,7 @@ import { WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { API_URL } from '../../config';
-import { Pagina, Producto, PromocionTemporada, Sesion } from '../../modelos/modelos';
+import { Producto, PromocionTemporada, Sesion } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ToastService } from '../../servicios/toast.service';
@@ -54,8 +54,6 @@ type Interno = {
 };
 
 const conDescuento = () => producto({ precio: 80000, precioOriginal: 100000, porcentajeDescuento: 20 });
-const pagina = (contenido: Producto[]): Pagina<Producto> =>
-  ({ contenido, pagina: 0, tamano: 100, totalElementos: contenido.length, totalPaginas: 1 });
 
 /** Deja correr las promesas pendientes (la confirmación se resuelve de forma asíncrona). */
 const esperar = () => new Promise<void>((r) => setTimeout(r));
@@ -66,12 +64,12 @@ describe('PanelVendedor (descuento inmediato)', () => {
   let toast: ToastService;
 
   const raiz = () => fixture.nativeElement as HTMLElement;
-  const catalogo = (r: { url: string }) => r.url === `${API_URL}/productos`;
+  const catalogo = (r: { url: string }) => r.url === `${API_URL}/productos/mios`;
   const promociones = (r: { url: string }) => r.url === `${API_URL}/promociones`;
 
   /** Responde catálogo y promociones; los reportes fallan en silencio (el panel ignora esos errores). */
   function responderCarga(lista: Producto[], promos: PromocionTemporada[] = []) {
-    http.match(catalogo).forEach((r) => r.flush(pagina(lista)));
+    http.match(catalogo).forEach((r) => r.flush(lista));
     http.match((r) => promociones(r) && r.method === 'GET').forEach((r) => r.flush(promos));
     http.match((r) => !catalogo(r) && !promociones(r) && r.method === 'GET')
       .forEach((r) => r.flush({ mensaje: 'sin datos' }, { status: 500, statusText: 'Server Error' }));
@@ -208,11 +206,11 @@ describe('PanelVendedor (promociones de temporada)', () => {
 
   const raiz = () => fixture.nativeElement as HTMLElement;
   const interno = () => fixture.componentInstance as unknown as Interno;
-  const catalogo = (r: { url: string }) => r.url === `${API_URL}/productos`;
+  const catalogo = (r: { url: string }) => r.url === `${API_URL}/productos/mios`;
   const promociones = (r: { url: string }) => r.url === `${API_URL}/promociones`;
 
   function responderCarga(lista: Producto[], promos: PromocionTemporada[] = []) {
-    http.match(catalogo).forEach((r) => r.flush(pagina(lista)));
+    http.match(catalogo).forEach((r) => r.flush(lista));
     http.match((r) => promociones(r) && r.method === 'GET').forEach((r) => r.flush(promos));
     http.match((r) => !catalogo(r) && !promociones(r) && r.method === 'GET')
       .forEach((r) => r.flush({ mensaje: 'sin datos' }, { status: 500, statusText: 'Server Error' }));
@@ -488,5 +486,132 @@ describe('PanelVendedor (promociones de temporada)', () => {
     fixture.detectChanges();
 
     expect(raiz().querySelector('.aviso')).toBeNull();
+  });
+});
+
+describe('PanelVendedor (pausar y reactivar productos)', () => {
+  let fixture: ComponentFixture<PanelVendedor>;
+  let http: HttpTestingController;
+  let toast: ToastService;
+
+  const raiz = () => fixture.nativeElement as HTMLElement;
+  const misProductos = (r: { url: string }) => r.url === `${API_URL}/productos/mios`;
+  const promociones = (r: { url: string }) => r.url === `${API_URL}/promociones`;
+  const filas = () => Array.from(raiz().querySelectorAll('.fila'));
+  const boton = (clase: string) => raiz().querySelector(`.fila button.${clase}`) as HTMLButtonElement | null;
+
+  function responderCarga(lista: Producto[]) {
+    http.match(misProductos).forEach((r) => r.flush(lista));
+    http.match((r) => promociones(r) && r.method === 'GET').forEach((r) => r.flush([]));
+    http.match((r) => !misProductos(r) && !promociones(r) && r.method === 'GET')
+      .forEach((r) => r.flush({ mensaje: 'sin datos' }, { status: 500, statusText: 'Server Error' }));
+    fixture.detectChanges();
+  }
+
+  function abrirMisProductos(lista: Producto[]) {
+    fixture = TestBed.createComponent(PanelVendedor);
+    fixture.detectChanges();
+    responderCarga(lista);
+    (raiz().querySelectorAll('.pestanas button')[1] as HTMLButtonElement).click(); // "Mis productos"
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    const sesion = signal<Sesion | null>({ id: 'v1', correo: 'v@correo.com', rol: 'VENDEDOR', exp: 9999999999 });
+    TestBed.configureTestingModule({
+      imports: [PanelVendedor],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: AuthService, useValue: { sesion } }],
+    });
+    http = TestBed.inject(HttpTestingController);
+    toast = TestBed.inject(ToastService);
+    vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    http.verify();
+  });
+
+  it('pideLaListaPropiaYNoElCatalogoPublico', () => {
+    fixture = TestBed.createComponent(PanelVendedor);
+    fixture.detectChanges();
+
+    http.expectNone({ method: 'GET', url: `${API_URL}/productos` });
+    expect(http.match(misProductos).length).toBe(1);
+    responderCarga([]);
+  });
+
+  it('unProductoPausadoSigueEnLaListaConEtiquetaYBotonReactivar', () => {
+    abrirMisProductos([producto({ id: 'p1', nombre: 'Mouse', pausado: true })]);
+
+    expect(filas().length).toBe(1);
+    expect(raiz().querySelector('.fila .etiqueta.pausado')?.textContent).toContain('Pausado');
+    expect(raiz().querySelector('.fila.pausado')).not.toBeNull();
+    expect(boton('reactivar')).not.toBeNull();
+    expect(boton('pausar')).toBeNull();
+  });
+
+  it('unProductoActivoMuestraPausarYNoReactivarNiEtiqueta', () => {
+    abrirMisProductos([producto({ pausado: false })]);
+
+    expect(boton('pausar')).not.toBeNull();
+    expect(boton('reactivar')).toBeNull();
+    expect(raiz().querySelector('.fila .etiqueta.pausado')).toBeNull();
+    expect(raiz().querySelector('.fila.pausado')).toBeNull();
+  });
+
+  it('pausarHacePutYElProductoSigueEnLaListaMarcadoComoPausado', () => {
+    abrirMisProductos([producto({ pausado: false })]);
+
+    boton('pausar')!.click();
+    const req = http.expectOne({ method: 'PUT', url: `${API_URL}/productos/p1/visibilidad` });
+    expect(req.request.body).toEqual({ activo: false });
+    req.flush({ id: 'p1', vendedorId: 'v1', nombre: 'Mouse', pausado: true });
+    responderCarga([producto({ pausado: true })]); // tras pausar se vuelve a pedir la lista propia
+
+    expect(filas().length).toBe(1); // ya no desaparece
+    expect(raiz().querySelector('.fila .etiqueta.pausado')).not.toBeNull();
+    expect(boton('reactivar')).not.toBeNull();
+    expect(toast.toasts().find((t) => t.tipo === 'ok')?.texto).toContain('pausado');
+  });
+
+  it('reactivarHacePutConActivoTrueYQuitaLaMarcaDePausado', () => {
+    abrirMisProductos([producto({ pausado: true })]);
+
+    boton('reactivar')!.click();
+    const req = http.expectOne({ method: 'PUT', url: `${API_URL}/productos/p1/visibilidad` });
+    expect(req.request.body).toEqual({ activo: true });
+    req.flush({ id: 'p1', vendedorId: 'v1', nombre: 'Mouse', pausado: false });
+    responderCarga([producto({ pausado: false })]);
+
+    expect(raiz().querySelector('.fila .etiqueta.pausado')).toBeNull();
+    expect(boton('pausar')).not.toBeNull();
+    expect(boton('reactivar')).toBeNull();
+    expect(toast.toasts().find((t) => t.tipo === 'ok')?.texto).toContain('reactivado');
+  });
+
+  it('unErrorAlReactivarMuestraElMensajeDelBackendYRecargaLaLista', () => {
+    abrirMisProductos([producto({ pausado: true })]);
+
+    boton('reactivar')!.click();
+    http.expectOne({ method: 'PUT', url: `${API_URL}/productos/p1/visibilidad` })
+      .flush({ mensaje: 'El producto ya está activo' }, { status: 422, statusText: 'Unprocessable Content' });
+    responderCarga([producto({ pausado: false })]); // el estado desfasado se corrige con la recarga
+
+    expect(toast.toasts().find((t) => t.tipo === 'error')?.texto).toContain('ya está activo');
+    expect(boton('pausar')).not.toBeNull();
+    expect(boton('pausar')!.disabled).toBe(false);
+  });
+
+  it('mientrasSeCambiaLaVisibilidadLosBotonesQuedanDeshabilitados', () => {
+    abrirMisProductos([producto({ pausado: true })]);
+
+    boton('reactivar')!.click();
+    fixture.detectChanges();
+    expect(boton('reactivar')!.disabled).toBe(true);
+
+    http.expectOne({ method: 'PUT', url: `${API_URL}/productos/p1/visibilidad` })
+      .flush({ id: 'p1', vendedorId: 'v1', nombre: 'Mouse', pausado: false });
+    responderCarga([producto({ pausado: false })]);
   });
 });

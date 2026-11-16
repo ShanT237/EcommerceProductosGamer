@@ -82,9 +82,11 @@ export class PanelVendedor implements OnInit {
   });
 
   // ---- mis productos ----
+  // Viene de GET /productos/mios (incluye los pausados). El catálogo público los oculta,
+  // y por eso un producto pausado desaparecía de aquí y no se podía reactivar.
   protected misProductos = computed(() => {
     const yo = this.auth.sesion()?.id;
-    return this.productos.catalogo().filter((p) => p.vendedorId === yo);
+    return this.productos.misProductos().filter((p) => p.vendedorId === yo);
   });
   protected conDescuento = computed(() => this.misProductos().filter((p) => !!p.precioOriginal));
   protected editando = signal<Producto | null>(null);
@@ -92,6 +94,8 @@ export class PanelVendedor implements OnInit {
   protected editDescripcion = signal('');
   protected editPrecio = signal<number | null>(null);
   protected guardando = signal(false);
+  /** Id del producto cuya visibilidad se está cambiando (evita dobles clics en Pausar/Reactivar). */
+  protected cambiandoVisibilidad = signal<string | null>(null);
 
   // ---- promociones por temporada y descuentos ----
   protected promoProducto = signal('');
@@ -125,7 +129,7 @@ export class PanelVendedor implements OnInit {
   });
 
   ngOnInit() {
-    this.cargarCatalogo();
+    this.cargarMisProductos();
     this.cargarResumen();
     this.cargarPromociones();
   }
@@ -137,8 +141,8 @@ export class PanelVendedor implements OnInit {
     });
   }
 
-  protected cargarCatalogo() {
-    this.productos.cargarCatalogo().subscribe({ error: (e) => this.toast.error(mensajeDeError(e)) });
+  protected cargarMisProductos() {
+    this.productos.cargarMisProductos().subscribe({ error: (e) => this.toast.error(mensajeDeError(e)) });
   }
 
   protected cargarResumen() {
@@ -151,7 +155,7 @@ export class PanelVendedor implements OnInit {
 
   // ---------- publicar (el formulario vive en FormularioPublicar) ----------
   protected alPublicar() {
-    this.cargarCatalogo();
+    this.cargarMisProductos();
     this.pestana.set('productos');
   }
 
@@ -179,12 +183,12 @@ export class PanelVendedor implements OnInit {
           this.guardando.set(false);
           this.editando.set(null);
           this.toast.ok('Producto actualizado.');
-          this.cargarCatalogo();
+          this.cargarMisProductos();
         };
         if (!p.precioOriginal && precioNuevo !== p.precio) {
           this.productos.modificarPrecio(p.id, precioNuevo).subscribe({
             next: despues,
-            error: (e) => { this.guardando.set(false); this.toast.error(mensajeDeError(e)); this.cargarCatalogo(); },
+            error: (e) => { this.guardando.set(false); this.toast.error(mensajeDeError(e)); this.cargarMisProductos(); },
           });
         } else {
           despues();
@@ -195,9 +199,20 @@ export class PanelVendedor implements OnInit {
   }
 
   protected visibilidad(p: Producto, activo: boolean) {
+    if (this.cambiandoVisibilidad()) return;
+    this.cambiandoVisibilidad.set(p.id);
     this.productos.cambiarVisibilidad(p.id, activo).subscribe({
-      next: () => { this.toast.ok(activo ? 'Producto reactivado.' : 'Producto pausado.'); this.cargarCatalogo(); },
-      error: (e) => this.toast.error(mensajeDeError(e)),
+      next: () => {
+        this.cambiandoVisibilidad.set(null);
+        this.toast.ok(activo ? 'Producto reactivado.' : 'Producto pausado.');
+        this.cargarMisProductos();
+      },
+      // Si el estado en pantalla estaba desfasado (p. ej. "ya está pausado"), se recarga para corregirlo.
+      error: (e) => {
+        this.cambiandoVisibilidad.set(null);
+        this.toast.error(mensajeDeError(e));
+        this.cargarMisProductos();
+      },
     });
   }
 
@@ -209,7 +224,7 @@ export class PanelVendedor implements OnInit {
     });
     if (!acepto) return;
     this.productos.eliminar(p.id).subscribe({
-      next: () => { this.toast.ok('Producto eliminado.'); this.cargarCatalogo(); this.cargarResumen(); },
+      next: () => { this.toast.ok('Producto eliminado.'); this.cargarMisProductos(); this.cargarResumen(); },
       error: (e) => this.toast.error(mensajeDeError(e)),
     });
   }
@@ -236,7 +251,7 @@ export class PanelVendedor implements OnInit {
         this.promoPorcentaje.set(null); this.promoDesde.set(''); this.promoHasta.set('');
         this.promoEditandoId.set(null);
         this.cargarPromociones();
-        this.cargarCatalogo();
+        this.cargarMisProductos();
       },
       error: (e) => { this.guardandoPromo.set(false); this.errorPromo.set(mensajeDeError(e)); },
     });
@@ -273,7 +288,7 @@ export class PanelVendedor implements OnInit {
         if (this.promoEditandoId() === pr.id) this.cancelarEdicionPromo();
         this.toast.ok(`Promoción retirada de "${pr.productoNombre}".`);
         this.cargarPromociones();
-        this.cargarCatalogo();
+        this.cargarMisProductos();
       },
       error: (e) => { this.quitandoPromo.set(null); this.toast.error(mensajeDeError(e)); },
     });
@@ -307,7 +322,7 @@ export class PanelVendedor implements OnInit {
         this.aplicandoDesc.set(false);
         this.toast.ok(`Descuento aplicado: "${r.nombre}" ahora cuesta ${precio(r.nuevoPrecio)}.`);
         this.descPorcentaje.set(null);
-        this.cargarCatalogo();
+        this.cargarMisProductos();
       },
       error: (e) => { this.aplicandoDesc.set(false); this.errorDesc.set(mensajeDeError(e)); },
     });
@@ -326,7 +341,7 @@ export class PanelVendedor implements OnInit {
       next: (r) => {
         this.quitandoDesc.set(null);
         this.toast.ok(`Descuento retirado: "${r.nombre}" vuelve a costar ${precio(r.nuevoPrecio)}.`);
-        this.cargarCatalogo();
+        this.cargarMisProductos();
       },
       error: (e) => { this.quitandoDesc.set(null); this.toast.error(mensajeDeError(e)); },
     });

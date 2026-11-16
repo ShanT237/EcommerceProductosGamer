@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_URL } from '../config';
-import { ProductoDescuento, PromocionTemporada } from '../modelos/modelos';
+import { Producto, ProductoDescuento, PromocionTemporada } from '../modelos/modelos';
 import { ProductoService } from './producto.service';
 
 describe('ProductoService (descuento inmediato)', () => {
@@ -90,5 +90,42 @@ describe('ProductoService (promociones de temporada)', () => {
       .flush(null, { status: 204, statusText: 'No Content' });
 
     expect(completo).toBe(true);
+  });
+});
+
+describe('ProductoService (mis productos)', () => {
+  let servicio: ProductoService;
+  let http: HttpTestingController;
+
+  const mio = (extra: Partial<Producto> = {}): Producto => ({
+    id: 'p1', vendedorId: 'v1', nombre: 'Mouse', descripcion: 'Desc', precio: 100, stock: 5,
+    gama: 'MEDIA', exclusividad: 'NORMAL', categoria: null, ...extra,
+  });
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    servicio = TestBed.inject(ProductoService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('cargarMisProductos hace GET a /productos/mios y guarda también los pausados', () => {
+    servicio.cargarMisProductos().subscribe();
+
+    http.expectOne({ method: 'GET', url: `${API_URL}/productos/mios` })
+      .flush([mio(), mio({ id: 'p2', nombre: 'Teclado', pausado: true })]);
+
+    expect(servicio.misProductos().length).toBe(2);
+    expect(servicio.misProductos().find((p) => p.id === 'p2')?.pausado).toBe(true);
+  });
+
+  it('cargarMisProductos no toca el catálogo público', () => {
+    servicio.catalogo.set([mio({ id: 'publico' })]);
+    servicio.cargarMisProductos().subscribe();
+
+    http.expectOne({ method: 'GET', url: `${API_URL}/productos/mios` }).flush([mio({ pausado: true })]);
+
+    expect(servicio.catalogo().map((p) => p.id)).toEqual(['publico']);
   });
 });

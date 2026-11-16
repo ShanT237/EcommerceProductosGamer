@@ -33,6 +33,8 @@ export interface Producto {
   porcentajePromocion?: number | null;
   /** Último día de la promoción (AAAA-MM-DD, inclusive). */
   promocionHasta?: string | null;
+  /** `true` si el vendedor lo pausó (no se ve en el catálogo público). Solo lo trae `GET /productos/mios`. */
+  pausado?: boolean;
 }
 
 /** Respuesta de `POST /api/descuentos` y `DELETE /api/descuentos/{productoId}`. */

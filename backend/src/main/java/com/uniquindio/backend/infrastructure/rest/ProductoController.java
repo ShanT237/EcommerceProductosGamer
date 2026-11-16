@@ -22,6 +22,8 @@ import com.uniquindio.backend.application.dto.response.BuscarProductoResponse;
 import com.uniquindio.backend.application.dto.response.PaginaResponse;
 import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
+import com.uniquindio.backend.application.usecase.ConsultarMisProductosUseCase;
+import com.uniquindio.backend.application.dto.response.MiProductoResponse;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,7 @@ public class ProductoController {
     private final CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase;
     private final BuscarProductosUseCase buscarProductosUseCase;
     private final ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase;
+    private final ConsultarMisProductosUseCase consultarMisProductosUseCase;
     private final ProductoMapper mapper;
 
     public ProductoController(PublicarProductoUseCase publicarProductoUseCase,
@@ -56,6 +59,7 @@ public class ProductoController {
                               CambiarVisibilidadProductoUseCase cambiarVisibilidadProductoUseCase,
                               BuscarProductosUseCase buscarProductosUseCase,
                               ConsultarPromocionesVigentesUseCase consultarPromocionesVigentesUseCase,
+                              ConsultarMisProductosUseCase consultarMisProductosUseCase,
                               ProductoMapper mapper) {
         this.publicarProductoUseCase = publicarProductoUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
@@ -64,6 +68,7 @@ public class ProductoController {
         this.cambiarVisibilidadProductoUseCase = cambiarVisibilidadProductoUseCase;
         this.buscarProductosUseCase = buscarProductosUseCase;
         this.consultarPromocionesVigentesUseCase = consultarPromocionesVigentesUseCase;
+        this.consultarMisProductosUseCase = consultarMisProductosUseCase;
         this.mapper = mapper;
     }
 
@@ -142,6 +147,19 @@ public class ProductoController {
                 pagina.tamano(),
                 pagina.totalElementos(),
                 pagina.totalPaginas());
+    }
+
+    // Listado del vendedor autenticado: TODOS sus productos (activos y pausados, no eliminados).
+    // GET /api/productos es el catálogo público y oculta los pausados, por eso el panel necesita este.
+    // Rol VENDEDOR heredado de la clase. No choca con /{id}: no hay GET por id en este controller.
+    @GetMapping("/mios")
+    public List<MiProductoResponse> listarMios(@AuthenticationPrincipal UUID vendedorId) {
+        List<Producto> productos = consultarMisProductosUseCase.ejecutar(vendedorId);
+        Map<UUID, Promocion> promociones = consultarPromocionesVigentesUseCase.ejecutar(
+                productos.stream().map(Producto::getId).toList());
+        return productos.stream()
+                .map(p -> mapper.toMiProductoResponse(p, promociones.get(p.getId())))
+                .toList();
     }
 
     // CU-21 Activar / Pausar Publicación
