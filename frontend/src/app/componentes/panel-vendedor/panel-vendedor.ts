@@ -21,8 +21,9 @@ import { CombosVendedor } from '../combos-vendedor/combos-vendedor';
 import { CuponesVendedor } from '../cupones-vendedor/cupones-vendedor';
 import { RegalosVendedor } from '../regalos-vendedor/regalos-vendedor';
 import { PreventasVendedor } from '../preventas-vendedor/preventas-vendedor';
+import { MetasVendedor } from '../metas-vendedor/metas-vendedor';
 
-type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' | 'cupones' | 'regalos' | 'preventas';
+type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' | 'cupones' | 'regalos' | 'preventas' | 'metas';
 
 @Component({
   selector: 'app-panel-vendedor',
@@ -33,7 +34,8 @@ type Pestana = 'resumen' | 'productos' | 'promociones' | 'publicar' | 'combos' |
     CombosVendedor,
     CuponesVendedor,
     RegalosVendedor,
-    PreventasVendedor
+    PreventasVendedor,
+    MetasVendedor
   ],
   templateUrl: './panel-vendedor.html',
   styleUrl: './panel-vendedor.css',
@@ -61,6 +63,7 @@ export class PanelVendedor implements OnInit {
     { id: 'cupones', etiqueta: 'Cupones' },
     { id: 'regalos', etiqueta: 'Regalos' },
     { id: 'preventas', etiqueta: 'Preventas' },
+    { id: 'metas', etiqueta: 'Metas' },
   ];
 
   // ---- resumen ----

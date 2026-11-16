@@ -1,0 +1,66 @@
+<section class="dos aparece">
+  <form class="panel formulario" (ngSubmit)="crear()">
+    <h3>Nueva meta</h3>
+    <p class="muted">Define cuántas compras completadas desbloquean un regalo y qué producto tuyo se ofrece. Los compradores ven las metas activas como información.</p>
+
+    <div class="campo">
+      <label for="mt-umbral">Compras requeridas</label>
+      <input id="mt-umbral" name="mt-umbral" type="number" min="1" step="1" class="entrada"
+             [ngModel]="umbral()" (ngModelChange)="umbral.set($event)" />
+    </div>
+
+    <div class="campo">
+      <label for="mt-producto">Producto de regalo</label>
+      <select id="mt-producto" name="mt-producto" class="entrada" [ngModel]="productoId()" (ngModelChange)="productoId.set($event)">
+        <option value="">Elige un producto…</option>
+        @for (p of misProductos(); track p.id) {
+          <option [value]="p.id">{{ p.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    @if (errorForm()) { <p class="error" role="alert">{{ errorForm() }}</p> }
+    <button class="btn btn-neon crear" type="submit" [disabled]="creando()">{{ creando() ? 'Creando…' : 'Crear meta' }}</button>
+  </form>
+
+  <div class="lista">
+    <h3 class="subtitulo">Metas activas</h3>
+
+    @if (error()) {
+      <div class="panel vacio">
+        <p>{{ error() }}</p>
+        <button type="button" class="btn btn-chico" (click)="cargar()">Reintentar</button>
+      </div>
+    } @else if (cargando() && metas().length === 0) {
+      <div class="panel vacio"><p class="muted">Cargando…</p></div>
+    } @else if (metas().length === 0) {
+      <div class="panel vacio">
+        <p class="grande">◈</p>
+        <p>No hay metas activas.</p>
+      </div>
+    } @else {
+      @for (m of metas(); track m.id) {
+        <article class="panel meta" [class.ocupada]="ocupada() === m.id">
+          <div class="datos">
+            <h4>{{ m.comprasRequeridas }} compras</h4>
+            <p class="muted pequeno">Regalo: {{ nombreDe(m) }}</p>
+          </div>
+
+          @if (editandoId() === m.id) {
+            <div class="acciones">
+              <input type="number" min="1" step="1" class="entrada umbral-edit" aria-label="Nuevo umbral de compras"
+                     [ngModel]="umbralEdit()" (ngModelChange)="umbralEdit.set($event)" />
+              <button type="button" class="btn btn-neon btn-chico guardar" [disabled]="ocupada() !== null" (click)="guardarUmbral(m)">Guardar</button>
+              <button type="button" class="btn btn-chico cancelar" (click)="cancelarEdicion()">Cancelar</button>
+            </div>
+          } @else {
+            <div class="acciones">
+              <button type="button" class="btn btn-chico editar" [disabled]="ocupada() !== null" (click)="editar(m)">Cambiar umbral</button>
+              <button type="button" class="btn btn-chico desactivar" [disabled]="ocupada() !== null" (click)="desactivar(m)">Desactivar</button>
+            </div>
+          }
+        </article>
+      }
+    }
+  </div>
+</section>

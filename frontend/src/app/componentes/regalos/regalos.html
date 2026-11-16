@@ -82,5 +82,17 @@
         }
       </div>
     </section>
+
+    @if (metas().length > 0) {
+      <section class="panel metas aparece">
+        <h3 class="subtitulo">Metas de recompensa</h3>
+        <p class="muted pequeno">Informativo: tu próximo regalo se desbloquea según tu progreso de arriba.</p>
+        <ul class="lista-metas">
+          @for (m of metas(); track m.id) {
+            <li><strong>{{ m.comprasRequeridas }} compras</strong><span>{{ nombreMeta(m) }}</span></li>
+          }
+        </ul>
+      </section>
+    }
   }
 </div>

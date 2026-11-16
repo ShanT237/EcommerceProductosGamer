@@ -28,6 +28,11 @@
 .estado-entregado { color: var(--lima); background: rgba(163, 255, 107, 0.1); }
 .estado-cancelado { color: var(--rojo); background: rgba(255, 77, 109, 0.1); }
 
+.metas { margin-top: 24px; padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; }
+.lista-metas { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.lista-metas li { display: flex; justify-content: space-between; gap: 14px; }
+.lista-metas strong { color: var(--cian); }
+
 .vacio .grande { font-size: 48px; color: var(--cian); text-shadow: var(--brillo-cian); }
 
 @media (max-width: 960px) {

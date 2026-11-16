@@ -3,6 +3,7 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.dto.request.ActualizarUmbralMetaRequest;
 import com.uniquindio.backend.application.dto.request.CrearMetaRecompensaRequest;
 import com.uniquindio.backend.application.dto.response.MetaRecompensaResponse;
+import com.uniquindio.backend.application.usecase.ConsultarMetasUseCase;
 import com.uniquindio.backend.application.usecase.GestionarMetasRecompensaUseCase;
 import com.uniquindio.backend.domain.entity.MetaRecompensa;
 import com.uniquindio.backend.infrastructure.rest.mapper.MetaRecompensaMapper;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,12 +27,26 @@ import java.util.UUID;
 public class MetaRecompensaController {
 
     private final GestionarMetasRecompensaUseCase gestionarMetasUseCase;
+    private final ConsultarMetasUseCase consultarMetasUseCase;
     private final MetaRecompensaMapper mapper;
 
     public MetaRecompensaController(GestionarMetasRecompensaUseCase gestionarMetasUseCase,
+                                    ConsultarMetasUseCase consultarMetasUseCase,
                                     MetaRecompensaMapper mapper) {
         this.gestionarMetasUseCase = gestionarMetasUseCase;
+        this.consultarMetasUseCase = consultarMetasUseCase;
         this.mapper = mapper;
+    }
+
+    // Consultar metas activas (menor umbral primero). Lectura abierta a cualquier usuario autenticado;
+    // el @PreAuthorize de método sobreescribe el de la clase (solo VENDEDOR).
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<List<MetaRecompensaResponse>> listar() {
+        List<MetaRecompensaResponse> metas = consultarMetasUseCase.ejecutar().stream()
+                .map(mapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(metas); // 200 OK
     }
 
     // CU-33 Gestionar Metas: crear
