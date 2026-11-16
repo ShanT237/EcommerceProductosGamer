@@ -24,7 +24,7 @@ export const routes: Routes = [
   { path: 'favoritos', component: Favoritos, canActivate: [rolGuard('COMPRADOR')], title: 'Favoritos · GamerZone' },
   { path: 'perfil', component: Perfil, canActivate: [rolGuard('COMPRADOR')], title: 'Mi perfil · GamerZone' },
   { path: 'regalos', component: Regalos, canActivate: [rolGuard('COMPRADOR')], title: 'Regalos · GamerZone' },
-  { path: 'notificaciones', component: Notificaciones, canActivate: [rolGuard('COMPRADOR')], title: 'Notificaciones · GamerZone' },
+  { path: 'notificaciones', component: Notificaciones, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Notificaciones · GamerZone' },
   { path: 'vendedor', component: PanelVendedor, canActivate: [rolGuard('VENDEDOR')], title: 'Panel de vendedor · GamerZone' },
   { path: '**', pathMatch: 'full', redirectTo: '' },
 ];

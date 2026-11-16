@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.ValoracionVendedor;
@@ -30,6 +31,7 @@ public class ValorarVendedorUseCase {
     private final ProductoRepository productoRepository;
     private final ValoracionVendedorRepository valoracionRepository;
     private final Clock clock;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public ValoracionVendedor ejecutar(UUID compraId, UUID usuarioId, int estrellas, String comentario) {
@@ -49,6 +51,7 @@ public class ValorarVendedorUseCase {
                 comentario, LocalDateTime.now(clock));
 
         valoracionRepository.guardar(valoracion);
+        notificador.nuevaValoracion(producto, estrellas);
 
         return valoracion;
     }

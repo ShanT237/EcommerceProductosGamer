@@ -2,7 +2,11 @@
   <header class="cabecera aparece">
     <div>
       <h1 class="titulo-seccion">Mis <span class="degradado">notificaciones</span></h1>
-      <p class="muted">Avisos de descuento de los productos de tu lista de deseos.</p>
+      @if (esVendedor()) {
+        <p class="muted">Avisos de tu tienda: stock, ventas, reembolsos, reseñas y valoraciones.</p>
+      } @else {
+        <p class="muted">Avisos de tu lista de deseos, tus metas de compra y tus regalos.</p>
+      }
     </div>
     <div class="panel kpi"><strong>{{ servicio.noLeidas() }}</strong><span>Sin leer</span></div>
   </header>
@@ -23,7 +27,10 @@
                 [class.ocupada]="ocupada() === n.id" (click)="abrir(n)">
           <span class="marca" aria-hidden="true"></span>
           <span class="texto">
-            <span class="mensaje">{{ n.mensaje }}</span>
+            <span class="mensaje">
+              <span class="tipo" [class.alerta]="esAlerta(n.tipo)">{{ etiquetas[n.tipo] }}</span>
+              {{ n.mensaje }}
+            </span>
             <span class="muted fecha">{{ fechaHora(n.fecha) }}</span>
           </span>
           <span class="estado" [class.estado-nueva]="!n.leida">{{ n.leida ? 'LEÍDA' : 'NUEVA' }}</span>

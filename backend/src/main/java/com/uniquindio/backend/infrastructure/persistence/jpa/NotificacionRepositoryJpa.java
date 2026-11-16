@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.persistence.jpa;
 
 import com.uniquindio.backend.domain.entity.Notificacion;
 import com.uniquindio.backend.domain.repository.NotificacionRepository;
+import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
 import com.uniquindio.backend.infrastructure.persistence.jpa.mapper.NotificacionPersistenceMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -32,5 +33,10 @@ public class NotificacionRepositoryJpa implements NotificacionRepository {
         return dataRepository.findByUsuarioId(usuarioId).stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public boolean existe(UUID usuarioId, UUID productoId, TipoNotificacion tipo) {
+        return dataRepository.existsByUsuarioIdAndProductoIdAndTipo(usuarioId, productoId, tipo);
     }
 }

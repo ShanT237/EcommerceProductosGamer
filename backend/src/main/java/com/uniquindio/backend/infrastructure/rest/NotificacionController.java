@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-@PreAuthorize("hasRole('COMPRADOR')")
+@PreAuthorize("hasAnyRole('COMPRADOR', 'VENDEDOR')")
 @RestController
 @RequestMapping("/api/notificaciones")
 public class NotificacionController {

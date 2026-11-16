@@ -13,4 +13,6 @@ interface PreventaJpaDataRepository extends JpaRepository<PreventaEntity, UUID> 
     Optional<PreventaEntity> findByProductoId(UUID productoId);
 
     List<PreventaEntity> findByFechaLanzamientoAfter(LocalDate hoy);
+
+    List<PreventaEntity> findByFechaLanzamiento(LocalDate fecha);
 }

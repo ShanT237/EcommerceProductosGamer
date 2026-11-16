@@ -36,7 +36,7 @@ class ValorarVendedorUseCaseTest {
         valoracionRepository = new ValoracionVendedorRepositoryEnMemoria();
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(LocalDateTime.of(2026, 10, 2, 10, 0).atZone(zona).toInstant(), zona);
-        useCase = new ValorarVendedorUseCase(compraRepository, productoRepository, valoracionRepository, reloj);
+        useCase = new ValorarVendedorUseCase(compraRepository, productoRepository, valoracionRepository, reloj, TestNotificador.nuevo());
 
         vendedorId = UUID.randomUUID();
         Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Mouse", "Desc",

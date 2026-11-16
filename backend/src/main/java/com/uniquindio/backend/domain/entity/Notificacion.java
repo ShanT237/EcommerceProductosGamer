@@ -10,8 +10,11 @@ import java.util.UUID;
 
 /**
  * Entidad Notificacion (Regla 8).
- * Representa una notificación generada para un usuario cuando un producto de su
- * wishlist cambia de precio o vuelve a tener stock.
+ * Notificación dirigida a un comprador o a un vendedor (el "usuarioId" es el id del destinatario).
+ * Compradores: descuento, stock repuesto o preventa lanzada de un producto de su wishlist,
+ * meta de compras alcanzada y regalo enviado.
+ * Vendedores: stock bajo/agotado, nueva venta, reembolso solicitado, nueva reseña y nueva valoración.
+ * El producto es opcional: hay avisos (p. ej. meta alcanzada) que no se refieren a uno.
  */
 @Getter
 public class Notificacion {
@@ -57,6 +60,18 @@ public class Notificacion {
         String detalle = String.format("ahora cuesta %.2f (antes %.2f)",
                 producto.getPrecio(), precioAnterior);
         return porCambioEnWishlist(usuarioId, producto, TipoNotificacion.DESCUENTO, detalle);
+    }
+
+    /**
+     * Notificación genérica para un destinatario (comprador o vendedor). El producto es opcional.
+     */
+    public static Notificacion crear(UUID destinatarioId, UUID productoId, TipoNotificacion tipo, String mensaje) {
+        Objects.requireNonNull(destinatarioId, "El destinatario es obligatorio");
+        Objects.requireNonNull(tipo, "El tipo de notificación es obligatorio");
+        if (mensaje == null || mensaje.isBlank()) {
+            throw new ReglaDominioException("El mensaje de la notificación no puede estar vacío");
+        }
+        return new Notificacion(UUID.randomUUID(), destinatarioId, productoId, tipo, mensaje, LocalDateTime.now());
     }
 
     public static Notificacion reconstruir(UUID id, UUID usuarioId, UUID productoId,

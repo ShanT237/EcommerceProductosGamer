@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Cupon;
@@ -37,6 +38,7 @@ public class ComprarComboUseCase {
     private final PreventaRepository preventaRepository;
     private final CuponRepository cuponRepository;
     private final Clock clock;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public List<Compra> ejecutar(UUID usuarioId, UUID comboId, int cantidad) {
@@ -72,7 +74,9 @@ public class ComprarComboUseCase {
 
         UUID pedidoId = UUID.randomUUID();
         List<Compra> compras = new ArrayList<>();
+        List<Integer> stocksAnteriores = new ArrayList<>();
         for (Producto producto : productos) {
+            stocksAnteriores.add(producto.getStock());
             producto.reducirStock(cantidad);
             var precioUnitario = combo.calcularPrecioUnitario(producto);
             Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(), cantidad,
@@ -91,6 +95,10 @@ public class ComprarComboUseCase {
         if (cupon != null) {
             cuponRepository.guardar(cupon);
             cuponRepository.registrarUsoDe(cupon.getId(), usuarioId);
+        }
+        for (int i = 0; i < productos.size(); i++) {
+            notificador.nuevaVenta(productos.get(i), cantidad);
+            notificador.stockDelVendedor(productos.get(i), stocksAnteriores.get(i));
         }
         return compras;
     }

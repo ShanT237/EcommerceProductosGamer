@@ -21,6 +21,10 @@ import java.util.UUID;
 @Getter
 public class Producto {
 
+    /** Con este stock (o menos) el vendedor recibe el aviso de stock bajo; coincide con el umbral por defecto del reporte. */
+    public static final int UMBRAL_STOCK_BAJO = 5;
+
+
     public static final String CATEGORIA_POR_DEFECTO = "General";
 
     private final UUID id;

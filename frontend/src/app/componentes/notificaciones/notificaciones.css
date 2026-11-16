@@ -24,6 +24,8 @@
 .mensaje { font-size: 18px; }
 .no-leida .mensaje { font-weight: 700; }
 .fecha { font-size: 14px; }
+.tipo { display: inline-block; margin-right: 8px; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--borde); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--texto-2); vertical-align: middle; }
+.tipo.alerta { color: #ffb02e; border-color: rgba(255, 176, 46, 0.6); }
 
 .estado { font-size: 12px; letter-spacing: 0.14em; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor; color: var(--texto-2); }
 .estado-nueva { color: var(--cian); }

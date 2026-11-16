@@ -29,7 +29,7 @@ class ConfirmarPedidoUseCaseTest {
     @BeforeEach
     void setUp() {
         compraRepository = new CompraRepositoryEnMemoria();
-        useCase = new ConfirmarPedidoUseCase(compraRepository);
+        useCase = new ConfirmarPedidoUseCase(compraRepository, TestNotificador.nuevo());
         usuarioId = UUID.randomUUID();
         pedidoId = UUID.randomUUID();
         linea1 = linea(usuarioId, pedidoId);

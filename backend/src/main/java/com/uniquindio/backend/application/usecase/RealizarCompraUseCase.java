@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Usuario;
@@ -32,6 +33,7 @@ public class RealizarCompraUseCase {
     private final PreventaRepository preventaRepository;
     private final PromocionRepository promocionRepository;
     private final Clock clock;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public Compra ejecutar(UUID usuarioId, UUID productoId, int cantidad) {
@@ -55,6 +57,7 @@ public class RealizarCompraUseCase {
         boolean yaLoTiene = compraRepository.existeCompraDe(usuarioId, productoId);
         producto.validarCompraExclusiva(yaLoTiene, cantidad);
 
+        int stockAnterior = producto.getStock();
         producto.reducirStock(cantidad);
 
         Precio precioBase = new Precio(producto.getPrecio());
@@ -68,6 +71,8 @@ public class RealizarCompraUseCase {
 
         productoRepository.guardar(producto);
         compraRepository.guardar(compra);
+        notificador.nuevaVenta(producto, cantidad);
+        notificador.stockDelVendedor(producto, stockAnterior);
         return compra;
     }
 }

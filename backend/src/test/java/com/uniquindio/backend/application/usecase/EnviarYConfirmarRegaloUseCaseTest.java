@@ -32,7 +32,7 @@ class EnviarYConfirmarRegaloUseCaseTest {
     void setUp() {
         regaloRepository = new RegaloRepositoryEnMemoria();
         productoRepository = new ProductoRepositoryEnMemoria();
-        enviar = new EnviarRegaloUseCase(regaloRepository, productoRepository, new ComboRepositoryEnMemoria());
+        enviar = new EnviarRegaloUseCase(regaloRepository, productoRepository, new ComboRepositoryEnMemoria(), TestNotificador.nuevo());
         confirmar = new ConfirmarEntregaRegaloUseCase(regaloRepository);
         id = UUID.randomUUID();
         destinatarioId = UUID.randomUUID();

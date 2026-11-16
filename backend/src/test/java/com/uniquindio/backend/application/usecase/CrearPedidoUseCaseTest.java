@@ -62,7 +62,7 @@ class CrearPedidoUseCaseTest {
         ZoneId zona = ZoneId.systemDefault();
         Clock reloj = Clock.fixed(HOY.atTime(10, 0).atZone(zona).toInstant(), zona);
         useCase = new CrearPedidoUseCase(productoRepository, compraRepository, usuarioRepository,
-                vendedorRepository, preventaRepository, promocionRepository, cuponRepository, reloj);
+                vendedorRepository, preventaRepository, promocionRepository, cuponRepository, reloj, TestNotificador.nuevo());
 
         vendedor = Vendedor.registrar(UUID.randomUUID(), "GamerZone", "v@g.com", TipoVendedor.EMPRESA, "900");
         vendedorRepository.guardar(vendedor);

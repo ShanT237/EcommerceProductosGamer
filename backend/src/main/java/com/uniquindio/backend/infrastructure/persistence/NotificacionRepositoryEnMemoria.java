@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.persistence;
 
 import com.uniquindio.backend.domain.entity.Notificacion;
 import com.uniquindio.backend.domain.repository.NotificacionRepository;
+import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,5 +34,13 @@ public class NotificacionRepositoryEnMemoria implements NotificacionRepository {
             }
         }
         return resultado;
+    }
+
+    @Override
+    public boolean existe(UUID usuarioId, UUID productoId, TipoNotificacion tipo) {
+        return storage.values().stream().anyMatch(n ->
+                n.getUsuarioId().equals(usuarioId)
+                        && java.util.Objects.equals(n.getProductoId(), productoId)
+                        && n.getTipo() == tipo);
     }
 }

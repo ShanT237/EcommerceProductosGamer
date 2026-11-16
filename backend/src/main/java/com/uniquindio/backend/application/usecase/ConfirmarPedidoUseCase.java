@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.CompraRepository;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class ConfirmarPedidoUseCase {
 
     private final CompraRepository compraRepository;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public List<Compra> ejecutar(UUID pedidoId, UUID usuarioId) {
@@ -34,8 +36,10 @@ public class ConfirmarPedidoUseCase {
             throw new ReglaDominioException("Solo se puede confirmar un pedido con todas sus líneas pendientes");
         }
 
+        long completadasAntes = compraRepository.contarCompletadasDe(usuarioId);
         compras.forEach(Compra::confirmar);
         compras.forEach(compraRepository::guardar);
+        notificador.metaAlcanzada(usuarioId, completadasAntes, compraRepository.contarCompletadasDe(usuarioId));
         return compras;
     }
 }

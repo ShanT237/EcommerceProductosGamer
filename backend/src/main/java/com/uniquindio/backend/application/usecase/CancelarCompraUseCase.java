@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
@@ -21,6 +22,7 @@ public class CancelarCompraUseCase {
 
     private final CompraRepository compraRepository;
     private final ProductoRepository productoRepository;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public Compra ejecutar(UUID compraId, UUID usuarioId) {
@@ -33,10 +35,12 @@ public class CancelarCompraUseCase {
                 .orElseThrow(() -> new ReglaDominioException("El producto no existe"));
 
         compra.cancelar();
+        int stockAnterior = producto.getStock();
         producto.aumentarStock(compra.getCantidad());
 
         compraRepository.guardar(compra);
         productoRepository.guardar(producto);
+        notificador.stockRepuesto(producto, stockAnterior);
 
         return compra;
     }

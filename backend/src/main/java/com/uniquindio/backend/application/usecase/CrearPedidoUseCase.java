@@ -1,5 +1,6 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Cupon;
 import com.uniquindio.backend.domain.entity.Producto;
@@ -48,6 +49,7 @@ public class CrearPedidoUseCase {
     private final PromocionRepository promocionRepository;
     private final CuponRepository cuponRepository;
     private final Clock clock;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public List<Compra> ejecutar(UUID usuarioId, List<ItemPedido> items, String codigoCupon) {
@@ -74,9 +76,11 @@ public class CrearPedidoUseCase {
         // 2) Ya es seguro: descontar stock y armar las compras del pedido
         UUID pedidoId = UUID.randomUUID();
         List<Compra> compras = new ArrayList<>();
+        List<Integer> stocksAnteriores = new ArrayList<>();
         for (int i = 0; i < items.size(); i++) {
             ItemPedido item = items.get(i);
             Producto producto = productos.get(i);
+            stocksAnteriores.add(producto.getStock());
             producto.reducirStock(item.cantidad());
             Compra compra = Compra.realizar(UUID.randomUUID(), usuarioId, producto.getId(),
                     item.cantidad(), ahora, precioUnitario(producto, ahora), pedidoId);
@@ -95,6 +99,10 @@ public class CrearPedidoUseCase {
         if (cupon != null) {
             cuponRepository.guardar(cupon);
             cuponRepository.registrarUsoDe(cupon.getId(), usuarioId);
+        }
+        for (int i = 0; i < items.size(); i++) {
+            notificador.nuevaVenta(productos.get(i), items.get(i).cantidad());
+            notificador.stockDelVendedor(productos.get(i), stocksAnteriores.get(i));
         }
         return compras;
     }

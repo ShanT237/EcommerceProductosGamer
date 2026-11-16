@@ -39,7 +39,7 @@ class SolicitarReembolsoPedidoUseCaseTest {
         productoRepository = new ProductoRepositoryEnMemoria();
         ZoneId zona = ZoneId.systemDefault();
         Clock clock = Clock.fixed(AHORA.plusDays(1).atZone(zona).toInstant(), zona);
-        useCase = new SolicitarReembolsoPedidoUseCase(compraRepository, productoRepository, clock);
+        useCase = new SolicitarReembolsoPedidoUseCase(compraRepository, productoRepository, clock, TestNotificador.nuevo());
 
         teclado = producto("Teclado");
         mouse = producto("Mouse");
@@ -92,7 +92,7 @@ class SolicitarReembolsoPedidoUseCaseTest {
     void reembolsoIndividualDeUnaLineaDelPedidoEsRechazado() {
         SolicitarReembolsoUseCase individual = new SolicitarReembolsoUseCase(compraRepository,
                 productoRepository, Clock.fixed(AHORA.plusDays(1).atZone(ZoneId.systemDefault()).toInstant(),
-                ZoneId.systemDefault()));
+                ZoneId.systemDefault()), TestNotificador.nuevo());
 
         assertThrows(ReglaDominioException.class, () -> individual.ejecutar(linea1.getId(), usuarioId));
         assertEquals(EstadoCompra.COMPLETADA, linea1.getEstado());

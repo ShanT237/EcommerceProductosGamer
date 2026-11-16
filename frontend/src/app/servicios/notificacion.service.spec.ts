@@ -62,12 +62,23 @@ describe('NotificacionService', () => {
     expect(servicio.noLeidas()).toBe(1);
   });
 
-  it('vendedorNoPideNotificaciones', () => {
+  it('vendedorTambienCargaSusNotificaciones', () => {
     iniciar('VENDEDOR');
+    http.expectOne(getLista()).flush([
+      { ...notificacion('v1'), tipo: 'STOCK_BAJO' },
+      { ...notificacion('v2'), tipo: 'NUEVA_VENTA', leida: true },
+    ]);
 
-    http.expectNone(getLista());
-    expect(servicio.notificaciones()).toEqual([]);
-    expect(servicio.noLeidas()).toBe(0);
+    expect(servicio.notificaciones().length).toBe(2);
+    expect(servicio.noLeidas()).toBe(1);
+  });
+
+  it('aceptaAvisosSinProducto', () => {
+    iniciar('COMPRADOR');
+    http.expectOne(getLista()).flush([{ ...notificacion('m1'), tipo: 'META_ALCANZADA', productoId: null }]);
+
+    expect(servicio.notificaciones()[0].productoId).toBeNull();
+    expect(servicio.noLeidas()).toBe(1);
   });
 
   it('seVaciaYRecargaAlCambiarDeUsuario', () => {

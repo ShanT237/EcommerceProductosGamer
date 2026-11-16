@@ -37,7 +37,7 @@ class CancelarPedidoUseCaseTest {
     void setUp() {
         compraRepository = new CompraRepositoryEnMemoria();
         productoRepository = new ProductoRepositoryEnMemoria();
-        useCase = new CancelarPedidoUseCase(compraRepository, productoRepository);
+        useCase = new CancelarPedidoUseCase(compraRepository, productoRepository, TestNotificador.nuevo());
         usuarioId = UUID.randomUUID();
         pedidoId = UUID.randomUUID();
 

@@ -2,6 +2,8 @@ package com.uniquindio.backend.infrastructure.persistence.jpa.entity;
 
 import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,10 +23,12 @@ public class NotificacionEntity {
     @Column(name = "usuario_id", nullable = false)
     private UUID usuarioId;
 
-    @Column(name = "producto_id", nullable = false)
+    // Opcional: avisos como "meta alcanzada" no se refieren a un producto.
+    @Column(name = "producto_id")
     private UUID productoId;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 30)
     private TipoNotificacion tipo;
 
