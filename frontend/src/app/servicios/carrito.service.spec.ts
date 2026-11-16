@@ -52,6 +52,7 @@ describe('CarritoService', () => {
   const sinStock = { status: 422, statusText: 'Unprocessable Content' };
 
   beforeEach(() => {
+    localStorage.clear()
     sesion = signal<Sesion | null>({ id: 'u1', correo: 'jose@correo.com', rol: 'COMPRADOR', exp: 9999999999 });
     TestBed.configureTestingModule({
       providers: [
@@ -64,7 +65,12 @@ describe('CarritoService', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // El componente pide el catálogo al abrirse; estos tests no lo usan.
+    http.match((r) => r.method === 'GET' && r.url.startsWith(`${API_URL}/productos`));
+    http.verify();
+    localStorage.clear();
+  });
 
   describe('estado del carrito', () => {
     it('agregar fusiona el mismo producto y respeta el stock', () => {
@@ -398,6 +404,68 @@ describe('CarritoService', () => {
       TestBed.tick();
 
       expect(carrito.items().length).toBe(0);
+    });
+
+    it('persiste el carrito y lo recupera para el mismo usuario', () => {
+      carrito.agregar(producto({ id: 'a' }), 2);
+
+      TestBed.resetTestingModule(); // simula recargar la página
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: AuthService, useValue: { sesion } }, // misma sesión 'u1'
+        ],
+      });
+      http = TestBed.inject(HttpTestingController);
+      const otro = TestBed.inject(CarritoService);
+      TestBed.tick();
+
+      expect(otro.items().map((i) => [i.producto.id, i.cantidad])).toEqual([['a', 2]]);
+    });
+
+    it('el carrito de un usuario no se ve desde otro', () => {
+      carrito.agregar(producto({ id: 'a' }));
+      sesion.set({ id: 'u2', correo: 'ana@correo.com', rol: 'COMPRADOR', exp: 9999999999 });
+      TestBed.tick();
+      expect(carrito.items().length).toBe(0);
+      sesion.set({ id: 'u1', correo: 'jose@correo.com', rol: 'COMPRADOR', exp: 9999999999 });
+      TestBed.tick();
+      expect(carrito.items().length).toBe(1);
+    });
+
+    it('un JSON corrupto en storage se ignora', () => {
+      localStorage.setItem('gamerzone.carrito.u1', '{no es json');
+      TestBed.tick(); // primera ejecución del efecto: lee y descarta lo corrupto
+      expect(carrito.items()).toEqual([]);
+    });
+
+    it('sincronizar ajusta la cantidad al stock actual y quita agotados', () => {
+      carrito.agregar(producto({ id: 'a', stock: 5 }), 5);
+      carrito.agregar(producto({ id: 'b', stock: 5 }), 1);
+      carrito.sincronizar([producto({ id: 'a', stock: 2, precio: 90 }), producto({ id: 'b', stock: 0 })]);
+      expect(carrito.items().map((i) => [i.producto.id, i.cantidad])).toEqual([['a', 2]]);
+    });
+
+    it('un pago exitoso borra el carrito guardado', () => {
+      carrito.agregar(producto({ id: 'a' }), 2);
+      carrito.agregar(producto({ id: 'b' }), 1);
+
+      const resultados: ResultadoPago[] = [];
+      carrito.pagar().subscribe((r) => resultados.push(r));
+
+      http.expectOne(postPedido()).flush(pedido([compra('cA', 'a', 2), compra('cB', 'b')]));
+      // Confirmar no se pide hasta que el pedido existe, y es un único PUT para todo el pedido.
+      expect(carrito.pagando()).toBe(true);
+      const confirmado = pedido([{ ...compra('cA', 'a', 2), estado: 'COMPLETADA' }, { ...compra('cB', 'b'), estado: 'COMPLETADA' }]);
+      http.expectOne(putPedido('ped1', 'confirmar')).flush(confirmado);
+
+      expect(resultados.length).toBe(1);
+      expect(resultados[0].error).toBeNull();
+      expect(resultados[0].compras.length).toBe(2);
+      expect(carrito.items().length).toBe(0);
+      expect(carrito.pagando()).toBe(false);
+      expect(localStorage.getItem('gamerzone.carrito.u1')).toBeNull();
     });
   });
 });

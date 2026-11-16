@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Cupon } from '../../modelos/modelos';
@@ -9,6 +9,7 @@ import { CuponService } from '../../servicios/cupon.service';
 import { precio, precioTachado, precioVigente } from '../../servicios/formato';
 import { ToastService } from '../../servicios/toast.service';
 import { ArteProducto } from '../arte-producto/arte-producto';
+import {ProductoService} from '../../servicios/producto.service';
 
 /** Pantalla `/carrito`: revisa los productos, aplica un cupón (vista previa) y ejecuta el pago simulado. */
 @Component({
@@ -17,12 +18,13 @@ import { ArteProducto } from '../arte-producto/arte-producto';
   templateUrl: './carrito.html',
   styleUrl: './carrito.css',
 })
-export class Carrito {
+export class Carrito implements OnInit {
   protected carrito = inject(CarritoService);
   private cupones = inject(CuponService);
   private toast = inject(ToastService);
   private confirmacion = inject(ConfirmacionService);
   private router = inject(Router);
+  private productos = inject(ProductoService);
   protected precio = precio;
   protected precioVigente = precioVigente;
   protected precioTachado = precioTachado;
@@ -32,6 +34,13 @@ export class Carrito {
   protected cupon = signal<Cupon | null>(null);
   protected errorCupon = signal('');
   protected consultandoCupon = signal(false);
+
+  ngOnInit() {
+    this.productos.cargarCatalogo().subscribe({
+      next: (p) => this.carrito.sincronizar(p.contenido),
+      error: () => {}, // sin conexión al catálogo: se muestra lo guardado
+    });
+  }
 
   /** Un cupón global descuenta todo el carrito; uno con dueño, solo los productos de ese vendedor. */
   private aplicaA(c: Cupon, i: ItemCarrito): boolean {

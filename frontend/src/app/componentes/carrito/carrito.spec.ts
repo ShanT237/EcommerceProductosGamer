@@ -61,6 +61,7 @@ describe('Carrito (pantalla)', () => {
   const boton = () => fixture.nativeElement.querySelector('button.pagar') as HTMLButtonElement;
 
   beforeEach(() => {
+    localStorage.clear();
     const sesion = signal<Sesion | null>({ id: 'u1', correo: 'jose@correo.com', rol: 'COMPRADOR', exp: 9999999999 });
     TestBed.configureTestingModule({
       imports: [Carrito],
@@ -75,12 +76,18 @@ describe('Carrito (pantalla)', () => {
     carrito = TestBed.inject(CarritoService);
     toast = TestBed.inject(ToastService);
     vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(true);
-    // El efecto del servicio vacía el carrito en su primera ejecución: se deja correr antes de añadir productos.
+    // El efecto del servicio carga el carrito guardado en su primera ejecución (vacío con storage limpio):
+    // se deja correr antes de añadir productos.
     TestBed.tick();
     fixture = TestBed.createComponent(Carrito);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // El componente pide el catálogo al abrirse; los tests que no lo usan lo descartan.
+    http.match((r) => r.method === 'GET' && r.url.startsWith(`${API_URL}/productos`));
+    http.verify();
+    localStorage.clear();
+  });
 
   it('el botón Pagar está deshabilitado con el carrito vacío', () => {
     fixture.detectChanges();
@@ -372,5 +379,15 @@ describe('Carrito (pantalla)', () => {
     await esperar();
     const post = http.expectOne(postPedido());
     expect('codigoCupon' in post.request.body).toBe(false);
+  });
+
+  it('al abrir sincroniza el carrito con el catálogo', () => {
+    carrito.agregar(producto({ id: 'p1', stock: 5 }), 5);
+    fixture.detectChanges();
+
+    http.expectOne((r) => r.url.startsWith(`${API_URL}/productos`))
+      .flush({ contenido: [producto({ id: 'p1', stock: 2 })] });
+
+    expect(carrito.items()[0].cantidad).toBe(2);
   });
 });
