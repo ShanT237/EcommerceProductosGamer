@@ -28,8 +28,7 @@ public class NotificacionEntity {
     private UUID productoId;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 30, columnDefinition = "varchar(30) not null")
     private TipoNotificacion tipo;
 
     @Column(nullable = false, length = 500)
