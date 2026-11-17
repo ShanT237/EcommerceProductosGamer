@@ -58,6 +58,16 @@
       </div>
     </div>
 
+    <div class="fila-2">
+      <div class="campo">
+        <label for="fp-tipo">Tipo de producto</label>
+        <select id="fp-tipo" class="entrada" formControlName="tipo">
+          <option value="FISICO">Físico</option>
+          <option value="DIGITAL">Digital</option>
+        </select>
+      </div>
+    </div>
+
     <div class="campo">
       <label for="fp-imagen">Imagen del producto (opcional)</label>
       <input #selectorImagen id="fp-imagen" class="entrada" type="file" accept="image/png,image/jpeg"

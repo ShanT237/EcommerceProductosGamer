@@ -119,6 +119,7 @@ describe('FormularioPublicar', () => {
       stock: 2,
       gama: 'MEDIA',
       exclusividad: 'NORMAL',
+      tipo: 'FISICO',
     });
 
     fixture.detectChanges();
@@ -169,5 +170,39 @@ describe('FormularioPublicar', () => {
 
     // expectOne falla si hubiera dos peticiones POST.
     http.expectOne(postProducto());
+  });
+
+  it('publica con tipo FISICO por defecto', () => {
+    llenarValido();
+
+    boton().click();
+
+    const req = http.expectOne(postProducto());
+    expect(req.request.body.tipo).toBe('FISICO');
+  });
+
+  it('envía tipo DIGITAL cuando el vendedor lo elige', () => {
+    llenarValido();
+    const selector = campo('tipo');
+    selector.value = 'DIGITAL';
+    selector.dispatchEvent(new Event('change'));
+
+    boton().click();
+
+    const req = http.expectOne(postProducto());
+    expect(req.request.body.tipo).toBe('DIGITAL');
+  });
+
+  it('tras publicar el selector vuelve a FISICO', () => {
+    llenarValido();
+    const selector = campo('tipo');
+    selector.value = 'DIGITAL';
+    selector.dispatchEvent(new Event('change'));
+
+    boton().click();
+    http.expectOne(postProducto()).flush({ ...creado, tipo: 'DIGITAL' }, { status: 201, statusText: 'Created' });
+    fixture.detectChanges();
+
+    expect(campo('tipo').value).toBe('FISICO');
   });
 });
