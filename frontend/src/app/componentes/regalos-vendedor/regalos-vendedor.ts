@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Combo, Regalo } from '../../modelos/modelos';
 import { mensajeDeError } from '../../servicios/api.util';
 import { AuthService } from '../../servicios/auth.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ComboService } from '../../servicios/combo.service';
 import { fechaHora } from '../../servicios/formato';
 import { ProductoService } from '../../servicios/producto.service';
@@ -24,6 +25,7 @@ export class RegalosVendedor implements OnInit {
   private combosApi = inject(ComboService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private confirmacion = inject(ConfirmacionService);
   protected fechaHora = fechaHora;
 
   protected porEnviar = signal<Regalo[]>([]);
@@ -93,6 +95,27 @@ export class RegalosVendedor implements OnInit {
       next: () => {
         this.ocupada.set(null);
         this.toast.ok(`"${this.nombreDe(r)}" marcado como enviado.`);
+        this.porEnviar.update((lista) => lista.filter((x) => x.id !== r.id));
+      },
+      error: (e) => { this.ocupada.set(null); this.toast.error(mensajeDeError(e)); },
+    });
+  }
+
+  /** Cancela el regalo (el comprador, si ya lo había elegido, es avisado y recupera su cupo). */
+  protected async cancelar(r: Regalo) {
+    if (this.ocupada()) return;
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Cancelar regalo',
+      mensaje: `¿Cancelar el regalo "${this.nombreDe(r)}"? El comprador será avisado y recuperará su cupo.`,
+      confirmar: 'Cancelar regalo',
+      cancelar: 'Volver',
+    });
+    if (!acepto) return;
+    this.ocupada.set(r.id);
+    this.servicio.cancelar(r.id).subscribe({
+      next: () => {
+        this.ocupada.set(null);
+        this.toast.ok(`"${this.nombreDe(r)}" cancelado.`);
         this.porEnviar.update((lista) => lista.filter((x) => x.id !== r.id));
       },
       error: (e) => { this.ocupada.set(null); this.toast.error(mensajeDeError(e)); },

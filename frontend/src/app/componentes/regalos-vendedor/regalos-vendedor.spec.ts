@@ -5,10 +5,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { API_URL } from '../../config';
 import { Combo, Producto, Regalo } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
+import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ToastService } from '../../servicios/toast.service';
 import { RegalosVendedor } from './regalos-vendedor';
 
 const VENDEDOR = 'v1';
+
+/** Deja correr las promesas pendientes (la confirmación se resuelve de forma asíncrona). */
+const esperar = () => new Promise<void>((r) => setTimeout(r));
 
 function producto(extra: Partial<Producto> = {}): Producto {
   return {
@@ -145,5 +149,51 @@ describe('RegalosVendedor', () => {
 
     expect(botones('enviar').length).toBe(1);
     expect(toast.toasts().find((t) => t.tipo === 'error')?.texto).toContain('no pertenece al vendedor');
+  });
+
+  describe('cancelar', () => {
+    const articulos = () => raiz().querySelectorAll('article.regalo');
+
+    function abrirConConfirmacion(acepta: boolean) {
+      abrir([regalo()]);
+      return vi.spyOn(TestBed.inject(ConfirmacionService), 'pedir').mockResolvedValue(acepta);
+    }
+
+    it('cancelar confirma, hace PUT /regalos/{id}/cancelar y quita el regalo de la lista', async () => {
+      const pedir = abrirConConfirmacion(true);
+
+      botones('cancelar')[0].click();
+      await esperar();
+
+      expect(pedir.mock.calls[0][0].mensaje).toContain('El comprador será avisado y recuperará su cupo');
+      http.expectOne({ method: 'PUT', url: `${API_URL}/regalos/r1/cancelar` }).flush(regalo({ estado: 'CANCELADO' }));
+      fixture.detectChanges();
+
+      expect(articulos()).toHaveLength(0);
+      expect(toast.toasts().some((t) => t.tipo === 'ok')).toBe(true);
+    });
+
+    it('si no se confirma no se llama al backend', async () => {
+      abrirConConfirmacion(false);
+
+      botones('cancelar')[0].click();
+      await esperar();
+
+      http.expectNone(`${API_URL}/regalos/r1/cancelar`);
+      expect(articulos()).toHaveLength(1);
+    });
+
+    it('un error del backend se muestra en un toast y el regalo sigue en la lista', async () => {
+      abrirConConfirmacion(true);
+
+      botones('cancelar')[0].click();
+      await esperar();
+      http.expectOne({ method: 'PUT', url: `${API_URL}/regalos/r1/cancelar` })
+        .flush({ mensaje: 'Un regalo entregado no puede cambiar de estado' }, { status: 422, statusText: 'Unprocessable Content' });
+      fixture.detectChanges();
+
+      expect(toast.toasts().find((t) => t.tipo === 'error')?.texto).toContain('entregado');
+      expect(articulos()).toHaveLength(1);
+    });
   });
 });
