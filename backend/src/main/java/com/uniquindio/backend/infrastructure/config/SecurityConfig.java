@@ -1,6 +1,7 @@
 package com.uniquindio.backend.infrastructure.config;
 
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.uniquindio.backend.infrastructure.security.RespuestaErrorSeguridad;
 import org.springframework.context.annotation.Bean;
@@ -26,15 +27,21 @@ import java.util.List;
 /**
  * Seguridad stateless con JWT: login, registros y la consulta del catálogo (productos, combos y
  * preventas, solo GET) son públicos; el resto de /api/** exige token.
- * Los 401 (sin token o token inválido) y 403 (sin permiso) responden JSON.
+ * Los 401 (sin token, token inválido o cuenta dada de baja) y 403 (sin permiso) responden JSON.
+ * El filtro JWT consulta en cada petición que la cuenta siga activa, así que una baja corta
+ * la sesión al instante en lugar de esperar a que expire el token.
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /** Código estable en el cuerpo del 401 cuando el token es válido pero la cuenta fue dada de baja. */
+    public static final String CODIGO_CUENTA_INACTIVA = "CUENTA_INACTIVA";
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, EmisorToken emisorToken) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, EmisorToken emisorToken,
+                                                   VerificadorCuentaActiva verificadorCuentaActiva) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -50,13 +57,19 @@ public class SecurityConfig {
                                 "/api-docs/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint((request, response, ex) ->
+                        .authenticationEntryPoint((request, response, ex) -> {
+                            if (request.getAttribute(JwtAuthenticationFilter.ATRIBUTO_CUENTA_INACTIVA) != null) {
                                 RespuestaErrorSeguridad.escribir(response, HttpStatus.UNAUTHORIZED,
-                                        "Token ausente, inválido o expirado"))
+                                        "La cuenta se encuentra inactiva o fue dada de baja", CODIGO_CUENTA_INACTIVA);
+                            } else {
+                                RespuestaErrorSeguridad.escribir(response, HttpStatus.UNAUTHORIZED,
+                                        "Token ausente, inválido o expirado");
+                            }
+                        })
                         .accessDeniedHandler((request, response, ex) ->
                                 RespuestaErrorSeguridad.escribir(response, HttpStatus.FORBIDDEN,
                                         "No tienes permisos para realizar esta operación")))
-                .addFilterBefore(new JwtAuthenticationFilter(emisorToken),
+                .addFilterBefore(new JwtAuthenticationFilter(emisorToken, verificadorCuentaActiva),
                         UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
