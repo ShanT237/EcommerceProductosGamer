@@ -26,14 +26,11 @@ export class App {
   protected cerrarMenu() { this.menuAbierto.set(false); }
   protected async salir() {
     this.cerrarMenu();
-    const items = this.carrito.unidades();
     const confirmo = await this.confirmacion.pedir({
       titulo: 'Cerrar sesión',
-      mensaje: items > 0
-        ? `Tienes ${items} producto(s) en el carrito y se vaciarán al salir. ¿Quieres cerrar sesión?`
-        : '¿Quieres cerrar tu sesión?',
+      mensaje: '¿Quieres cerrar tu sesión?',
       confirmar: 'Salir',
-      peligro: items > 0,
+      peligro: false,
     });
     if (confirmo) this.auth.cerrarSesion();
   }
