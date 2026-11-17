@@ -94,6 +94,11 @@ export class MisCompras implements OnInit {
     return this.productos.catalogo().find((p) => p.id === productoId)?.nombre ?? 'Producto';
   }
 
+  /** Solo los productos digitales se pueden descargar; si no está en el catálogo cargado, no se ofrece. */
+  protected esDigital(productoId: string): boolean {
+    return this.productos.catalogo().find((p) => p.id === productoId)?.tipo === 'DIGITAL';
+  }
+
   protected nombreOperacion(op: OperacionCompra): string {
     if (op.comboNombre) return op.comboNombre;
     return op.lineas.map((linea) => this.nombreDe(linea.productoId)).join(' + ');
@@ -178,6 +183,19 @@ export class MisCompras implements OnInit {
     } else {
       this.accion(c, this.compras.reembolsar(c.id), 'Reembolso solicitado correctamente.');
     }
+  }
+
+  /** Marca la línea como descargada (no se entrega ningún archivo); bloquea el reembolso, por eso pide confirmación. */
+  protected async descargar(linea: Compra) {
+    const acepto = await this.confirmacion.pedir({
+      titulo: 'Marcar como descargado',
+      mensaje: `No se entrega ningún archivo: solo se marca \"${this.nombreDe(linea.productoId)}\" como descargado. `
+        + 'Después de descargar ya no podrás solicitar el reembolso de esta compra, ni del pedido si pertenece a uno.',
+      confirmar: 'Descargar',
+      peligro: true,
+    });
+    if (!acepto) return;
+    this.accion(linea, this.compras.descargar(linea.id), 'Descarga registrada.');
   }
 
   protected abrirDialogo(tipo: Dialogo['tipo'], compra: Compra) {

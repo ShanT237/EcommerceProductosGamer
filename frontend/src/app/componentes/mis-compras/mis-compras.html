@@ -56,7 +56,9 @@
                 <button class="btn btn-chico btn-peligro" (click)="cancelar(c)">Cancelar</button>
               }
               @case ('COMPLETADA') {
-                <button class="btn btn-chico btn-peligro" (click)="reembolsar(c)">Reembolso</button>
+                @let descargada = op.lineas.some((l) => l.descargado);
+                <button class="btn btn-chico btn-peligro" (click)="reembolsar(c)" [disabled]="descargada"
+                        [attr.title]="descargada ? 'No se puede reembolsar: ya descargaste un producto de esta operación' : null">Reembolso</button>
               }
               @default { <span class="muted">Sin acciones disponibles</span> }
             }
@@ -72,6 +74,11 @@
                   <div class="detalle-linea-acciones">
                     <strong>{{ precio(linea.subtotal) }}</strong>
                     @if (linea.estado === 'COMPLETADA') {
+                      @if (linea.descargado) {
+                        <span class="muted">Descargado</span>
+                      } @else if (esDigital(linea.productoId)) {
+                        <button class="btn btn-chico" (click)="descargar(linea)">Descargar</button>
+                      }
                       <button class="btn btn-chico" (click)="abrirDialogo('resena', linea)">★ Reseñar</button>
                       <button class="btn btn-chico" (click)="abrirDialogo('vendedor', linea)">Valorar vendedor</button>
                     }

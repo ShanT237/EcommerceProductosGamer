@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { API_URL } from '../../config';
-import { Compra, MovimientoPuntos } from '../../modelos/modelos';
+import { Compra, MovimientoPuntos, TipoProducto } from '../../modelos/modelos';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { MisCompras } from './mis-compras';
 
@@ -31,16 +31,16 @@ describe('MisCompras (pedidos)', () => {
   let pedir: ReturnType<typeof vi.spyOn>;
 
   /** Crea la pantalla y responde las tres cargas iniciales (catálogo, compras y puntos). */
-  function abrir(lista: Compra[]) {
+  function abrir(lista: Compra[], opciones: { tipos?: Record<string, TipoProducto>; sinCatalogo?: boolean } = {}) {
     fixture = TestBed.createComponent(MisCompras);
     fixture.detectChanges();
     http.expectOne((r) => r.method === 'GET' && r.url.startsWith(`${API_URL}/productos`)).flush({
-      contenido: lista.map((c, i) => ({
+      contenido: (opciones.sinCatalogo ? [] : lista).map((c, i) => ({
         id: c.productoId, vendedorId: 'v1', nombre: `Producto ${i + 1}`,
         descripcion: '', precio: 100, stock: 5, gama: 'MEDIA', exclusividad: 'NORMAL',
-        categoria: null,
+        categoria: null, tipo: opciones.tipos?.[c.productoId],
       })),
-      pagina: 0, tamano: 100, totalElementos: lista.length, totalPaginas: 1,
+      pagina: 0, tamano: 100, totalElementos: opciones.sinCatalogo ? 0 : lista.length, totalPaginas: 1,
     });
     http.expectOne({ method: 'GET', url: `${API_URL}/compras` }).flush(lista);
     http.expectOne({ method: 'GET', url: `${API_URL}/puntos/historial` }).flush([]);
@@ -130,6 +130,70 @@ describe('MisCompras (pedidos)', () => {
     abrir([compra('c1', 'ped1'), compra('c9', null)]);
 
     expect(boton('Cupón')).toBeUndefined();
+  });
+
+  const abrirDetalles = () =>
+    (fixture.nativeElement.querySelectorAll('article.compra') as NodeListOf<HTMLElement>).forEach((a) => {
+      [...a.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Ver productos')?.click();
+    });
+  const botonesDescargar = () =>
+    [...(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)].filter(
+      (b) => b.textContent?.trim() === 'Descargar',
+    );
+
+  it('muestra Descargar solo en líneas completadas de productos digitales sin descargar', () => {
+    abrir(
+      [compra('c1', null, { estado: 'COMPLETADA' }), compra('c2', null, { estado: 'COMPLETADA' }), compra('c3', null)],
+      { tipos: { 'p-c1': 'DIGITAL', 'p-c2': 'FISICO', 'p-c3': 'DIGITAL' } },
+    );
+    abrirDetalles();
+    fixture.detectChanges();
+
+    expect(botonesDescargar()).toHaveLength(1);
+  });
+
+  it('descargar pide confirmación avisando que se bloquea el reembolso y hace PUT /compras/{id}/descarga', async () => {
+    abrir([compra('c1', null, { estado: 'COMPLETADA' })], { tipos: { 'p-c1': 'DIGITAL' } });
+    abrirDetalles();
+    fixture.detectChanges();
+
+    botonesDescargar()[0].click();
+    await esperar();
+
+    expect(pedir).toHaveBeenCalledWith(expect.objectContaining({ mensaje: expect.stringContaining('reembolso') }));
+    http.expectOne({ method: 'PUT', url: `${API_URL}/compras/c1/descarga` })
+      .flush({ ...compra('c1', null, { estado: 'COMPLETADA' }), descargado: true });
+    responderRecarga();
+  });
+
+  it('si el usuario no confirma no se llama al backend', async () => {
+    pedir.mockResolvedValue(false);
+    abrir([compra('c1', null, { estado: 'COMPLETADA' })], { tipos: { 'p-c1': 'DIGITAL' } });
+    abrirDetalles();
+    fixture.detectChanges();
+
+    botonesDescargar()[0].click();
+    await esperar();
+
+    http.expectNone(`${API_URL}/compras/c1/descarga`);
+  });
+
+  it('una línea descargada muestra Descargado y deshabilita el Reembolso de la operación', () => {
+    abrir([compra('c1', null, { estado: 'COMPLETADA', descargado: true })], { tipos: { 'p-c1': 'DIGITAL' } });
+    abrirDetalles();
+    fixture.detectChanges();
+
+    expect(boton('Reembolso')!.disabled).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Descargado');
+    expect(botonesDescargar()).toHaveLength(0);
+  });
+
+  it('un producto fuera del catálogo no muestra Descargar y no rompe la pantalla', () => {
+    abrir([compra('c1', null, { estado: 'COMPLETADA' })], { sinCatalogo: true });
+    abrirDetalles();
+
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(botonesDescargar()).toHaveLength(0);
   });
 });
 
