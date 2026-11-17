@@ -13,8 +13,8 @@ import java.util.UUID;
 /**
  * Entidad Vendedor.
  *  - Identidad: dos vendedores son el mismo solo si comparten el mismo id.
- *  - Ciclo de vida: se registra, publica productos, puede cambiar su correo
- *    y se puede dar de baja (eliminación lógica).
+ *  - Ciclo de vida: se registra, publica productos, puede editar su perfil (nombre y correo),
+ *    cambiar su contraseña y se puede dar de baja (eliminación lógica).
  *  - TipoVendedor (persona natural o empresa) está dentro de su límite.
  *  - Es independiente de Usuario (comprador): los productos lo referencian por id.
  */
@@ -22,7 +22,7 @@ import java.util.UUID;
 public class Vendedor {
 
     private final UUID id;
-    private final String nombre;
+    private String nombre;
     private String correo;
     private final TipoVendedor tipo;
     private final String documento;
@@ -103,6 +103,35 @@ public class Vendedor {
 
     public boolean verificarContrasena(String plana, HashContrasena hasher) {
         return contrasenaHash != null && hasher.coincide(plana, contrasenaHash);
+    }
+
+    /**
+     * Cambio directo de contraseña: exige la actual y la nueva debe ser segura y distinta.
+     * Un vendedor dado de baja no puede cambiarla.
+     */
+    public void cambiarContrasena(String actual, String nueva, HashContrasena hasher) {
+        asegurarActivo();
+        if (!verificarContrasena(actual, hasher)) {
+            throw new ReglaDominioException("La contraseña actual es incorrecta");
+        }
+        Contrasena.validarFortaleza(nueva);
+        if (nueva.equals(actual)) {
+            throw new ReglaDominioException("La nueva contraseña debe ser distinta de la actual");
+        }
+        establecerContrasenaSegura(nueva, hasher);
+    }
+
+    /**
+     * Actualiza nombre y correo juntos: valida ambos ANTES de cambiar cualquiera.
+     * El tipo y el documento no se editan (identifican al vendedor ante la ley).
+     */
+    public void actualizarPerfil(String nuevoNombre, String nuevoCorreo) {
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new ReglaDominioException("El nombre del vendedor no puede estar vacío");
+        }
+        validarCorreo(nuevoCorreo);
+        this.nombre = nuevoNombre;
+        this.correo = nuevoCorreo;
     }
 
     public void actualizarCorreo(String nuevoCorreo) {

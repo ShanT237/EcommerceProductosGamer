@@ -13,6 +13,20 @@ export interface Sesion {
   exp: number;
 }
 
+/**
+ * Datos de la cuenta autenticada que muestra la pantalla de perfil. Lo comparten comprador y vendedor:
+ * `puntos` solo viene del comprador; `tipo` y `documento` solo del vendedor (no se editan).
+ */
+export interface PerfilCuenta {
+  id: string;
+  nombre: string;
+  correo: string;
+  activo: boolean;
+  puntos?: number;
+  tipo?: TipoVendedor;
+  documento?: string;
+}
+
 /** Solo los productos DIGITAL admiten «descargar»; los productos sin tipo se tratan como FISICO. */
 export type TipoProducto = 'DIGITAL' | 'FISICO';
 
