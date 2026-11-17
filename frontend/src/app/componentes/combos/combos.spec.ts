@@ -38,8 +38,8 @@ describe('Combos (pantalla)', () => {
   const raiz = () => fixture.nativeElement as HTMLElement;
   const boton = (selector: string) => raiz().querySelector(selector) as HTMLButtonElement | null;
 
-  function configurar(rol: Sesion['rol']) {
-    const sesion = signal<Sesion | null>({ id: 'u1', correo: 'jose@correo.com', rol, exp: 9999999999 });
+  function configurar(rol: Sesion['rol'] | null) {
+    const sesion = signal<Sesion | null>(rol ? { id: 'u1', correo: 'jose@correo.com', rol, exp: 9999999999 } : null);
     TestBed.configureTestingModule({
       imports: [Combos],
       providers: [
@@ -160,6 +160,19 @@ describe('Combos (pantalla)', () => {
 
     expect(boton('.comprar')).toBeNull();
     expect(raiz().textContent).toContain('Agotado');
+  });
+
+  it('unVisitanteVeLosCombosPeroAlComprarSoloRecibeUnAviso', () => {
+    configurar(null);
+    abrir([combo()]);
+    const info = vi.spyOn(toast, 'info');
+
+    expect(raiz().textContent).toContain('Combo Gamer');
+    expect(raiz().querySelector('.cupon')).toBeNull();
+    boton('.comprar')!.click();
+
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('iniciar sesión'));
+    http.expectNone(postComprar('c1'));
   });
 
   it('unVendedorNoVeElBotonComprar', () => {
