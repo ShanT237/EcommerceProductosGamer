@@ -28,7 +28,7 @@ export class App {
     this.cerrarMenu();
     const confirmo = await this.confirmacion.pedir({
       titulo: 'Cerrar sesión',
-      mensaje: '¿Quieres cerrar tu sesión?',
+      mensaje:  '¿Quieres cerrar tu sesión?',
       confirmar: 'Salir',
       peligro: false,
     });
