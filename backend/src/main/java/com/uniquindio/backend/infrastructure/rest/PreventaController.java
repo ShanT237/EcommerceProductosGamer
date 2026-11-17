@@ -53,7 +53,8 @@ public class PreventaController {
         this.mapper = mapper;
     }
 
-    @PreAuthorize("isAuthenticated()")
+    // Público: el catálogo necesita saber qué productos están en preventa, también para visitantes.
+    @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<java.util.List<PreventaResponse>> listar() {
         return ResponseEntity.ok(consultarPreventasUseCase.ejecutar().stream()
