@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.uniquindio.backend.infrastructure.security.RespuestaErrorSeguridad;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -91,7 +93,10 @@ public class SecurityConfig {
      * origen que la API, así que no necesita CORS.
      */
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+                                                           @Value("${cors.allowed-origins}") String[] origenesPermitidos) {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of(origenesPermitidos));
         CorsConfiguration api = new CorsConfiguration();
         api.setAllowedOrigins(List.of(
                 "http://localhost:4200",
@@ -102,8 +107,8 @@ public class SecurityConfig {
         api.setAllowedHeaders(List.of("*"));
         api.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", api);
-        return source;
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", configuration);
+            return source;
     }
 }

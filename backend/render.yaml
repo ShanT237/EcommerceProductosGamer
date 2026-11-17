@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: gamerzone-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/productos
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: mariadb
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
