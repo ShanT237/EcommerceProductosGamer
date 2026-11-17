@@ -1,6 +1,9 @@
 package com.uniquindio.backend.infrastructure.rest;
 
+import com.uniquindio.backend.application.usecase.CambiarContrasenaVendedorUseCase;
 import com.uniquindio.backend.application.usecase.DarDeBajaVendedorUseCase;
+import com.uniquindio.backend.application.usecase.EditarPerfilVendedorUseCase;
+import com.uniquindio.backend.application.usecase.ObtenerPerfilVendedorUseCase;
 import com.uniquindio.backend.application.usecase.RegistrarVendedorUseCase;
 import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.exception.ConflictoException;
@@ -26,6 +29,7 @@ import static com.uniquindio.backend.infrastructure.rest.SesionTest.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -47,6 +51,15 @@ class VendedorControllerTest {
 
     @MockitoBean
     private DarDeBajaVendedorUseCase darDeBajaVendedorUseCase;
+
+    @MockitoBean
+    private ObtenerPerfilVendedorUseCase obtenerPerfilVendedorUseCase;
+
+    @MockitoBean
+    private EditarPerfilVendedorUseCase editarPerfilVendedorUseCase;
+
+    @MockitoBean
+    private CambiarContrasenaVendedorUseCase cambiarContrasenaVendedorUseCase;
 
     @MockitoBean
     private EmisorToken emisorToken;
@@ -95,6 +108,148 @@ class VendedorControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest());              // 400
+    }
+
+    // ===================== perfil (CU-26) =====================
+
+    @Test
+    void obtenerPerfilUsaElVendedorDelToken() throws Exception {
+        when(obtenerPerfilVendedorUseCase.ejecutar(vendedorId)).thenReturn(vendedorRegistrado());
+
+        mockMvc.perform(get("/api/vendedores/me")
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.id").value(vendedorId.toString()))
+                .andExpect(jsonPath("$.nombre").value("GamerZone"))
+                .andExpect(jsonPath("$.correo").value("ventas@gamerzone.com"))
+                .andExpect(jsonPath("$.tipo").value("EMPRESA"))
+                .andExpect(jsonPath("$.documento").value("900123"));
+    }
+
+    @Test
+    void obtenerPerfilSinTokenRetorna401YComoCompradorRetorna403() throws Exception {
+        mockMvc.perform(get("/api/vendedores/me"))
+                .andExpect(status().isUnauthorized());            // 401
+
+        mockMvc.perform(get("/api/vendedores/me")
+                        .with(comprador(UUID.randomUUID())))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(obtenerPerfilVendedorUseCase);
+    }
+
+    @Test
+    void editarPerfilUsaElVendedorDelToken() throws Exception {
+        Vendedor editado = vendedorRegistrado();
+        editado.actualizarPerfil("GamerZone Pro", "pro@gamerzone.com");
+        when(editarPerfilVendedorUseCase.ejecutar(vendedorId, "GamerZone Pro", "pro@gamerzone.com"))
+                .thenReturn(editado);
+
+        mockMvc.perform(put("/api/vendedores/me/perfil")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"nombre\": \"GamerZone Pro\", \"correo\": \"pro@gamerzone.com\" }"))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.nombre").value("GamerZone Pro"))
+                .andExpect(jsonPath("$.correo").value("pro@gamerzone.com"));
+
+        Mockito.verify(editarPerfilVendedorUseCase).ejecutar(vendedorId, "GamerZone Pro", "pro@gamerzone.com");
+    }
+
+    @Test
+    void editarPerfilConDatosInvalidosRetorna400() throws Exception {
+        mockMvc.perform(put("/api/vendedores/me/perfil")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"nombre\": \"\", \"correo\": \"no-es-correo\" }"))
+                .andExpect(status().isBadRequest());              // 400
+
+        Mockito.verifyNoInteractions(editarPerfilVendedorUseCase);
+    }
+
+    @Test
+    void editarPerfilConCorreoDeOtraCuentaRetorna409() throws Exception {
+        when(editarPerfilVendedorUseCase.ejecutar(any(), any(), any()))
+                .thenThrow(new ConflictoException("Ya existe una cuenta con ese correo"));
+
+        mockMvc.perform(put("/api/vendedores/me/perfil")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"nombre\": \"GamerZone\", \"correo\": \"otro@tienda.com\" }"))
+                .andExpect(status().isConflict())                 // 409
+                .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    void editarPerfilSinTokenRetorna401YComoCompradorRetorna403() throws Exception {
+        String json = "{ \"nombre\": \"GamerZone\", \"correo\": \"ventas@gamerzone.com\" }";
+
+        mockMvc.perform(put("/api/vendedores/me/perfil")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());            // 401
+
+        mockMvc.perform(put("/api/vendedores/me/perfil")
+                        .with(comprador(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(editarPerfilVendedorUseCase);
+    }
+
+    // ===================== contraseña (CU-26) =====================
+
+    @Test
+    void cambiarContrasenaUsaElVendedorDelToken() throws Exception {
+        mockMvc.perform(put("/api/vendedores/me/contrasena")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"contrasenaActual\": \"Vendedor2026\", \"contrasenaNueva\": \"Nueva2027x\" }"))
+                .andExpect(status().isNoContent());               // 204
+
+        Mockito.verify(cambiarContrasenaVendedorUseCase).ejecutar(vendedorId, "Vendedor2026", "Nueva2027x");
+    }
+
+    @Test
+    void cambiarContrasenaConContrasenaNuevaCortaRetorna400() throws Exception {
+        mockMvc.perform(put("/api/vendedores/me/contrasena")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"contrasenaActual\": \"Vendedor2026\", \"contrasenaNueva\": \"corta\" }"))
+                .andExpect(status().isBadRequest());              // 400
+
+        Mockito.verifyNoInteractions(cambiarContrasenaVendedorUseCase);
+    }
+
+    @Test
+    void cambiarContrasenaConActualIncorrectaRetorna422() throws Exception {
+        Mockito.doThrow(new ReglaDominioException("La contraseña actual es incorrecta"))
+                .when(cambiarContrasenaVendedorUseCase).ejecutar(any(), any(), any());
+
+        mockMvc.perform(put("/api/vendedores/me/contrasena")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"contrasenaActual\": \"Equivocada1\", \"contrasenaNueva\": \"Nueva2027x\" }"))
+                .andExpect(status().isUnprocessableContent());    // 422
+    }
+
+    @Test
+    void cambiarContrasenaSinTokenRetorna401YComoCompradorRetorna403() throws Exception {
+        String json = "{ \"contrasenaActual\": \"Vendedor2026\", \"contrasenaNueva\": \"Nueva2027x\" }";
+
+        mockMvc.perform(put("/api/vendedores/me/contrasena")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());            // 401
+
+        mockMvc.perform(put("/api/vendedores/me/contrasena")
+                        .with(comprador(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(cambiarContrasenaVendedorUseCase);
     }
 
     // ===================== baja =====================

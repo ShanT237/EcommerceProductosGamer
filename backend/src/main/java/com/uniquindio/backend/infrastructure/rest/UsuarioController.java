@@ -10,6 +10,7 @@ import com.uniquindio.backend.application.usecase.EditarPerfilUseCase;
 import com.uniquindio.backend.application.usecase.ObtenerPerfilUseCase;
 import com.uniquindio.backend.application.dto.request.CambiarContrasenaRequest;
 import com.uniquindio.backend.application.usecase.CambiarContrasenaUseCase;
+import com.uniquindio.backend.application.usecase.DarDeBajaUsuarioUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,17 +31,20 @@ public class UsuarioController {
     private final EditarPerfilUseCase editarPerfilUseCase;
     private final ObtenerPerfilUseCase obtenerPerfilUseCase;
     private final CambiarContrasenaUseCase cambiarContrasenaUseCase;
+    private final DarDeBajaUsuarioUseCase darDeBajaUsuarioUseCase;
     private final UsuarioMapper mapper;
 
     public UsuarioController(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                              EditarPerfilUseCase editarPerfilUseCase,
                              ObtenerPerfilUseCase obtenerPerfilUseCase,
                              CambiarContrasenaUseCase cambiarContrasenaUseCase,
+                             DarDeBajaUsuarioUseCase darDeBajaUsuarioUseCase,
                              UsuarioMapper mapper) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.editarPerfilUseCase = editarPerfilUseCase;
         this.obtenerPerfilUseCase = obtenerPerfilUseCase;
         this.cambiarContrasenaUseCase = cambiarContrasenaUseCase;
+        this.darDeBajaUsuarioUseCase = darDeBajaUsuarioUseCase;
         this.mapper = mapper;
     }
 
@@ -91,5 +95,13 @@ public class UsuarioController {
             @Valid @RequestBody CambiarContrasenaRequest request) {
         cambiarContrasenaUseCase.ejecutar(usuarioId, request.contrasenaActual(), request.contrasenaNueva());
         return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
+    // CU-25 Dar de Baja al comprador autenticado (baja lógica; conserva su historial)
+    @PreAuthorize("hasRole('COMPRADOR')")
+    @PutMapping("/me/baja")
+    public ResponseEntity<RegistrarUsuarioResponse> darDeBaja(@AuthenticationPrincipal UUID usuarioId) {
+        Usuario usuario = darDeBajaUsuarioUseCase.ejecutar(usuarioId);
+        return ResponseEntity.ok(mapper.toRegistrarResponse(usuario)); // 200 OK
     }
 }
