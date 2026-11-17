@@ -12,8 +12,8 @@ import java.util.UUID;
  * Entidad Notificacion (Regla 8).
  * Notificación dirigida a un comprador o a un vendedor (el "usuarioId" es el id del destinatario).
  * Compradores: descuento, stock repuesto o preventa lanzada de un producto de su wishlist,
- * meta de compras alcanzada y regalo enviado.
- * Vendedores: stock bajo/agotado, nueva venta, reembolso solicitado, nueva reseña y nueva valoración.
+ * meta de compras alcanzada, regalo enviado y regalo cancelado.
+ * Vendedores: stock bajo/agotado, nueva venta, reembolso solicitado, nueva reseña, nueva valoración y regalo elegido.
  * El producto es opcional: hay avisos (p. ej. meta alcanzada) que no se refieren a uno.
  */
 @Getter

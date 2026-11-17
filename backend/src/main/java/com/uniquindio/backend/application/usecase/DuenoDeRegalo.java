@@ -1,9 +1,12 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.domain.entity.Combo;
+import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.repository.ComboRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -12,21 +15,41 @@ import java.util.UUID;
  */
 final class DuenoDeRegalo {
 
+    private static final String NOMBRE_GENERICO = "regalo";
+
     private DuenoDeRegalo() {
     }
 
     static boolean esDelVendedor(Regalo regalo, UUID vendedorId,
                                  ProductoRepository productoRepository, ComboRepository comboRepository) {
+        return vendedorDe(regalo, productoRepository, comboRepository)
+                .map(vendedorId::equals)
+                .orElse(false);
+    }
+
+    /** Vendedor del producto o del combo del regalo; vacío si el destino ya no existe. */
+    static Optional<UUID> vendedorDe(Regalo regalo,
+                                     ProductoRepository productoRepository, ComboRepository comboRepository) {
+        if (regalo.getIdProducto() != null) {
+            return productoRepository.obtenerPorId(regalo.getIdProducto()).map(Producto::getVendedorId);
+        }
+        if (regalo.getIdCombo() != null) {
+            return comboRepository.obtenerPorId(regalo.getIdCombo()).map(Combo::getVendedorId);
+        }
+        return Optional.empty();
+    }
+
+    /** Nombre del producto o del combo del regalo; {@code "regalo"} si ya no existe. */
+    static String nombreDe(Regalo regalo,
+                           ProductoRepository productoRepository, ComboRepository comboRepository) {
         if (regalo.getIdProducto() != null) {
             return productoRepository.obtenerPorId(regalo.getIdProducto())
-                    .map(producto -> vendedorId.equals(producto.getVendedorId()))
-                    .orElse(false);
+                    .map(Producto::getNombre).orElse(NOMBRE_GENERICO);
         }
         if (regalo.getIdCombo() != null) {
             return comboRepository.obtenerPorId(regalo.getIdCombo())
-                    .map(combo -> vendedorId.equals(combo.getVendedorId()))
-                    .orElse(false);
+                    .map(Combo::getNombre).orElse(NOMBRE_GENERICO);
         }
-        return false;
+        return NOMBRE_GENERICO;
     }
 }
