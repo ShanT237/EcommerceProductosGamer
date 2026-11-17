@@ -3,7 +3,7 @@
 ## Agregado: Producto
 
 **Raíz de agregado:** `Producto`
-**Dentro del límite:** `Gama` (enum), `Exclusividad` (enum)
+**Dentro del límite:** `Gama` (enum), `Exclusividad` (enum), `TipoProducto` (enum: `FISICO` por defecto o `DIGITAL`)
 **Fuera del agregado:** `Vendedor` (referenciado por `vendedorId`). Además, `Producto` es referenciado por otros agregados, ej. `Combo`, `Regalo`, `Compra`, `Preventa`, `Wishlist`.
 
 ### Invariantes
@@ -17,6 +17,9 @@
 - Un descuento debe ser mayor a 0 y menor a 100, y no puede aplicarse a un producto eliminado.
 - Un producto pausado o eliminado no se puede comprar; solo su vendedor dueño lo modifica, edita o pausa.
 - La categoría del producto es obligatoria.
+- Solo un producto `DIGITAL` admite que se marque la descarga de una compra; uno `FISICO` la rechaza.
+- El vendedor dueño fija el stock con un valor no negativo y solo sobre un producto no eliminado; si estaba agotado y vuelve a tener unidades se avisa a las wishlists.
+- La imagen del producto es una URL HTTPS de Cloudinary y solo la asigna el vendedor dueño sobre un producto no eliminado.
 
 ---
 
@@ -32,6 +35,7 @@
 - El nombre del vendedor no puede estar vacío y su correo siempre debe ser válido.
 - Un vendedor dado de baja no puede publicar productos.
 - Un vendedor solo puede darse de baja una vez — la baja es lógica, para conservar el historial de sus ventas.
+- Un vendedor solo edita su nombre y su correo; el tipo y el documento no cambian, y el correo no puede coincidir con el de otro vendedor ni el de un comprador.
 
 ---
 
@@ -47,6 +51,7 @@
 - Un regalo solo puede elegirse una vez, y nunca para un usuario que ya posee ese producto.
 - Un regalo no puede marcarse como entregado si no fue enviado, ni sin la confirmación de su destinatario.
 - Un regalo ENTREGADO o CANCELADO no puede cambiar de estado.
+- Un regalo se cancela desde cualquier estado anterior a ENTREGADO y solo por el vendedor dueño; los regalos CANCELADOS no cuentan como asignados, así que el comprador recupera su cupo.
 - Un regalo está asociado a un producto o a un combo, nunca a ambos ni a ninguno.
 - El regalo no guarda su vendedor: el dueño es el del producto o combo al que apunta. Solo ese vendedor puede crearlo y enviarlo.
 - Un comprador elige un regalo por cada 5 compras COMPLETADAS (regalos asignados ≤ completadas ÷ 5).
@@ -68,6 +73,8 @@
 - Solo se reseña una compra COMPLETADA, y máximo una vez.
 - Los puntos solo se asignan después de reseñar, y una sola vez.
 - Una compra solo se reembolsa si está COMPLETADA, dentro de 48 horas, sin descarga y sin puntos asignados.
+- Solo una compra COMPLETADA puede marcarse como descargada (y solo si su producto es DIGITAL); tras la descarga ya no se reembolsa.
+- Una compra PENDIENTE que supera los 10 minutos pasa a EXPIRADA (lo dispara un proceso automático, no el comprador).
 - Una compra REEMBOLSADA, CANCELADA o EXPIRADA no puede cambiar de estado.
 
 ---
@@ -82,7 +89,7 @@
 
 - Todo o nada: se validan todas las líneas (producto comprable, preventa, vendedor activo, exclusividad, stock) **antes** de descontar stock; si una falla, no cambia ningún producto ni se guarda ninguna compra.
 - Un pedido tiene entre 1 y 50 líneas, con cantidades positivas y sin repetir producto.
-- Confirmar o cancelar exige que **todas** las líneas estén PENDIENTES y sean del usuario, comprobado antes de mutar; cancelar o reembolsar restituye el stock de cada línea.
+- Confirmar o cancelar exige que **todas** las líneas estén PENDIENTES y sean del usuario, comprobado antes de mutar; cancelar, expirar o reembolsar restituye el stock de cada línea.
 - Un cupón consume **un solo uso** por pedido, sin importar cuántas líneas tenga, y solo rebaja las líneas a las que aplica.
 
 ---
@@ -97,6 +104,6 @@ Todos referencian a otros agregados solo por id.
 - **ValoracionVendedor** (raíz): una por compra completada; calificación obligatoria y comentario opcional de máximo 500 caracteres.
 - **MovimientoPuntos** (raíz, inmutable): registro de puntos ganados o redimidos con cantidad positiva; el saldo vigente sigue en `Usuario`.
 - **Combo** (raíz): dos o más productos distintos del mismo vendedor y un descuento menor a 100. Solo su vendedor lo modifica o elimina, y no se elimina con regalos pendientes que lo referencien.
-- **Preventa** (raíz): un producto con fecha de lanzamiento futura al programarla; el producto se puede comprar desde ese mismo día. Una por producto.
+- **Preventa** (raíz): un producto con fecha de lanzamiento futura al programarla; el producto se puede comprar desde ese mismo día. Una por producto. Solo se reprograma (nueva fecha futura y descripción) o se cancela mientras no se haya lanzado; cancelarla la elimina.
 - **Wishlist** (raíz): productos favoritos de un usuario, sin repetidos ni eliminados.
 - **Notificacion** (raíz): aviso de descuento para un usuario; solo su dueño la marca como leída.
