@@ -50,4 +50,19 @@ class UsuarioTest {
         assertDoesNotThrow(() -> usuario.asegurarPuedeElegirRegalo(10, 1));
         assertThrows(ReglaDominioException.class, () -> usuario.asegurarPuedeElegirRegalo(10, 2));
     }
+
+    @Test
+    @DisplayName("darDeBaja desactiva al comprador, conserva sus datos y rechaza darlo de baja dos veces")
+    void darDeBaja() {
+        Usuario usuario = Usuario.registrar(UUID.randomUUID(), "Gamer4", "gamer4@test.com");
+        usuario.acumularPuntos(30);
+
+        usuario.darDeBaja();
+
+        assertFalse(usuario.isActivo());
+        assertEquals(30, usuario.getPuntos());
+        assertEquals("gamer4@test.com", usuario.getCorreo());
+        assertThrows(ReglaDominioException.class, usuario::darDeBaja);
+        assertThrows(ReglaDominioException.class, usuario::asegurarActivo);
+    }
 }

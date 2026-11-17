@@ -150,6 +150,17 @@ public class Usuario {
         this.activo = false;
     }
 
+    /**
+     * Baja lógica del comprador: deja de poder iniciar sesión y comprar, pero se conserva
+     * su historial (compras, pedidos, reseñas). Darlo de baja dos veces es un error de regla.
+     */
+    public void darDeBaja() {
+        if (!activo) {
+            throw new ReglaDominioException("El usuario ya está dado de baja");
+        }
+        this.activo = false;
+    }
+
     public void activar() {
         this.activo = true;
     }

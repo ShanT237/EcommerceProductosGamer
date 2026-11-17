@@ -144,4 +144,63 @@ class VendedorTest {
         assertThrows(ReglaDominioException.class, () -> vendedor.definirContrasena(" "));
         assertThrows(ReglaDominioException.class, () -> vendedor.definirContrasena(null));
     }
+
+    @Test
+    @DisplayName("actualizarPerfil cambia nombre y correo juntos y no deja nada a medias si algo es inválido")
+    void actualizarPerfil() {
+        Vendedor vendedor = crearVendedorValido();
+
+        vendedor.actualizarPerfil("GamerZone Pro", "pro@gamerzone.com");
+        assertEquals("GamerZone Pro", vendedor.getNombre());
+        assertEquals("pro@gamerzone.com", vendedor.getCorreo());
+
+        assertThrows(ReglaDominioException.class, () -> vendedor.actualizarPerfil(" ", "otro@gamerzone.com"));
+        assertThrows(ReglaDominioException.class, () -> vendedor.actualizarPerfil(null, "otro@gamerzone.com"));
+        assertThrows(ReglaDominioException.class, () -> vendedor.actualizarPerfil("Otro nombre", "sin-arroba"));
+        assertEquals("GamerZone Pro", vendedor.getNombre());
+        assertEquals("pro@gamerzone.com", vendedor.getCorreo());
+    }
+
+    @Test
+    @DisplayName("actualizarPerfil no toca el tipo ni el documento")
+    void actualizarPerfilConservaTipoYDocumento() {
+        Vendedor vendedor = crearVendedorValido();
+
+        vendedor.actualizarPerfil("Otro nombre", "otro@gamerzone.com");
+
+        assertEquals(TipoVendedor.EMPRESA, vendedor.getTipo());
+        assertEquals("900123456-7", vendedor.getDocumento());
+    }
+
+    @Test
+    @DisplayName("cambiarContrasena exige la actual, una nueva segura y distinta, y un vendedor activo")
+    void cambiarContrasena() {
+        Vendedor vendedor = crearVendedorValido();
+        vendedor.definirContrasena(hasher.hashear("Vendedor2026"));
+
+        vendedor.cambiarContrasena("Vendedor2026", "Nueva2027x", hasher);
+        assertTrue(vendedor.verificarContrasena("Nueva2027x", hasher));
+        assertFalse(vendedor.verificarContrasena("Vendedor2026", hasher));
+
+        assertThrows(ReglaDominioException.class,
+                () -> vendedor.cambiarContrasena("Equivocada1", "Otra2028xx", hasher));
+        assertThrows(ReglaDominioException.class,
+                () -> vendedor.cambiarContrasena("Nueva2027x", "debil", hasher));
+        assertThrows(ReglaDominioException.class,
+                () -> vendedor.cambiarContrasena("Nueva2027x", "Nueva2027x", hasher));
+        assertTrue(vendedor.verificarContrasena("Nueva2027x", hasher));
+
+        vendedor.darDeBaja();
+        assertThrows(ReglaDominioException.class,
+                () -> vendedor.cambiarContrasena("Nueva2027x", "Otra2028xx", hasher));
+    }
+
+    @Test
+    @DisplayName("Un vendedor sin contraseña no puede cambiarla")
+    void vendedorSinContrasenaNoPuedeCambiarla() {
+        Vendedor vendedor = crearVendedorValido();
+
+        assertThrows(ReglaDominioException.class,
+                () -> vendedor.cambiarContrasena("Vendedor2026", "Nueva2027x", hasher));
+    }
 }
