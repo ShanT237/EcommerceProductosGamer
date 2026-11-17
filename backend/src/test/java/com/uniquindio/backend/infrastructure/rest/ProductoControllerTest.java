@@ -51,6 +51,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.uniquindio.backend.application.usecase.ActualizarStockProductoUseCase;
+
 @WebMvcTest(ProductoController.class)
 @Import({SecurityConfig.class, ProductoMapper.class})
 class ProductoControllerTest {
@@ -62,6 +64,9 @@ class ProductoControllerTest {
 
     @MockitoBean
     private PublicarProductoUseCase publicarProductoUseCase;
+
+    @MockitoBean
+    private ActualizarStockProductoUseCase actualizarStockProductoUseCase;
 
     @MockitoBean
     private EliminarProductoUseCase eliminarProductoUseCase;
