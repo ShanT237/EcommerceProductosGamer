@@ -7,6 +7,7 @@ import com.uniquindio.backend.application.usecase.ModificarPromocionUseCase;
 import com.uniquindio.backend.application.usecase.QuitarPromocionUseCase;
 import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.PromocionMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +66,9 @@ class PromocionControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

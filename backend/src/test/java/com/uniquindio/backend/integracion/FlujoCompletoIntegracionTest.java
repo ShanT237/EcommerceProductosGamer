@@ -540,4 +540,92 @@ class FlujoCompletoIntegracionTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contenido[0].stock").value(10));
     }
+
+    // ------------------------------------------------------------------ Baja de cuenta y token vigente
+
+    private void registrarComprador(String correo, String contrasena) throws Exception {
+        mockMvc.perform(post("/api/usuarios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "nombre": "Comprador baja", "correo": "%s", "contrasena": "%s" }
+                                """.formatted(correo, contrasena)))
+                .andExpect(status().isCreated());
+    }
+
+    private void registrarVendedor(String correo, String contrasena, String documento) throws Exception {
+        mockMvc.perform(post("/api/vendedores")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "nombre": "Vendedor baja", "correo": "%s", "tipo": "EMPRESA",
+                                  "documento": "%s", "contrasena": "%s" }
+                                """.formatted(correo, documento, contrasena)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("Seguridad real: tras la baja, el JWT vigente del comprador deja de servir al instante (401)")
+    void tokenDeCompradorDadoDeBajaRetorna401() throws Exception {
+        // Arrange: comprador nuevo con sesión activa
+        String correo = "baja-" + UUID.randomUUID() + "@correo.com";
+        registrarComprador(correo, "BajaGamer2026");
+        String token = iniciarSesion(correo, "BajaGamer2026");
+        mockMvc.perform(get("/api/usuarios/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        // Act: se da de baja con ese mismo token
+        mockMvc.perform(put("/api/usuarios/me/baja").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        // Assert: el token no ha expirado, pero ya no abre ninguna ruta protegida
+        mockMvc.perform(get("/api/usuarios/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"));
+        mockMvc.perform(get("/api/compras").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"));
+        mockMvc.perform(put("/api/usuarios/me/baja").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+
+        // Assert: el catálogo público sigue disponible aunque el token ya no sirva
+        mockMvc.perform(get("/api/productos").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        // Assert: tampoco puede iniciar sesión de nuevo
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "correo": "%s", "contrasena": "BajaGamer2026" }
+                                """.formatted(correo)))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("Seguridad real: tras la baja, el JWT vigente del vendedor deja de servir al instante (401)")
+    void tokenDeVendedorDadoDeBajaRetorna401() throws Exception {
+        // Arrange: vendedor nuevo con sesión activa
+        String correo = "vendedor-baja-" + UUID.randomUUID() + "@tienda.com";
+        String documento = "9" + Math.abs(UUID.randomUUID().getMostSignificantBits() % 1_000_000_000L);
+        registrarVendedor(correo, "BajaVendedor2026", documento);
+        String token = iniciarSesion(correo, "BajaVendedor2026");
+        mockMvc.perform(get("/api/vendedores/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        // Act
+        mockMvc.perform(put("/api/vendedores/me/baja").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        // Assert: el mismo token ya no sirve, ni siquiera para publicar
+        mockMvc.perform(get("/api/vendedores/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"));
+        mockMvc.perform(post("/api/productos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "nombre": "Mouse-baja-%s", "descripcion": "No debe publicarse nunca",
+                                  "precio": 50000, "stock": 1,
+                                  "gama": "BAJA", "exclusividad": "NORMAL" }
+                                """.formatted(UUID.randomUUID())))
+                .andExpect(status().isUnauthorized());
+    }
 }

@@ -12,6 +12,7 @@ import com.uniquindio.backend.infrastructure.rest.mapper.CompraMapper;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import org.springframework.context.annotation.Import;
 
@@ -75,6 +76,9 @@ class CompraControllerTest {
     // SecurityConfig necesita el EmisorToken para armar el filtro JWT; las sesiones se simulan con SesionPrueba.
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     private final UUID usuarioId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();

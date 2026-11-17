@@ -9,6 +9,7 @@ import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Cupon;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Precio;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +74,9 @@ class PedidoControllerTest {
     // SecurityConfig necesita el EmisorToken para armar el filtro JWT; las sesiones se simulan con SesionTest.
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     private final UUID usuarioId = UUID.randomUUID();
     private final UUID pedidoId = UUID.randomUUID();

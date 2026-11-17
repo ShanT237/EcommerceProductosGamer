@@ -57,6 +57,26 @@ describe('AuthService.verificarSesion', () => {
     expect(TestBed.inject(ToastService).toasts().some((t) => t.tipo === 'info')).toBe(true);
   });
 
+  it('cerrarSesion(true, mensaje) avisa con el texto indicado', () => {
+    iniciarSesion(jwt(enUnaHora()));
+
+    auth.cerrarSesion(true, 'Tu cuenta fue dada de baja.');
+
+    expect(auth.autenticado()).toBe(false);
+    expect(navegar).toHaveBeenCalledWith(['/login']);
+    expect(TestBed.inject(ToastService).toasts().some((t) => t.texto === 'Tu cuenta fue dada de baja.')).toBe(true);
+  });
+
+  it('cerrarSesion(true) sin mensaje usa el aviso por defecto', () => {
+    iniciarSesion(jwt(enUnaHora()));
+
+    auth.cerrarSesion(true);
+
+    expect(
+      TestBed.inject(ToastService).toasts().some((t) => t.texto === 'Tu sesión terminó o expiró. Vuelve a ingresar.'),
+    ).toBe(true);
+  });
+
   it('si el token guardado se reemplaza por uno inválido cierra la sesión', () => {
     iniciarSesion(jwt(enUnaHora()));
 

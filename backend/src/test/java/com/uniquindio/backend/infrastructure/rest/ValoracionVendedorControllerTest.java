@@ -3,6 +3,7 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.usecase.ValorarVendedorUseCase;
 import com.uniquindio.backend.domain.entity.ValoracionVendedor;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.ValoracionVendedorMapper;
@@ -43,6 +44,9 @@ class ValoracionVendedorControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

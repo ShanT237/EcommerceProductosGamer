@@ -189,6 +189,8 @@ export interface Notificacion {
 export interface ErrorApi {
   status?: number;
   mensaje?: string;
+  /** Código estable del backend (p. ej. CUENTA_INACTIVA en un 401 tras una baja). */
+  codigo?: string;
   errores?: Record<string, string> | string[];
 }
 

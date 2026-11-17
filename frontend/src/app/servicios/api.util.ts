@@ -12,6 +12,12 @@ const MENSAJE_POR_ESTADO: Record<number, string> = {
   500: 'Error del servidor. Inténtalo de nuevo en unos minutos.',
 };
 
+/** Código que manda el backend en un 401 cuando el token sigue vigente pero la cuenta fue dada de baja. */
+export const CODIGO_CUENTA_INACTIVA = 'CUENTA_INACTIVA';
+
+/** Aviso al cerrar la sesión de una cuenta que ya no está activa. */
+export const MENSAJE_CUENTA_INACTIVA = 'Tu cuenta fue dada de baja o está inactiva. Cerramos tu sesión.';
+
 /** Aviso para quien intenta comprar (o guardar favoritos) sin haber iniciado sesión. */
 export const MENSAJE_INGRESAR_PARA_COMPRAR =
   'Para comprar necesitas iniciar sesión con una cuenta de comprador. Ingresa o crea tu cuenta.';

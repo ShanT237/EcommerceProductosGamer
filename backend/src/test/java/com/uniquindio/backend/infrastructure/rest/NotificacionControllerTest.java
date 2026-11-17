@@ -5,6 +5,7 @@ import com.uniquindio.backend.application.usecase.MarcarNotificacionLeidaUseCase
 import com.uniquindio.backend.domain.entity.Notificacion;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.NotificacionMapper;
@@ -51,6 +52,9 @@ class NotificacionControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     private final UUID usuarioId = UUID.randomUUID();
     private final UUID notificacionId = UUID.randomUUID();

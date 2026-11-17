@@ -17,11 +17,18 @@ public final class RespuestaErrorSeguridad {
     }
 
     public static void escribir(HttpServletResponse response, HttpStatus status, String mensaje) throws IOException {
+        escribir(response, status, mensaje, null);
+    }
+
+    /** Igual que el anterior, con un "codigo" estable que el frontend puede usar sin depender del texto. */
+    public static void escribir(HttpServletResponse response, HttpStatus status, String mensaje,
+                                String codigo) throws IOException {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
+        String campoCodigo = codigo == null ? "" : ",\"codigo\":\"" + codigo + "\"";
         response.getWriter().write("{\"timestamp\":\"" + LocalDateTime.now()
                 + "\",\"status\":" + status.value()
-                + ",\"mensaje\":\"" + mensaje + "\"}");
+                + ",\"mensaje\":\"" + mensaje + "\"" + campoCodigo + "}");
     }
 }

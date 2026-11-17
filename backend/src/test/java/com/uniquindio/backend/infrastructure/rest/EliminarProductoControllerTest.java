@@ -5,6 +5,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
@@ -83,6 +84,9 @@ class EliminarProductoControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     private final UUID vendedorId = UUID.randomUUID();
     private final UUID productoId = UUID.randomUUID();
