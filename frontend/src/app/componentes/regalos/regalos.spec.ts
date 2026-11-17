@@ -149,4 +149,12 @@ describe('Regalos (comprador)', () => {
     expect(raiz().textContent).toContain('Error del servidor');
     expect(raiz().textContent).toContain('Reintentar');
   });
+
+  it('un regalo CANCELADO se muestra como Cancelado, con la nota del cupo y sin botón de confirmar', () => {
+    abrir({ disponibles: [], mios: [regalo({ id: 'r9', estado: 'CANCELADO', idUsuario: 'u1' })] });
+
+    expect(raiz().querySelector('.estado-cancelado')?.textContent).toContain('Cancelado');
+    expect(raiz().querySelector('.nota-cancelado')).not.toBeNull();
+    expect(raiz().querySelector('button.confirmar')).toBeNull();
+  });
 });

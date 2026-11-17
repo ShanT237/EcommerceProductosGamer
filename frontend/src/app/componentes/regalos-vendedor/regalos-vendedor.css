@@ -16,3 +16,5 @@
 @media (max-width: 960px) {
   .dos { grid-template-columns: 1fr; }
 }
+
+.acciones-regalo { display: flex; gap: .5rem; flex-wrap: wrap; }

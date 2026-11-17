@@ -6,6 +6,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.entity.Wishlist;
+import com.uniquindio.backend.domain.repository.NotificacionRepository;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
@@ -13,6 +14,7 @@ import com.uniquindio.backend.infrastructure.persistence.NotificacionRepositoryE
 import com.uniquindio.backend.infrastructure.persistence.WishlistRepositoryEnMemoria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -144,5 +146,40 @@ class NotificadorEventosTest {
         assertEquals(4, tipos.size());
         assertTrue(tipos.containsAll(List.of(TipoNotificacion.NUEVA_VENTA, TipoNotificacion.REEMBOLSO_SOLICITADO,
                 TipoNotificacion.NUEVA_RESENA, TipoNotificacion.NUEVA_VALORACION)));
+    }
+
+    @Test
+    void regaloElegidoAvisaAlVendedor() {
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), producto.getId(), null);
+        regalo.elegir(UUID.randomUUID(), false);
+
+        notificador.regaloElegido(vendedorId, regalo, "Teclado RGB");
+
+        Notificacion n = unica(vendedorId, TipoNotificacion.REGALO_ELEGIDO);
+        assertEquals(producto.getId(), n.getProductoId());
+    }
+
+    @Test
+    void regaloCanceladoAvisaAlComprador() {
+        UUID usuarioId = UUID.randomUUID();
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), producto.getId(), null);
+        regalo.elegir(usuarioId, false);
+        regalo.cancelarRegalo();
+
+        notificador.regaloCancelado(regalo, "Teclado RGB");
+
+        unica(usuarioId, TipoNotificacion.REGALO_CANCELADO);
+    }
+
+    @Test
+    void regaloCanceladoSinDestinatarioNoAvisa() {
+        Regalo disponible = Regalo.crear(UUID.randomUUID(), producto.getId(), null);
+        disponible.cancelarRegalo();
+
+        NotificacionRepository repositorioEspia = Mockito.mock(NotificacionRepository.class);
+        new NotificadorEventos(repositorioEspia, wishlists).regaloCancelado(disponible, "X");
+
+        Mockito.verifyNoInteractions(repositorioEspia);   // ninguna notificación guardada
+        assertTrue(notificaciones.obtenerPorUsuarioId(vendedorId).isEmpty());
     }
 }

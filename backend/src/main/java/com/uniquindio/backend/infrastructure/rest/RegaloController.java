@@ -4,6 +4,7 @@ import com.uniquindio.backend.application.dto.request.CrearRegaloRequest;
 import com.uniquindio.backend.application.dto.response.ProgresoRegalosResponse;
 import com.uniquindio.backend.application.dto.response.RegaloResponse;
 import com.uniquindio.backend.application.usecase.AsignarRegaloPorMetaUseCase;
+import com.uniquindio.backend.application.usecase.CancelarRegaloUseCase;
 import com.uniquindio.backend.application.usecase.ConfirmarEntregaRegaloUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarMisRegalosUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarProgresoRegalosUseCase;
@@ -41,6 +42,7 @@ public class RegaloController {
 
     private final AsignarRegaloPorMetaUseCase asignarRegaloPorMetaUseCase;
     private final EnviarRegaloUseCase enviarRegaloUseCase;
+    private final CancelarRegaloUseCase cancelarRegaloUseCase;
     private final ConfirmarEntregaRegaloUseCase confirmarEntregaRegaloUseCase;
     private final CrearRegaloUseCase crearRegaloUseCase;
     private final ConsultarRegalosDisponiblesUseCase consultarRegalosDisponiblesUseCase;
@@ -51,6 +53,7 @@ public class RegaloController {
 
     public RegaloController(AsignarRegaloPorMetaUseCase asignarRegaloPorMetaUseCase,
                             EnviarRegaloUseCase enviarRegaloUseCase,
+                            CancelarRegaloUseCase cancelarRegaloUseCase,
                             ConfirmarEntregaRegaloUseCase confirmarEntregaRegaloUseCase,
                             CrearRegaloUseCase crearRegaloUseCase,
                             ConsultarRegalosDisponiblesUseCase consultarRegalosDisponiblesUseCase,
@@ -60,6 +63,7 @@ public class RegaloController {
                             RegaloMapper mapper) {
         this.asignarRegaloPorMetaUseCase = asignarRegaloPorMetaUseCase;
         this.enviarRegaloUseCase = enviarRegaloUseCase;
+        this.cancelarRegaloUseCase = cancelarRegaloUseCase;
         this.confirmarEntregaRegaloUseCase = confirmarEntregaRegaloUseCase;
         this.crearRegaloUseCase = crearRegaloUseCase;
         this.consultarRegalosDisponiblesUseCase = consultarRegalosDisponiblesUseCase;
@@ -136,6 +140,16 @@ public class RegaloController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UUID vendedorId) {
         Regalo regalo = enviarRegaloUseCase.ejecutar(id, vendedorId);
+        return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
+    }
+
+    // Cancelar Regalo (solo el vendedor dueño del producto o combo; el id sale del token)
+    @PreAuthorize("hasRole('VENDEDOR')")
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<RegaloResponse> cancelar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID vendedorId) {
+        Regalo regalo = cancelarRegaloUseCase.ejecutar(id, vendedorId);
         return ResponseEntity.ok(mapper.toResponse(regalo)); // 200 OK
     }
 

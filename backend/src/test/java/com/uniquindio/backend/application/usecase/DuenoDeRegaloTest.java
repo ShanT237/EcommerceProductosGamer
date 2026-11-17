@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,5 +68,38 @@ class DuenoDeRegaloTest {
         Regalo regalo = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
 
         assertFalse(DuenoDeRegalo.esDelVendedor(regalo, vendedorId, productoRepository, comboRepository));
+    }
+
+    @Test
+    void vendedorDeProductoYDeComboSeResuelve() {
+        Regalo deProducto = Regalo.crear(UUID.randomUUID(), producto(vendedorId).getId(), null);
+        Combo combo = Combo.crear(UUID.randomUUID(), vendedorId, "Combo", "Desc", 10.0,
+                List.of(producto(vendedorId).getId(), producto(vendedorId).getId()));
+        comboRepository.guardar(combo);
+        Regalo deCombo = Regalo.crear(UUID.randomUUID(), null, combo.getId());
+
+        assertEquals(Optional.of(vendedorId), DuenoDeRegalo.vendedorDe(deProducto, productoRepository, comboRepository));
+        assertEquals(Optional.of(vendedorId), DuenoDeRegalo.vendedorDe(deCombo, productoRepository, comboRepository));
+    }
+
+    @Test
+    void vendedorDeUnProductoInexistenteEsVacio() {
+        Regalo sinProducto = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+
+        assertTrue(DuenoDeRegalo.vendedorDe(sinProducto, productoRepository, comboRepository).isEmpty());
+    }
+
+    @Test
+    void nombreDeDevuelveElDelProductoElDelComboOElGenerico() {
+        Regalo deProducto = Regalo.crear(UUID.randomUUID(), producto(vendedorId).getId(), null);
+        Combo combo = Combo.crear(UUID.randomUUID(), vendedorId, "Combo", "Desc", 10.0,
+                List.of(producto(vendedorId).getId(), producto(vendedorId).getId()));
+        comboRepository.guardar(combo);
+        Regalo deCombo = Regalo.crear(UUID.randomUUID(), null, combo.getId());
+        Regalo sinProducto = Regalo.crear(UUID.randomUUID(), UUID.randomUUID(), null);
+
+        assertEquals("Mouse", DuenoDeRegalo.nombreDe(deProducto, productoRepository, comboRepository));
+        assertEquals("Combo", DuenoDeRegalo.nombreDe(deCombo, productoRepository, comboRepository));
+        assertEquals("regalo", DuenoDeRegalo.nombreDe(sinProducto, productoRepository, comboRepository));
     }
 }

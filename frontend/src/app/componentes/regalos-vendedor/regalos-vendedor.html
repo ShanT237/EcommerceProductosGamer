@@ -59,9 +59,12 @@
             <h4>{{ nombreDe(r) }}</h4>
             <p class="muted pequeno">Elegido por un comprador · creado el {{ fechaHora(r.fechaCreacion) }}</p>
           </div>
-          <button type="button" class="btn btn-neon btn-chico enviar" [disabled]="ocupada() !== null" (click)="enviar(r)">
-            Marcar como enviado
-          </button>
+          <div class="acciones-regalo">
+            <button type="button" class="btn btn-neon btn-chico enviar" [disabled]="ocupada() !== null" (click)="enviar(r)">
+              Marcar como enviado
+            </button>
+            <button type="button" class="btn btn-chico btn-peligro cancelar" [disabled]="ocupada() !== null" (click)="cancelar(r)">Cancelar</button>
+          </div>
         </article>
       }
     }

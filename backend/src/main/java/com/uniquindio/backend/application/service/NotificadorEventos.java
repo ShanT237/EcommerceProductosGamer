@@ -71,7 +71,25 @@ public class NotificadorEventos {
                 "Tu regalo fue enviado. Confirma la entrega cuando lo recibas."));
     }
 
+    /** El vendedor canceló un regalo ya elegido o enviado: se avisa al comprador (sin destinatario no hay aviso). */
+    public void regaloCancelado(Regalo regalo, String nombre) {
+        if (regalo.getIdUsuario() == null) {
+            return;
+        }
+        notificacionRepository.guardar(Notificacion.crear(regalo.getIdUsuario(), regalo.getIdProducto(),
+                TipoNotificacion.REGALO_CANCELADO,
+                String.format("El vendedor canceló tu regalo '%s'. Recuperaste tu cupo: ya puedes elegir otro.",
+                        nombre)));
+    }
+
     // ------------------------------------------------------------------ VENDEDOR
+
+    /** Un comprador eligió un regalo del vendedor: ya puede enviarlo. */
+    public void regaloElegido(UUID vendedorId, Regalo regalo, String nombre) {
+        notificacionRepository.guardar(Notificacion.crear(vendedorId, regalo.getIdProducto(),
+                TipoNotificacion.REGALO_ELEGIDO,
+                String.format("Un comprador eligió tu regalo '%s'. Ya puedes enviarlo.", nombre)));
+    }
 
     /** Avisa al vendedor cuando el stock se agota o cruza hacia abajo el umbral de stock bajo. */
     public void stockDelVendedor(Producto producto, int stockAnterior) {

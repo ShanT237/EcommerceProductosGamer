@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 import com.uniquindio.backend.infrastructure.persistence.jpa.entity.CompraEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +14,8 @@ interface CompraJpaDataRepository extends JpaRepository<CompraEntity, UUID> {
     List<CompraEntity> findByUsuarioId(UUID usuarioId);
 
     List<CompraEntity> findByPedidoId(UUID pedidoId);
+
+    List<CompraEntity> findByEstadoAndFechaBefore(EstadoCompra estado, LocalDateTime fecha);
 
     boolean existsByUsuarioIdAndProductoIdAndEstadoIn(
             UUID usuarioId, UUID productoId, Collection<EstadoCompra> estados);

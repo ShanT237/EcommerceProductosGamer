@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.domain.valueobject.Precio;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -38,12 +39,15 @@ public class Producto {
     private final Gama gama;
     private final Exclusividad exclusividad;
     private final String categoria;
+    /** Físico o digital; nunca nulo (las filas sin tipo se tratan como FISICO). */
+    private final TipoProducto tipo;
     private boolean eliminado;
     private boolean pausado;
     private String imagenUrl;
 
     private Producto(UUID id, UUID vendedorId, String nombre, String descripcion,
-                     double precio, int stock, Gama gama, Exclusividad exclusividad, String categoria) {
+                     double precio, int stock, Gama gama, Exclusividad exclusividad, String categoria,
+                     TipoProducto tipo) {
         this.id = id;
         this.vendedorId = vendedorId;
         this.nombre = nombre;
@@ -54,6 +58,7 @@ public class Producto {
         this.gama = gama;
         this.exclusividad = exclusividad;
         this.categoria = categoria;
+        this.tipo = tipo == null ? TipoProducto.FISICO : tipo;
         this.eliminado = false;
     }
 
@@ -66,10 +71,18 @@ public class Producto {
     public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
                                     double precio, int stock, Gama gama, Exclusividad exclusividad,
                                     String categoria) {
+        return publicar(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                categoria, TipoProducto.FISICO);
+    }
+
+    public static Producto publicar(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                    double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                    String categoria, TipoProducto tipo) {
         Objects.requireNonNull(id, "El id del producto es obligatorio");
         Objects.requireNonNull(vendedorId, "El vendedor del producto es obligatorio");
         Objects.requireNonNull(gama, "La gama del producto es obligatoria");
         Objects.requireNonNull(exclusividad, "La exclusividad del producto es obligatoria");
+        Objects.requireNonNull(tipo, "El tipo del producto es obligatorio");
 
         if (nombre == null || nombre.isBlank()) {
             throw new ReglaDominioException("El nombre del producto no puede estar vacío");
@@ -86,7 +99,8 @@ public class Producto {
         if (categoria == null || categoria.isBlank()) {
             throw new ReglaDominioException("La categoría del producto no puede estar vacía");
         }
-        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad, categoria);
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                categoria, tipo);
     }
 
     /**
@@ -126,8 +140,16 @@ public class Producto {
                                        double precio, int stock, Gama gama, Exclusividad exclusividad,
                                        boolean eliminado, Double precioOriginal, boolean pausado,
                                        String categoria, String imagenUrl) {
+        return reconstruir(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad,
+                eliminado, precioOriginal, pausado, categoria, imagenUrl, TipoProducto.FISICO);
+    }
+
+    public static Producto reconstruir(UUID id, UUID vendedorId, String nombre, String descripcion,
+                                       double precio, int stock, Gama gama, Exclusividad exclusividad,
+                                       boolean eliminado, Double precioOriginal, boolean pausado,
+                                       String categoria, String imagenUrl, TipoProducto tipo) {
         Producto producto = new Producto(id, vendedorId, nombre, descripcion,
-                precio, stock, gama, exclusividad, categoria);
+                precio, stock, gama, exclusividad, categoria, tipo);
         producto.eliminado = eliminado;
         producto.precioOriginal = precioOriginal;
         producto.pausado = pausado;
@@ -140,6 +162,17 @@ public class Producto {
             throw new ReglaDominioException("La URL de la imagen no es válida");
         }
         this.imagenUrl = imagenUrl;
+    }
+
+    public boolean esDigital() {
+        return tipo.esDigital();
+    }
+
+    /** Solo un producto digital tiene algo que descargar. */
+    public void asegurarEsDigital() {
+        if (!esDigital()) {
+            throw new ReglaDominioException("El producto es físico: no tiene archivo para descargar");
+        }
     }
 
     public boolean esExclusivo() {

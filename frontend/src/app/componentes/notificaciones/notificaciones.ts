@@ -32,6 +32,8 @@ export class Notificaciones implements OnInit {
     REEMBOLSO_SOLICITADO: 'Reembolso',
     NUEVA_RESENA: 'Reseña',
     NUEVA_VALORACION: 'Valoración',
+    REGALO_ELEGIDO: 'Regalo elegido',
+    REGALO_CANCELADO: 'Regalo cancelado',
   };
 
   /** Avisos que piden atención del vendedor (se pintan en ámbar). */

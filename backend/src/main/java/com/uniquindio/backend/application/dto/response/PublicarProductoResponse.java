@@ -2,6 +2,7 @@ package com.uniquindio.backend.application.dto.response;
 
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 
 import java.util.UUID;
 
@@ -15,5 +16,6 @@ public record PublicarProductoResponse(
         int stock,
         Gama gama,
         Exclusividad exclusividad,
-        String imagenUrl
+        String imagenUrl,
+        TipoProducto tipo
 ) {}

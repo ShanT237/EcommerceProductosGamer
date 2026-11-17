@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.valueobject.EstadoCompra;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class CompraRepositoryEnMemoria implements CompraRepository {
@@ -59,6 +60,13 @@ public class CompraRepositoryEnMemoria implements CompraRepository {
     @Override
     public List<Compra> obtenerTodas() {
         return List.copyOf(compras.values());
+    }
+
+    @Override
+    public List<Compra> obtenerPendientesAnterioresA(LocalDateTime limite) {
+        return compras.values().stream()
+                .filter(c -> c.estaPendiente() && c.getFecha().isBefore(limite))
+                .toList();
     }
 
     private static boolean esActiva(Compra c) {

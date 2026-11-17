@@ -4,11 +4,14 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
+import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.infrastructure.persistence.ComboRepositoryEnMemoria;
+import com.uniquindio.backend.infrastructure.persistence.NotificacionRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.persistence.ProductoRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.persistence.RegaloRepositoryEnMemoria;
+import com.uniquindio.backend.infrastructure.persistence.WishlistRepositoryEnMemoria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +24,7 @@ class EnviarYConfirmarRegaloUseCaseTest {
 
     private RegaloRepositoryEnMemoria regaloRepository;
     private ProductoRepositoryEnMemoria productoRepository;
+    private NotificacionRepositoryEnMemoria notificaciones;
     private EnviarRegaloUseCase enviar;
     private ConfirmarEntregaRegaloUseCase confirmar;
     private UUID id;
@@ -32,7 +36,9 @@ class EnviarYConfirmarRegaloUseCaseTest {
     void setUp() {
         regaloRepository = new RegaloRepositoryEnMemoria();
         productoRepository = new ProductoRepositoryEnMemoria();
-        enviar = new EnviarRegaloUseCase(regaloRepository, productoRepository, new ComboRepositoryEnMemoria(), TestNotificador.nuevo());
+        notificaciones = new NotificacionRepositoryEnMemoria();
+        enviar = new EnviarRegaloUseCase(regaloRepository, productoRepository, new ComboRepositoryEnMemoria(),
+                TestNotificador.con(notificaciones, new WishlistRepositoryEnMemoria()));
         confirmar = new ConfirmarEntregaRegaloUseCase(regaloRepository);
         id = UUID.randomUUID();
         destinatarioId = UUID.randomUUID();
@@ -47,6 +53,28 @@ class EnviarYConfirmarRegaloUseCaseTest {
         Regalo regalo = Regalo.crear(id, productoId, null);
         regalo.elegir(destinatarioId, false);
         regaloRepository.guardar(regalo);
+    }
+
+    @Test
+    void alEnviarQuedaNotificadoYSeAvisaAlComprador() {
+        guardarRegaloElegido();
+
+        Regalo r = enviar.ejecutar(id, vendedorId);
+
+        assertTrue(r.isNotificado());
+        assertEquals(EstadoRegalo.ENVIADO, r.getEstado());
+        assertEquals(TipoNotificacion.REGALO_ENVIADO, notificaciones.obtenerPorUsuarioId(destinatarioId).get(0).getTipo());
+    }
+
+    @Test
+    void enviarUnRegaloYaEnviadoRechazaSinCambiarElEstado() {
+        guardarRegaloElegido();
+        enviar.ejecutar(id, vendedorId);
+
+        assertThrows(ReglaDominioException.class, () -> enviar.ejecutar(id, vendedorId));
+
+        assertEquals(EstadoRegalo.ENVIADO, regaloRepository.obtenerPorId(id).get().getEstado());
+        assertEquals(1, notificaciones.obtenerPorUsuarioId(destinatarioId).size());   // sin aviso duplicado
     }
 
     @Test

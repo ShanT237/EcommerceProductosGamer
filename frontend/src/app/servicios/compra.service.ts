@@ -21,6 +21,8 @@ export class CompraService {
   reembolsarPedido(id: string) { return this.http.put<Pedido>(`${API_URL}/pedidos/${id}/reembolso`, {}); }
   confirmar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/confirmar`, {}); }
   cancelar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/cancelar`, {}); }
+  /** PUT /compras/{id}/descarga: marca la compra COMPLETADA de un producto digital como descargada (bloquea el reembolso). */
+  descargar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/descarga`, {}); }
   reembolsar(id: string) { return this.http.put<Compra>(`${API_URL}/compras/${id}/reembolso`, {}); }
   resenar(idCompra: string, valorCalificacion: number, comentario: string) {
     return this.http.post(`${API_URL}/resenas`, { idCompra, valorCalificacion, comentario });

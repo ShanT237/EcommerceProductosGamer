@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.dto.response.ProgresoRegalosResponse;
 import com.uniquindio.backend.application.usecase.AsignarRegaloPorMetaUseCase;
+import com.uniquindio.backend.application.usecase.CancelarRegaloUseCase;
 import com.uniquindio.backend.application.usecase.ConfirmarEntregaRegaloUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarMisRegalosUseCase;
 import com.uniquindio.backend.application.usecase.ConsultarProgresoRegalosUseCase;
@@ -52,6 +53,9 @@ class RegaloControllerTest {
 
     @MockitoBean
     private EnviarRegaloUseCase enviarRegaloUseCase;
+
+    @MockitoBean
+    private CancelarRegaloUseCase cancelarRegaloUseCase;
 
     @MockitoBean
     private ConfirmarEntregaRegaloUseCase confirmarEntregaRegaloUseCase;
@@ -304,5 +308,40 @@ class RegaloControllerTest {
         mockMvc.perform(put("/api/regalos/{id}/asignar", regaloId))
                 .andExpect(status().isUnauthorized())             // 401
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    // ===================== cancelar =====================
+
+    @Test
+    void cancelarUsaElVendedorDelToken() throws Exception {
+        UUID vendedorId = UUID.randomUUID();
+        Regalo cancelado = regaloElegido();
+        cancelado.cancelarRegalo();
+        when(cancelarRegaloUseCase.ejecutar(regaloId, vendedorId)).thenReturn(cancelado);
+
+        mockMvc.perform(put("/api/regalos/{id}/cancelar", regaloId)
+                        .with(vendedor(vendedorId)))
+                .andExpect(status().isOk())                       // 200
+                .andExpect(jsonPath("$.estado").value("CANCELADO"));
+
+        Mockito.verify(cancelarRegaloUseCase).ejecutar(regaloId, vendedorId);
+    }
+
+    @Test
+    void unCompradorNoPuedeCancelarRetorna403() throws Exception {
+        mockMvc.perform(put("/api/regalos/{id}/cancelar", regaloId)
+                        .with(comprador(usuarioId)))
+                .andExpect(status().isForbidden());               // 403
+
+        Mockito.verifyNoInteractions(cancelarRegaloUseCase);
+    }
+
+    @Test
+    void cancelarSinTokenRetorna401EnJson() throws Exception {
+        mockMvc.perform(put("/api/regalos/{id}/cancelar", regaloId))
+                .andExpect(status().isUnauthorized())             // 401
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        Mockito.verifyNoInteractions(cancelarRegaloUseCase);
     }
 }

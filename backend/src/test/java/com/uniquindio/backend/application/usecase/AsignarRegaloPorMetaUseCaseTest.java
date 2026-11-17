@@ -2,15 +2,22 @@ package com.uniquindio.backend.application.usecase;
 
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Compra;
+import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.EstadoRegalo;
+import com.uniquindio.backend.domain.valueobject.Exclusividad;
+import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.domain.valueobject.Precio;
+import com.uniquindio.backend.domain.valueobject.TipoNotificacion;
 import com.uniquindio.backend.infrastructure.persistence.ComboRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.persistence.CompraRepositoryEnMemoria;
+import com.uniquindio.backend.infrastructure.persistence.NotificacionRepositoryEnMemoria;
+import com.uniquindio.backend.infrastructure.persistence.ProductoRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.persistence.RegaloRepositoryEnMemoria;
 import com.uniquindio.backend.infrastructure.persistence.UsuarioRepositoryEnMemoria;
+import com.uniquindio.backend.infrastructure.persistence.WishlistRepositoryEnMemoria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +37,8 @@ class AsignarRegaloPorMetaUseCaseTest {
     private CompraRepositoryEnMemoria compraRepository;
     private RegaloRepositoryEnMemoria regaloRepository;
     private ComboRepositoryEnMemoria comboRepository;
+    private ProductoRepositoryEnMemoria productoRepository;
+    private NotificacionRepositoryEnMemoria notificaciones;
     private AsignarRegaloPorMetaUseCase useCase;
     private UUID usuarioId;
 
@@ -39,8 +48,11 @@ class AsignarRegaloPorMetaUseCaseTest {
         compraRepository = new CompraRepositoryEnMemoria();
         regaloRepository = new RegaloRepositoryEnMemoria();
         comboRepository = new ComboRepositoryEnMemoria();
+        productoRepository = new ProductoRepositoryEnMemoria();
+        notificaciones = new NotificacionRepositoryEnMemoria();
         useCase = new AsignarRegaloPorMetaUseCase(usuarioRepository, compraRepository,
-                regaloRepository, comboRepository);
+                regaloRepository, comboRepository, productoRepository,
+                TestNotificador.con(notificaciones, new WishlistRepositoryEnMemoria()));
 
         usuarioId = UUID.randomUUID();
         usuarioRepository.guardar(Usuario.registrar(usuarioId, "Gamer", "gamer@test.com"));
@@ -214,5 +226,64 @@ class AsignarRegaloPorMetaUseCaseTest {
 
         assertThrows(NoSuchElementException.class, () -> useCase.ejecutar(UUID.randomUUID(), regaloDisponible().getId()));
         assertThrows(NoSuchElementException.class, () -> useCase.ejecutar(usuarioId, UUID.randomUUID()));
+    }
+
+    // ---- aviso al vendedor al elegir (Regalo.notificar queda para el envío) ----
+
+    private Regalo regaloDeProductoDelVendedor(UUID vendedorId) {
+        Producto producto = Producto.publicar(UUID.randomUUID(), vendedorId, "Teclado RGB", "Desc", 100.0, 10,
+                Gama.MEDIA, Exclusividad.NORMAL);
+        productoRepository.guardar(producto);
+        return regaloDeProducto(producto.getId());
+    }
+
+    @Test
+    @DisplayName("Al elegir el regalo se avisa al vendedor y el regalo no queda notificado")
+    void alElegirElRegaloSeAvisaAlVendedorYElRegaloNoQuedaNotificado() {
+        UUID vendedorId = UUID.randomUUID();
+        comprasCompletadas(5);
+        Regalo regalo = regaloDeProductoDelVendedor(vendedorId);
+
+        Regalo r = useCase.ejecutar(usuarioId, regalo.getId());
+
+        assertEquals(TipoNotificacion.REGALO_ELEGIDO, notificaciones.obtenerPorUsuarioId(vendedorId).get(0).getTipo());
+        assertFalse(r.isNotificado());
+    }
+
+    @Test
+    @DisplayName("Al elegir un regalo-combo se avisa al vendedor del combo")
+    void alElegirUnRegaloDeComboSeAvisaAlVendedorDelCombo() {
+        UUID vendedorDelCombo = UUID.randomUUID();
+        comprasCompletadas(5);
+        Combo combo = Combo.crear(UUID.randomUUID(), vendedorDelCombo, "Combo", "Setup", 10.0,
+                List.of(UUID.randomUUID(), UUID.randomUUID()));
+        comboRepository.guardar(combo);
+        Regalo regalo = Regalo.crear(UUID.randomUUID(), null, combo.getId());
+        regaloRepository.guardar(regalo);
+
+        useCase.ejecutar(usuarioId, regalo.getId());
+
+        assertEquals(1, notificaciones.obtenerPorUsuarioId(vendedorDelCombo).size());
+    }
+
+    @Test
+    @DisplayName("Sin alcanzar la meta no se avisa a nadie")
+    void sinAlcanzarLaMetaNoSeAvisaANadie() {
+        UUID vendedorId = UUID.randomUUID();
+        comprasCompletadas(4);
+        Regalo regalo = regaloDeProductoDelVendedor(vendedorId);
+
+        assertThrows(ReglaDominioException.class, () -> useCase.ejecutar(usuarioId, regalo.getId()));
+
+        assertTrue(notificaciones.obtenerPorUsuarioId(vendedorId).isEmpty());
+    }
+
+    // Review Focus 4: si el producto del regalo ya no existe, la elección no falla.
+    @Test
+    @DisplayName("Si el producto del regalo ya no existe la elección no falla")
+    void siElProductoDelRegaloYaNoExisteLaEleccionNoFalla() {
+        comprasCompletadas(5);   // regaloDisponible() usa un productoId inexistente
+
+        assertDoesNotThrow(() -> useCase.ejecutar(usuarioId, regaloDisponible().getId()));
     }
 }

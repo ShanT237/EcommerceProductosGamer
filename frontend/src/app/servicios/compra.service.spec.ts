@@ -2,10 +2,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_URL } from '../config';
-import { Pedido } from '../modelos/modelos';
+import { Compra, Pedido } from '../modelos/modelos';
 import { CompraService } from './compra.service';
 
 const PEDIDO: Pedido = { pedidoId: 'ped1', compras: [], total: 0 };
+const COMPRA: Compra = {
+  id: 'c1', usuarioId: 'u1', productoId: 'p1', cantidad: 1, precioUnitario: 100, subtotal: 100,
+  fecha: '2026-11-15T10:00:00', estado: 'COMPLETADA', pedidoId: null,
+};
 
 describe('CompraService (pedidos)', () => {
   let servicio: CompraService;
@@ -72,5 +76,13 @@ describe('CompraService (pedidos)', () => {
     servicio.reembolsarPedido('ped1').subscribe();
 
     http.expectOne({ method: 'PUT', url: `${API_URL}/pedidos/ped1/reembolso` }).flush(PEDIDO);
+  });
+
+  it('descargar hace PUT a /compras/{id}/descarga', () => {
+    let recibida: Compra | undefined;
+    servicio.descargar('c1').subscribe((c) => (recibida = c));
+
+    http.expectOne({ method: 'PUT', url: `${API_URL}/compras/c1/descarga` }).flush({ ...COMPRA, descargado: true });
+    expect(recibida?.descargado).toBe(true);
   });
 });

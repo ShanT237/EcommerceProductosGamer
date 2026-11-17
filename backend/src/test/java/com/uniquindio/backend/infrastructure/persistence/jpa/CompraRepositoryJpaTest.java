@@ -124,4 +124,26 @@ class CompraRepositoryJpaTest {
         assertTrue(compraRepository.obtenerPorPedidoId(pedidoId).stream()
                 .allMatch(c -> c.getEstado() == EstadoCompra.COMPLETADA));
     }
+
+    @Test
+    void obtenerPendientesAnterioresASoloDevuelvePendientesMasViejasQueElLimite() {
+        LocalDateTime limite = AHORA.minusMinutes(10);
+        Compra vieja = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
+                AHORA.minusMinutes(30), new Precio(100));
+        Compra nueva = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
+                AHORA, new Precio(100));
+        Compra justa = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
+                limite, new Precio(100));
+        Compra viejaCompletada = Compra.realizar(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
+                AHORA.minusMinutes(30), new Precio(100));
+        viejaCompletada.confirmar();
+        compraRepository.guardar(vieja);
+        compraRepository.guardar(nueva);
+        compraRepository.guardar(justa);
+        compraRepository.guardar(viejaCompletada);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals(Set.of(vieja.getId()), ids(compraRepository.obtenerPendientesAnterioresA(limite)));
+    }
 }

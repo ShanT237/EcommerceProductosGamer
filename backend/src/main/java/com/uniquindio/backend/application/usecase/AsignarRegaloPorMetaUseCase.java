@@ -1,11 +1,13 @@
 package com.uniquindio.backend.application.usecase;
 
+import com.uniquindio.backend.application.service.NotificadorEventos;
 import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.repository.ComboRepository;
 import com.uniquindio.backend.domain.repository.CompraRepository;
+import com.uniquindio.backend.domain.repository.ProductoRepository;
 import com.uniquindio.backend.domain.repository.RegaloRepository;
 import com.uniquindio.backend.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,8 @@ import java.util.UUID;
  * Un usuario gana un regalo por cada COMPRAS_POR_REGALO compras COMPLETADAS.
  * Valida la meta y que el usuario no posea ya el producto; las transiciones
  * de estado del regalo las valida la entidad Regalo.
+ * Al elegir se avisa al vendedor dueño del regalo (si su producto o combo aún existe). No se llama a
+ * {@code Regalo.notificar} aquí: ese indicador representa «comprador notificado» y lo fija el envío.
  */
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,8 @@ public class AsignarRegaloPorMetaUseCase {
     private final CompraRepository compraRepository;
     private final RegaloRepository regaloRepository;
     private final ComboRepository comboRepository;
+    private final ProductoRepository productoRepository;
+    private final NotificadorEventos notificador;
 
     @Transactional
     public Regalo ejecutar(UUID usuarioId, UUID regaloId) {
@@ -46,6 +52,9 @@ public class AsignarRegaloPorMetaUseCase {
         regalo.elegir(usuarioId, usuarioYaPosee(usuarioId, regalo));
 
         regaloRepository.guardar(regalo);
+        DuenoDeRegalo.vendedorDe(regalo, productoRepository, comboRepository).ifPresent(vendedorId ->
+                notificador.regaloElegido(vendedorId, regalo,
+                        DuenoDeRegalo.nombreDe(regalo, productoRepository, comboRepository)));
         return regalo;
     }
 

@@ -1,17 +1,9 @@
 package com.uniquindio.backend.infrastructure.rest;
 
-import com.uniquindio.backend.application.usecase.BuscarProductosUseCase;
-import com.uniquindio.backend.application.usecase.CambiarVisibilidadProductoUseCase;
-import com.uniquindio.backend.application.usecase.ConsultarMisProductosUseCase;
-import com.uniquindio.backend.application.usecase.EditarInformacionProductoUseCase;
-import com.uniquindio.backend.application.usecase.EliminarProductoUseCase;
-import com.uniquindio.backend.application.usecase.ModificarProductoUseCase;
-import com.uniquindio.backend.application.usecase.PublicarProductoUseCase;
-import com.uniquindio.backend.application.usecase.SubirImagenProductoUseCase;
+import com.uniquindio.backend.application.usecase.*;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.repository.CompraRepository;
 import com.uniquindio.backend.domain.repository.ProductoRepository;
-import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
@@ -64,6 +56,9 @@ class EliminarProductoControllerTest {
     // Resto de dependencias del controller (no se usan en estas pruebas)
     @MockitoBean
     private PublicarProductoUseCase publicarProductoUseCase;
+
+    @MockitoBean
+    private ActualizarStockProductoUseCase actualizarStockProductoUseCase;
 
     @MockitoBean
     private ModificarProductoUseCase modificarProductoUseCase;

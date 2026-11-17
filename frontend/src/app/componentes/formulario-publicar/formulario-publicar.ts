@@ -2,7 +2,7 @@ import { Component, computed, ElementRef, inject, OnDestroy, output, signal, vie
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { catchError, finalize, map, of, switchMap } from 'rxjs';
-import { Exclusividad, Gama, Producto } from '../../modelos/modelos';
+import { Exclusividad, Gama, Producto, TipoProducto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { ProductoService } from '../../servicios/producto.service';
 import { ToastService } from '../../servicios/toast.service';
@@ -41,6 +41,7 @@ export class FormularioPublicar implements OnDestroy {
     stock: 1 as number | null,
     gama: 'MEDIA' as Gama,
     exclusividad: 'NORMAL' as Exclusividad,
+    tipo: 'FISICO' as TipoProducto,
   };
 
   protected form = this.fb.group({
@@ -51,6 +52,7 @@ export class FormularioPublicar implements OnDestroy {
     stock: this.fb.control<number | null>(this.valoresIniciales.stock, [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]),
     gama: this.fb.control<Gama>(this.valoresIniciales.gama),
     exclusividad: this.fb.control<Exclusividad>(this.valoresIniciales.exclusividad),
+    tipo: this.fb.control<TipoProducto>(this.valoresIniciales.tipo),
   });
 
   protected publicando = signal(false);
@@ -75,6 +77,7 @@ export class FormularioPublicar implements OnDestroy {
       gama: v.gama ?? 'MEDIA',
       exclusividad: v.exclusividad ?? 'NORMAL',
       categoria: null,
+      tipo: v.tipo ?? 'FISICO',
       imagenUrl: this.imagenPrevia(),
     };
   });
@@ -135,6 +138,7 @@ export class FormularioPublicar implements OnDestroy {
         stock: v.stock as number,
         gama: v.gama,
         exclusividad: v.exclusividad,
+        tipo: v.tipo,
       })
       .pipe(
         switchMap((producto) => {

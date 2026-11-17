@@ -1,7 +1,9 @@
 package com.uniquindio.backend.infrastructure.rest;
 
 import com.uniquindio.backend.application.usecase.CancelarCompraUseCase;
+import com.uniquindio.backend.application.dto.response.RealizarCompraResponse;
 import com.uniquindio.backend.application.usecase.ConfirmarCompraUseCase;
+import com.uniquindio.backend.application.usecase.MarcarDescargaCompraUseCase;
 import com.uniquindio.backend.application.usecase.RealizarCompraUseCase;
 import com.uniquindio.backend.application.usecase.SolicitarReembolsoUseCase;
 import com.uniquindio.backend.domain.entity.Compra;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.mockito.Mockito;
 
@@ -62,6 +65,9 @@ class CompraControllerTest {
 
     @MockitoBean
     private SolicitarReembolsoUseCase solicitarReembolsoUseCase;
+
+    @MockitoBean
+    private MarcarDescargaCompraUseCase marcarDescargaCompraUseCase;
 
     @MockitoBean
     private CompraMapper mapper;
@@ -146,5 +152,38 @@ class CompraControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         Mockito.verifyNoInteractions(realizarCompraUseCase);
+    }
+
+    @Test
+    void descargaUsaElUsuarioDelToken() throws Exception {
+        Compra compra = compraSimulada();
+        compra.confirmar();
+        compra.marcarDescargado();
+        when(marcarDescargaCompraUseCase.ejecutar(any(), any())).thenReturn(compra);
+        when(mapper.toRealizarResponse(any())).thenReturn(RealizarCompraResponse.desde(compra));
+
+        mockMvc.perform(put("/api/compras/{id}/descarga", compra.getId())
+                        .with(comprador(usuarioId)))
+                .andExpect(status().isOk())                          // 200
+                .andExpect(jsonPath("$.descargado").value(true));
+
+        Mockito.verify(marcarDescargaCompraUseCase).ejecutar(compra.getId(), usuarioId);
+    }
+
+    @Test
+    void unVendedorNoPuedeDescargarRetorna403() throws Exception {
+        mockMvc.perform(put("/api/compras/{id}/descarga", UUID.randomUUID())
+                        .with(vendedor(usuarioId)))
+                .andExpect(status().isForbidden());                  // 403
+
+        Mockito.verifyNoInteractions(marcarDescargaCompraUseCase);
+    }
+
+    @Test
+    void descargaSinTokenRetorna401() throws Exception {
+        mockMvc.perform(put("/api/compras/{id}/descarga", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());               // 401
+
+        Mockito.verifyNoInteractions(marcarDescargaCompraUseCase);
     }
 }

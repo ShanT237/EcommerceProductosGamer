@@ -70,6 +70,9 @@
                 @if (r.fechaEntrega) {
                   <p class="muted pequeno">Entregado el {{ fechaHora(r.fechaEntrega) }}</p>
                 }
+                @if (r.estado === 'CANCELADO') {
+                  <p class="muted pequeno nota-cancelado">El vendedor canceló este regalo: recuperaste tu cupo para elegir otro.</p>
+                }
               </div>
               @if (r.estado === 'ENVIADO') {
                 <button type="button" class="btn btn-neon btn-chico confirmar"

@@ -2,9 +2,10 @@ package com.uniquindio.backend.application.dto.request;
 
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import jakarta.validation.constraints.*;
 
-// Mapea a: PublicarProductoUseCase.ejecutar(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad)
+// Mapea a: PublicarProductoUseCase.ejecutar(id, vendedorId, nombre, descripcion, precio, stock, gama, exclusividad, tipo)
 // El vendedorId sale del token (Authentication), no del body.
 public record PublicarProductoRequest(
         @NotBlank(message = "El nombre es obligatorio")
@@ -25,5 +26,8 @@ public record PublicarProductoRequest(
         Gama gama,
 
         @NotNull(message = "La exclusividad es obligatoria")
-        Exclusividad exclusividad
+        Exclusividad exclusividad,
+
+        // Opcional: si no se indica, el producto se publica como FISICO.
+        TipoProducto tipo
 ) {}
