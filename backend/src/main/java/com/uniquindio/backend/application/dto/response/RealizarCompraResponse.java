@@ -17,7 +17,8 @@ public record RealizarCompraResponse(
         EstadoCompra estado,
         UUID pedidoId,
         UUID comboId,
-        String comboNombre
+        String comboNombre,
+        boolean descargado
 ) {
     public static RealizarCompraResponse desde(Compra compra) {
         return new RealizarCompraResponse(
@@ -31,7 +32,8 @@ public record RealizarCompraResponse(
                 compra.getEstado(),
                 compra.getPedidoId(),
                 compra.getComboId(),
-                compra.getComboNombre()
+                compra.getComboNombre(),
+                compra.isDescargado()
         );
     }
 }

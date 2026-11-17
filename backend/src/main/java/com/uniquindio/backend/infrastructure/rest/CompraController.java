@@ -4,6 +4,7 @@ import com.uniquindio.backend.application.dto.request.RealizarCompraRequest;
 import com.uniquindio.backend.application.dto.response.ConfirmarCompraResponse;
 import com.uniquindio.backend.application.dto.response.RealizarCompraResponse;
 import com.uniquindio.backend.application.usecase.CancelarCompraUseCase;
+import com.uniquindio.backend.application.usecase.MarcarDescargaCompraUseCase;
 import com.uniquindio.backend.application.usecase.ConfirmarCompraUseCase;
 import com.uniquindio.backend.application.usecase.RealizarCompraUseCase;
 import com.uniquindio.backend.application.usecase.SolicitarReembolsoUseCase;
@@ -29,17 +30,20 @@ public class CompraController {
     private final ConfirmarCompraUseCase confirmarCompraUseCase;
     private final CancelarCompraUseCase cancelarCompraUseCase;
     private final SolicitarReembolsoUseCase solicitarReembolsoUseCase;
+    private final MarcarDescargaCompraUseCase marcarDescargaCompraUseCase;
     private final CompraMapper mapper;
 
     public CompraController(RealizarCompraUseCase realizarCompraUseCase,
                             ConfirmarCompraUseCase confirmarCompraUseCase,
                             CancelarCompraUseCase cancelarCompraUseCase,
                             SolicitarReembolsoUseCase solicitarReembolsoUseCase,
+                            MarcarDescargaCompraUseCase marcarDescargaCompraUseCase,
                             CompraMapper mapper) {
         this.realizarCompraUseCase = realizarCompraUseCase;
         this.confirmarCompraUseCase = confirmarCompraUseCase;
         this.cancelarCompraUseCase = cancelarCompraUseCase;
         this.solicitarReembolsoUseCase = solicitarReembolsoUseCase;
+        this.marcarDescargaCompraUseCase = marcarDescargaCompraUseCase;
         this.mapper = mapper;
     }
 
@@ -88,6 +92,15 @@ public class CompraController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UUID usuarioId) {
         Compra compra = solicitarReembolsoUseCase.ejecutar(id, usuarioId);
+        return ResponseEntity.ok(mapper.toRealizarResponse(compra)); // 200 OK
+    }
+
+    // Marcar descarga (solo productos digitales; no entrega archivo)
+    @PutMapping("/{id}/descarga")
+    public ResponseEntity<RealizarCompraResponse> descargar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID usuarioId) {
+        Compra compra = marcarDescargaCompraUseCase.ejecutar(id, usuarioId);
         return ResponseEntity.ok(mapper.toRealizarResponse(compra)); // 200 OK
     }
 }
