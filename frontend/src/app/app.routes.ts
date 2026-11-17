@@ -22,7 +22,7 @@ export const routes: Routes = [
   { path: 'carrito', component: Carrito, canActivate: [rolGuard('COMPRADOR')], title: 'Carrito · GamerZone' },
   { path: 'mis-compras', component: MisCompras, canActivate: [rolGuard('COMPRADOR')], title: 'Mis compras · GamerZone' },
   { path: 'favoritos', component: Favoritos, canActivate: [rolGuard('COMPRADOR')], title: 'Favoritos · GamerZone' },
-  { path: 'perfil', component: Perfil, canActivate: [rolGuard('COMPRADOR')], title: 'Mi perfil · GamerZone' },
+  { path: 'perfil', component: Perfil, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Mi perfil · GamerZone' },
   { path: 'regalos', component: Regalos, canActivate: [rolGuard('COMPRADOR')], title: 'Regalos · GamerZone' },
   { path: 'notificaciones', component: Notificaciones, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Notificaciones · GamerZone' },
   { path: 'vendedor', component: PanelVendedor, canActivate: [rolGuard('VENDEDOR')], title: 'Panel de vendedor · GamerZone' },
