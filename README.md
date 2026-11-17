@@ -23,7 +23,7 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 6. [¿Qué hace único a sus vendedores?](#6-qué-hace-único-a-sus-vendedores)
 7. [Lenguaje Ubicuo (DDD)](#7-lenguaje-ubicuo-ddd)
 8. [Reglas de Negocio e Invariantes del Dominio](#8-reglas-de-negocio-e-invariantes-del-dominio)
-9. [Casos de Uso del Sistema (57 Casos de Uso)](#9-casos-de-uso-del-sistema-57-casos-de-uso)
+9. [Casos de Uso del Sistema (63 Casos de Uso)](#9-casos-de-uso-del-sistema-63-casos-de-uso)
 10. [Arquitectura del Software (Clean Architecture)](#10-arquitectura-del-software-clean-architecture)
 11. [Seguridad, Base de Datos y Limitaciones](#11-seguridad-base-de-datos-y-limitaciones)
 12. [Cómo ejecutar las pruebas](#12-cómo-ejecutar-las-pruebas)
@@ -225,33 +225,38 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 | `POST /api/auth/login` | Público | Inicia sesión y devuelve el JWT |
 | `POST /api/usuarios` | Público | Registra un comprador |
 | `POST /api/vendedores` | Público | Registra un vendedor |
-| `PUT /api/usuarios/me/perfil` · `PUT /api/usuarios/me/contrasena` | `COMPRADOR` | Edita el perfil y cambia la contraseña |
+| `GET /api/usuarios/me` · `PUT /api/usuarios/me/perfil` · `PUT /api/usuarios/me/contrasena` | `COMPRADOR` | Consulta y edita el perfil, y cambia la contraseña |
+| `PUT /api/usuarios/me/baja` | `COMPRADOR` | Baja lógica del comprador (conserva su historial) |
+| `GET /api/vendedores/me` · `PUT /api/vendedores/me/perfil` · `PUT /api/vendedores/me/contrasena` | `VENDEDOR` | Consulta y edita el perfil (nombre y correo), y cambia la contraseña |
 | `PUT /api/vendedores/me/baja` | `VENDEDOR` | Baja lógica del vendedor |
-| `GET /api/productos` | Autenticado | Catálogo paginado con búsqueda por texto y filtros (incluye el precio con promoción vigente) |
+| `GET /api/productos` | Público | Catálogo paginado con búsqueda por texto y filtros (incluye el precio con promoción vigente) |
 | `GET /api/productos/mios` | `VENDEDOR` | Todos los productos del vendedor, activos y pausados |
 | `POST /api/productos` | `VENDEDOR` | Publica un producto |
 | `PUT /api/productos/{id}/precio` | `VENDEDOR` | Modifica el precio |
 | `PUT /api/productos/{id}/informacion` | `VENDEDOR` | Edita la información del producto |
+| `PUT /api/productos/{id}/stock` | `VENDEDOR` | Fija el stock disponible (repone un producto agotado y avisa a las wishlists) |
 | `PUT /api/productos/{id}/visibilidad` | `VENDEDOR` | Pausa o activa la publicación |
 | `POST /api/productos/{id}/imagen` | `VENDEDOR` | Sube la imagen del producto (`multipart/form-data`, campo `archivo`; PNG/JPEG de hasta 5 MB) a Cloudinary y guarda la URL |
 | `DELETE /api/productos/{id}` | `VENDEDOR` | Eliminación lógica de su producto |
 | `POST /api/descuentos` · `DELETE /api/descuentos/{productoId}` | `VENDEDOR` | Aplica o quita el descuento inmediato (el alta notifica a las wishlists) |
 | `GET /api/promociones` · `POST /api/promociones` | `VENDEDOR` | Lista y programa promociones de temporada con vigencia |
 | `PUT /api/promociones/{id}` · `DELETE /api/promociones/{id}` | `VENDEDOR` | Modifica o quita una promoción |
-| `GET /api/preventas` | Autenticado | Preventas con lanzamiento futuro, de la más próxima a la más lejana |
+| `GET /api/preventas` | Público | Preventas con lanzamiento futuro, de la más próxima a la más lejana |
 | `POST /api/preventas` | `VENDEDOR` | Programa una preventa de un producto propio |
+| `PUT /api/preventas/{id}` · `DELETE /api/preventas/{id}` | `VENDEDOR` | Reprograma o cancela una preventa que aún no se ha lanzado |
 | `POST /api/compras` | `COMPRADOR` | Realiza una compra suelta |
 | `GET /api/compras` | `COMPRADOR` | Historial de compras |
 | `PUT /api/compras/{id}/confirmar` | `COMPRADOR` | Confirma la compra (una línea de pedido o combo se rechaza con `422`) |
 | `PUT /api/compras/{id}/cancelar` | `COMPRADOR` | Cancela la compra (una línea de pedido o combo se rechaza con `422`) |
 | `PUT /api/compras/{id}/reembolso` | `COMPRADOR` | Solicita reembolso (48 h, sin descarga); una línea de pedido o combo se rechaza con `422` |
+| `PUT /api/compras/{id}/descarga` | `COMPRADOR` | Marca como descargada una compra completada de un producto digital (bloquea el reembolso) |
 | `POST /api/pedidos` | `COMPRADOR` | Crea el pedido del carrito: una compra por línea, todo o nada, con cupón opcional (`codigoCupon`) |
 | `PUT /api/pedidos/{id}/confirmar` | `COMPRADOR` | Confirma el pedido completo |
 | `PUT /api/pedidos/{id}/cancelar` | `COMPRADOR` | Cancela el pedido completo y restituye todo el stock |
 | `PUT /api/pedidos/{id}/reembolso` | `COMPRADOR` | Reembolsa el pedido o combo completo |
 | `GET /api/cupones/{codigo}` | `COMPRADOR` | Vista previa de un cupón (no consume ningún uso) |
 | `POST /api/cupones` · `GET /api/cupones` | `VENDEDOR` | Crea un cupón propio y lista los suyos |
-| `GET /api/combos` | Autenticado | Combos con todos sus productos visibles, con precio con y sin descuento |
+| `GET /api/combos` | Público | Combos con todos sus productos visibles, con precio con y sin descuento |
 | `GET /api/combos/mios` | `VENDEDOR` | Todos los combos del vendedor |
 | `POST /api/combos` · `PUT /api/combos/{id}` · `DELETE /api/combos/{id}` | `VENDEDOR` | Crea, modifica o elimina un combo propio |
 | `PUT /api/combos/{id}/productos/{productoId}` · `DELETE …` | `VENDEDOR` | Agrega o quita un producto del combo (mínimo 2) |
@@ -261,16 +266,16 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 | `POST /api/puntos/redimir` · `GET /api/puntos/historial` | `COMPRADOR` | Redime puntos y consulta el historial |
 | `GET /api/wishlists` | `COMPRADOR` | Productos favoritos (solo visibles; `[]` si no hay) |
 | `POST /api/wishlists` · `DELETE /api/wishlists/{productoId}` | `COMPRADOR` | Añade o quita de la wishlist |
-| `GET /api/notificaciones` · `PUT /api/notificaciones/{id}/leida` | `COMPRADOR` | Lista las notificaciones (más reciente primero) y marca una como leída |
+| `GET /api/notificaciones` · `PUT /api/notificaciones/{id}/leida` | Autenticado | Lista las notificaciones propias, de comprador o de vendedor (más reciente primero), y marca una como leída |
 | `GET /api/regalos/disponibles` · `/mios` · `/progreso` | `COMPRADOR` | Regalos que puede elegir, los suyos y su progreso de compras |
 | `PUT /api/regalos/{id}/asignar` · `PUT /api/regalos/{id}/entrega` | `COMPRADOR` | Elige un regalo (1 por cada 5 compras completadas) y confirma su recepción |
-| `POST /api/regalos` · `GET /api/regalos/por-enviar` · `PUT /api/regalos/{id}/enviar` | `VENDEDOR` | Crea un regalo de un producto o combo propio, ve los elegidos y los envía (solo el vendedor dueño) |
+| `POST /api/regalos` · `GET /api/regalos/por-enviar` · `PUT /api/regalos/{id}/enviar` · `PUT /api/regalos/{id}/cancelar` | `VENDEDOR` | Crea un regalo de un producto o combo propio, ve los elegidos, los envía y los cancela antes de la entrega (solo el vendedor dueño) |
 | `GET /api/metas-recompensa` | Autenticado | Metas activas, de menor a mayor umbral |
 | `POST /api/metas-recompensa` · `PUT …/{id}/umbral` · `PUT …/{id}/desactivar` | `VENDEDOR` | Gestiona las metas de recompensa |
 | `GET /api/reportes/ventas` · `/stock-bajo` · `/metricas-resenas` | `VENDEDOR` | Ventas, alertas de stock y métricas de reseñas del vendedor |
 | `GET /api/reportes/mas-vendidos` · `/global` | Autenticado | Ranking de más vendidos (JOIN + GROUP BY) y reporte global |
 
-La lista completa, con códigos de respuesta y cuerpos, está en [`docs/api/mapeo-dominio-api.md`](docs/api/mapeo-dominio-api.md) y en Swagger.
+`Público` = sin token; `Autenticado` = cualquier sesión con token (comprador o vendedor). La lista completa (78 endpoints), con códigos de respuesta, cuerpos y procesos automáticos, está en [`docs/api/mapeo-dominio-api.md`](docs/api/mapeo-dominio-api.md) y en Swagger.
 
 ---
 
@@ -319,17 +324,18 @@ Categorías habilitadas en el catálogo:
 | **Gama** | Clasificación técnica del producto según prestaciones y precio (`BAJA`, `MEDIA`, `ALTA`). |
 | **Preventa** | Modalidad de compra anticipada habilitada antes de la fecha de liberación oficial del producto. |
 | **Wishlist** | Lista de deseos personal para seguimiento de precios, promociones y disponibilidad de stock. En la interfaz se muestra como *Favoritos*. |
-| **Notificación** | Alerta que recibe el usuario cuando un producto de su Wishlist baja de precio (descuento). |
+| **Notificación** | Aviso que recibe un comprador (descuento, stock repuesto, preventa lanzada, meta alcanzada, regalo enviado o cancelado) o un vendedor (stock bajo o agotado, venta, reembolso, reseña, valoración y regalo elegido). Ver la tabla de tipos más abajo. |
 | **Combo** | Agrupación promocional de 2 o más productos comercializados bajo una sola entidad con descuento. |
 | **Usuario** | Persona registrada que compra, reseña, acumula y redime puntos. Se llama *Usuario* en todo el código. |
 | **Vendedor** | Entidad comercial (Persona Natural o Empresa) registrada para publicar y vender productos. |
 | **Puntos de Fidelización** | Unidades de beneficio otorgadas a compradores tras publicar reseñas de compras completadas. |
-| **Regalo** | Beneficio que un vendedor ofrece (un producto o un combo propio) y que el comprador elige al completar 5 compras. Sigue `DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO`. |
+| **Regalo** | Beneficio que un vendedor ofrece (un producto o un combo propio) y que el comprador elige al completar 5 compras. Sigue `DISPONIBLE → ELEGIDO → ENVIADO → ENTREGADO`; el vendedor puede cancelarlo (`CANCELADO`) antes de la entrega. |
 | **Pedido** | Operación que agrupa varias compras creadas, confirmadas, canceladas o reembolsadas juntas: sus líneas comparten un `pedidoId`. El carrito se paga como un pedido (todo o nada). No existe como entidad aparte: es un conjunto de `Compra`. |
 | **Cupón** | Código de descuento porcentual con vencimiento y usos máximos. Es global (sin dueño) o de un vendedor (solo aplica a sus productos). Consume un uso por pedido o combo y cada comprador lo usa una sola vez. |
 | **Promoción de temporada** | Descuento porcentual con vigencia entre dos fechas, sin solaparse con otra del mismo producto. No cambia el precio base. |
 | **Descuento inmediato** | Rebaja puntual del precio de un producto que notifica a las wishlists que lo contienen; el vendedor puede retirarla. |
 | **Meta de recompensa** | Umbral de compras completadas ligado a un producto regalo. Hoy es informativa: no cambia la regla de 5 compras por regalo. |
+| **Tipo de producto** | `FISICO` (por defecto) o `DIGITAL`. Solo los productos digitales permiten marcar la compra como descargada, lo que bloquea el reembolso. |
 | **Exclusividad** | Condición de un producto especial: cada usuario puede comprarlo una sola vez y de a una unidad. |
 | **Unidades** | Cantidad disponible de un producto para su venta (nunca negativa; cero significa agotado). |
 
@@ -337,15 +343,17 @@ Categorías habilitadas en el catálogo:
 | Destinatario | Tipo | Cuándo se genera |
 |---|---|---|
 | Comprador | `DESCUENTO` (ya existía) | El vendedor rebaja un producto de su wishlist |
-| Comprador | `STOCK_DISPONIBLE` | Producto de su wishlist estaba en 0 y vuelve a tener stock (cancelación o reembolso) |
+| Comprador | `STOCK_DISPONIBLE` | Producto de su wishlist estaba en 0 y vuelve a tener stock (cancelación, reembolso, expiración de una compra pendiente o reposición del vendedor con `PUT /api/productos/{id}/stock`) |
 | Comprador | `PREVENTA_DISPONIBLE` | Llega la fecha de lanzamiento de una preventa de su wishlist (job diario 00:05 + al arrancar; no duplica) |
 | Comprador | `META_ALCANZADA` | Sus compras COMPLETADAS cruzan un múltiplo de 5 (confirmar compra o pedido) |
 | Comprador | `REGALO_ENVIADO` | El vendedor marca el regalo como enviado |
+| Comprador | `REGALO_CANCELADO` | El vendedor cancela un regalo que el comprador ya había elegido o que iba en camino; recupera su cupo |
 | Vendedor | `STOCK_BAJO` | El stock de un producto cruza hacia abajo el umbral (5) |
 | Vendedor | `STOCK_AGOTADO` | El stock llega a 0 |
 | Vendedor | `NUEVA_VENTA` | Compra individual, pedido o combo con un producto suyo |
 | Vendedor | `REEMBOLSO_SOLICITADO` | Reembolso individual o de pedido sobre un producto suyo |
 | Vendedor | `NUEVA_RESENA` / `NUEVA_VALORACION` | Reseña de producto / valoración del vendedor |
+| Vendedor | `REGALO_ELEGIDO` | Un comprador elige un regalo del vendedor: ya puede enviarlo |
 ---
 
 ## 8. Reglas de Negocio e Invariantes del Dominio
@@ -374,6 +382,11 @@ Categorías habilitadas en el catálogo:
 - El reembolso solo procede si la compra está `COMPLETADA`, dentro de **48 horas**, sin descarga y sin puntos asignados.
 - El reembolso de un pedido o combo exige que **todas** sus líneas cumplan esas condiciones; si una no cumple, ninguna cambia. Al reembolsar o cancelar se restituye el stock de cada línea.
 - `REEMBOLSADA`, `CANCELADA` y `EXPIRADA` son estados finales de una compra.
+- Una compra `PENDIENTE` expira a los 10 minutos: un proceso automático (cada 5 minutos) la pasa a `EXPIRADA`, restituye el stock y, si es línea de un pedido o combo, expira todo el grupo pendiente. No restituye cupones.
+- Solo los productos `DIGITAL` (por defecto son `FISICO`) permiten marcar la compra como descargada, y solo si está `COMPLETADA`; tras la descarga el reembolso queda bloqueado.
+- El vendedor fija el stock de su producto con `PUT /api/productos/{id}/stock` (nunca negativo, producto no eliminado). Una preventa (programada con fecha estrictamente futura) solo se reprograma o cancela mientras no se haya lanzado; cancelarla la elimina.
+- Un regalo se cancela desde cualquier estado anterior a `ENTREGADO` y solo por el vendedor dueño; los regalos `CANCELADO` no cuentan como asignados, así que el comprador recupera su cupo.
+- Un vendedor solo edita su nombre y su correo (no el tipo ni el documento); el correo no puede repetirse entre vendedores ni coincidir con el de un comprador. Compradores y vendedores se dan de baja de forma lógica y el filtro JWT corta la sesión en la siguiente petición (`401` con `codigo: CUENTA_INACTIVA`).
 - La fecha de la compra y los ids los genera el servidor, no el cliente.
 - Un vendedor dado de baja no puede publicar y sus productos no se pueden comprar.
 - Un producto pausado o eliminado no se puede comprar; solo el vendedor dueño modifica, edita, pausa o programa promociones de su producto.
@@ -389,30 +402,30 @@ Categorías habilitadas en el catálogo:
 - Promociones y precios: el catálogo, la wishlist y «Mis productos» muestran el precio con la promoción de temporada vigente hoy, el mismo que cobra el backend al reservar; solo el vendedor dueño modifica o quita una promoción.
 - Una `MetaRecompensa` exige un umbral de compras positivo, un producto regalo existente y no eliminado, y se desactiva una sola vez (nunca se borra). Las metas **se muestran, pero no gobiernan** la asignación de regalos: esa regla sigue siendo `Usuario.COMPRAS_POR_REGALO = 5`.
 - El vendedor se valora una vez por compra completada. La comisión del marketplace es 5% de los ingresos completados.
-- Las contraseñas (de compradores y vendedores) exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (BCrypt). La sesión usa JWT HS256 con el rol en el token (`COMPRADOR` o `VENDEDOR`) y `/api/**` exige token salvo `/api/auth/**` y los `POST` de registro.
+- Las contraseñas (de compradores y vendedores) exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (BCrypt). La sesión usa JWT HS256 con el rol en el token (`COMPRADOR` o `VENDEDOR`) y `/api/**` exige token salvo `/api/auth/**`, los `POST` de registro y las consultas públicas del catálogo (`GET /api/productos`, `/api/combos` y `/api/preventas`).
 - El id del comprador o vendedor sale siempre del token, nunca del body ni de la URL; cada ruta valida el rol con `@PreAuthorize`.
 - La búsqueda de catálogo es paginada (`size` entre 1 y 100) y solo lista productos visibles (no eliminados ni pausados).
 - Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
 ---
 
-## 9. Casos de Uso del Sistema (57 Casos de Uso)
+## 9. Casos de Uso del Sistema (63 Casos de Uso)
 
 **Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
-Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a `CU-57` se añadieron al construir las pantallas y la gestión que faltaban (pedidos, cupones, wishlist, notificaciones, combos, preventas, regalos y metas). Un caso de uso puede agrupar varias clases (el backend tiene 65 clases `*UseCase`; todas aparecen en las tablas).
+Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a `CU-57` se añadieron al construir las pantallas y la gestión que faltaban (pedidos, cupones, wishlist, notificaciones, combos, preventas, regalos y metas); `CU-58` a `CU-63` completaron el ciclo de vida de preventas y regalos, la expiración de compras, la descarga de productos digitales, la subida de imágenes y la notificación de preventas lanzadas. Un caso de uso puede agrupar varias clases (el backend tiene 78 clases `*UseCase`; todas aparecen en las tablas).
 
 ### 📈 Resumen de avance
 
 | Módulo | ✅ Implementados | 🟡 Parciales | ⏳ Especificados | Total |
 | :--- | :---: | :---: | :---: | :---: |
-| Compras y Checkout | 12 | 0 | 0 | 12 |
-| Productos y Catálogo | 14 | 0 | 0 | 14 |
+| Compras y Checkout | 14 | 0 | 0 | 14 |
+| Productos y Catálogo | 16 | 0 | 0 | 16 |
 | Combos Promocionales | 4 | 0 | 0 | 4 |
-| Reseñas, Puntos y Recompensas | 8 | 0 | 0 | 8 |
-| Lista de Deseos (Wishlist) y Notificaciones | 6 | 0 | 0 | 6 |
+| Reseñas, Puntos y Recompensas | 9 | 0 | 0 | 9 |
+| Lista de Deseos (Wishlist) y Notificaciones | 7 | 0 | 0 | 7 |
 | Usuarios, Vendedores y Autenticación | 5 | 0 | 0 | 5 |
 | Consultas, Métricas y Reportes | 8 | 0 | 0 | 8 |
-| **Total** | **57** | **0** | **0** | **57** |
+| **Total** | **63** | **0** | **0** | **63** |
 
 ### 🛒 Módulo 1: Compras y Checkout
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -429,6 +442,8 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-41` | **Reembolsar Pedido o Combo** | ✅ Implementado | Comprador | Reembolsa todas las líneas de un pedido o combo como una sola operación si cada una cumple el plazo de 48 horas, sin descarga y sin puntos; restituye el stock (`SolicitarReembolsoPedidoUseCase`). |
 | `CU-42` | **Crear Cupón** | ✅ Implementado | Vendedor | Un vendedor activo crea un cupón propio (solo aplica a sus productos) con código único, porcentaje entre 0 y 100, vencimiento no pasado y usos máximos (`CrearCuponUseCase`). |
 | `CU-43` | **Consultar Cupones** | ✅ Implementado | Vendedor / Comprador | El vendedor lista sus cupones con sus usos; el comprador obtiene la vista previa de un código sin consumirlo (`404` si no existe, `422` si está vencido, agotado o ya usado por él) (`ConsultarCuponesVendedorUseCase`, `ConsultarCuponUseCase`). |
+| `CU-60` | **Expirar Compras Pendientes** | ✅ Implementado | Sistema | Proceso automático (`ComprasScheduler`, cada 5 minutos, sin endpoint): pasa a `EXPIRADA` la compra `PENDIENTE` con más de 10 minutos. Si es línea de un pedido o combo, expira todas las líneas aún pendientes; restituye el stock de cada una y avisa de stock repuesto. No restituye cupones (`ExpirarComprasPendientesUseCase`). |
+| `CU-61` | **Marcar Descarga de Compra** | ✅ Implementado | Comprador | Marca como descargada una compra `COMPLETADA` de un producto `DIGITAL` (`422` si el producto es físico o la compra no está completada); sirve también para líneas de pedido o combo y bloquea el reembolso (`MarcarDescargaCompraUseCase`, `PUT /api/compras/{id}/descarga`). |
 
 ### 📦 Módulo 2: Productos y Catálogo
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -436,8 +451,8 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-04` | **Publicar Producto** | ✅ Implementado | Vendedor | Crea un nuevo producto especificando gama, precio, stock y atributos; expuesto en `POST /api/productos` (`PublicarProductoUseCase`, `ProductoController`). |
 | `CU-05` | **Modificar Producto** | ✅ Implementado | Vendedor | Actualiza precio, descripción o disponibilidad de preventa. (`ModificarProductoUseCase`). |
 | `CU-06` | **Eliminar Producto** | ✅ Implementado | Vendedor | Desactiva el producto preservando trazabilidad; rechaza la baja si hay compras activas (`EliminarProductoUseCase`). |
-| `CU-18` | **Gestionar / Aumentar Stock** | ✅ Implementado (Dominio) | Vendedor | Incrementa las unidades disponibles en inventario (`Producto.aumentarStock`, usado al cancelar y reembolsar). |
-| `CU-19` | **Editar Información General** | ✅ Implementado | Vendedor | Actualiza detalles secundarios e imágenes del producto. (`EditarInformacionProductoUseCase`). |
+| `CU-18` | **Gestionar / Aumentar Stock** | ✅ Implementado | Vendedor | El vendedor dueño fija el stock disponible de su producto (`PUT /api/productos/{id}/stock`; no negativo y producto no eliminado) y, si estaba agotado y vuelve a tener unidades, se notifica `STOCK_DISPONIBLE` a las wishlists (`ActualizarStockProductoUseCase`). Al cancelar, expirar o reembolsar, el stock se restituye con `Producto.aumentarStock`. |
+| `CU-19` | **Editar Información General** | ✅ Implementado | Vendedor | Actualiza el nombre y la descripción del producto; la imagen se sube aparte (CU-63) (`EditarInformacionProductoUseCase`). |
 | `CU-20` | **Filtrar y Buscar Productos** | ✅ Implementado | Comprador | Búsqueda avanzada y paginada por texto, gama, categoría, precio y preventas; filtros y paginación se resuelven en la base de datos. (`BuscarProductosUseCase`). |
 | `CU-21` | **Activar / Pausar Publicación** | ✅ Implementado | Vendedor | Alterna la visibilidad del producto en el catálogo sin borrarlo. (`CambiarVisibilidadProductoUseCase`). |
 | `CU-22` | **Configurar Descuento Promocional** | ✅ Implementado | Vendedor | Aplica un porcentaje de descuento a un producto y notifica a quienes lo tienen en su Wishlist (`AplicarDescuentoUseCase`). La vigencia temporal la maneja `Promocion` (el precio base no cambia). (`ConfigurarDescuentoPromocionalUseCase`). |
@@ -447,6 +462,8 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-46` | **Modificar / Quitar Promoción** | ✅ Implementado | Vendedor | Cambia porcentaje y vigencia de una promoción de temporada (mismas reglas que al crearla, sin solaparse) o la elimina; el precio base nunca se tocó (`ModificarPromocionUseCase`, `QuitarPromocionUseCase`). |
 | `CU-47` | **Consultar Promociones** | ✅ Implementado | Vendedor / Sistema | El vendedor ve todas sus promociones (pasadas, vigentes y futuras); el catálogo, la wishlist y «Mis productos» resuelven la promoción vigente hoy para mostrar el mismo precio que se cobrará (`ConsultarPromocionesDelVendedorUseCase`, `ConsultarPromocionesVigentesUseCase`). |
 | `CU-48` | **Consultar Preventas** | ✅ Implementado | Comprador / Vendedor | Lista las preventas con lanzamiento estrictamente posterior a hoy, de la más próxima a la más lejana; el frontend las indexa por producto para mostrar la insignia y bloquear la compra (`ConsultarPreventasUseCase`). |
+| `CU-58` | **Modificar / Cancelar Preventa** | ✅ Implementado | Vendedor | El vendedor dueño reprograma una preventa (fecha estrictamente futura y descripción, mismas reglas que CU-37) o la cancela mientras no se haya lanzado (`422` si ya se lanzó). Cancelar la elimina: el producto se puede comprar de inmediato y se puede programar otra después (`ModificarPreventaUseCase`, `CancelarPreventaUseCase`). |
+| `CU-63` | **Subir Imagen de Producto** | ✅ Implementado | Vendedor | Sube a Cloudinary la imagen (PNG o JPEG, máx. 5 MB y 6000 × 6000 px) de un producto propio y no eliminado, y guarda solo la URL HTTPS. El producto se publica antes y sin imagen usa la ilustración de respaldo (`SubirImagenProductoUseCase`, puerto `AlmacenImagenesProductos`, `POST /api/productos/{id}/imagen`). |
 
 ### 🎁 Módulo 3: Combos Promocionales
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -467,6 +484,7 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-52` | **Consultar Regalos** | ✅ Implementado | Comprador / Vendedor | Regalos disponibles para elegir, regalos del comprador y regalos elegidos que el vendedor debe enviar (solo los suyos) (`ConsultarRegalosDisponiblesUseCase`, `ConsultarMisRegalosUseCase`, `ConsultarRegalosPorEnviarUseCase`). |
 | `CU-53` | **Consultar Progreso de Regalos** | ✅ Implementado | Comprador | Compras completadas, regalos asignados, regalos por elegir y compras que faltan para el siguiente, con la misma regla de 5 compras de CU-10 (`ConsultarProgresoRegalosUseCase`). |
 | `CU-54` | **Consultar Metas** | ✅ Implementado | Comprador / Vendedor | Metas de recompensa activas de menor a mayor umbral; son informativas y no gobiernan la asignación de regalos (`ConsultarMetasUseCase`). |
+| `CU-62` | **Cancelar Regalo** | ✅ Implementado | Vendedor | El vendedor dueño del producto o combo cancela el regalo desde cualquier estado anterior a `ENTREGADO`. Si ya tenía comprador (`ELEGIDO` o `ENVIADO`) se le notifica (`REGALO_CANCELADO`) y recupera su cupo, porque los regalos `CANCELADO` no cuentan como asignados (`CancelarRegaloUseCase`, `DuenoDeRegalo`). |
 
 ### ❤️ Módulo 5: Lista de Deseos (Wishlist) y Notificaciones
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -475,15 +493,16 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-14` | **Notificar Descuento en Wishlist** | ✅ Implementado | Sistema | Genera notificaciones por descuento para quienes tienen el producto en su Wishlist (`NotificarDescuentoWishlistUseCase`). |
 | `CU-15` | **Quitar de Wishlist** | ✅ Implementado | Comprador | Elimina un producto específico de la lista de deseos (`QuitarDeWishlistUseCase`). |
 | `CU-55` | **Consultar Wishlist** | ✅ Implementado | Comprador | Devuelve los favoritos en el orden en que se añadieron, omitiendo productos eliminados o pausados; `[]` si no hay wishlist. El frontend lo carga para que el corazón persista tras recargar (`ConsultarWishlistUseCase`). |
-| `CU-56` | **Consultar Notificaciones** | ✅ Implementado | Comprador | Lista las notificaciones del usuario, la más reciente primero (`ConsultarNotificacionesUseCase`). |
-| `CU-57` | **Marcar Notificación como Leída** | ✅ Implementado | Comprador | Solo el dueño marca su notificación como leída: `404` si no existe, `422` si es ajena (`MarcarNotificacionLeidaUseCase`). |
+| `CU-56` | **Consultar Notificaciones** | ✅ Implementado | Comprador / Vendedor | Lista las notificaciones del usuario autenticado (de comprador o de vendedor), la más reciente primero (`ConsultarNotificacionesUseCase`). |
+| `CU-57` | **Marcar Notificación como Leída** | ✅ Implementado | Comprador / Vendedor | Solo el dueño marca su notificación como leída: `404` si no existe, `422` si es ajena (`MarcarNotificacionLeidaUseCase`). |
+| `CU-59` | **Notificar Preventa Disponible** | ✅ Implementado | Sistema | Proceso automático (`PreventasScheduler`, todos los días a las 00:05 y al arrancar la aplicación, sin endpoint): cuando llega la fecha de lanzamiento de una preventa, genera `PREVENTA_DISPONIBLE` para quienes tienen el producto en su wishlist. Es idempotente: no repite el aviso por usuario y producto (`NotificarPreventasDisponiblesUseCase`). |
 
 ### 👤 Módulo 6: Usuarios, Vendedores y Autenticación
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
 | `CU-11` | **Registrar Usuario / Vendedor** | ✅ Implementado | Público | Registro de compradores (correo único) y de vendedores (documento único, cédula o NIT) (`RegistrarUsuarioUseCase`, `RegistrarVendedorUseCase`). |
-| `CU-25` | **Dar de Baja Vendedor** | ✅ Implementado | Admin / Vendedor | Baja lógica del vendedor conservando la historia comercial (`DarDeBajaVendedorUseCase`). |
-| `CU-26` | **Editar Perfil y Seguridad** | ✅ Implementado | Usuario | Modificación de nombre, correo y contraseña. (`EditarPerfilUseCase`, `CambiarContrasenaUseCase`). |
+| `CU-25` | **Dar de Baja Usuario / Vendedor** | ✅ Implementado | Comprador / Vendedor | Baja lógica de la propia cuenta (`PUT /api/usuarios/me/baja` o `PUT /api/vendedores/me/baja`) conservando la historia comercial; una cuenta dada de baja ya no puede iniciar sesión ni operar (`DarDeBajaUsuarioUseCase`, `DarDeBajaVendedorUseCase`). |
+| `CU-26` | **Editar Perfil y Seguridad** | ✅ Implementado | Comprador / Vendedor | Consulta del perfil propio, modificación de nombre y correo (el vendedor no cambia tipo ni documento; el correo no puede repetirse con otro vendedor ni con un comprador) y cambio de contraseña exigiendo la actual (`ObtenerPerfilUseCase`, `EditarPerfilUseCase`, `CambiarContrasenaUseCase`, `ObtenerPerfilVendedorUseCase`, `EditarPerfilVendedorUseCase`, `CambiarContrasenaVendedorUseCase`). |
 | `CU-27` | **Iniciar Sesión (JWT)** | ✅ Implementado | Todos | Autenticación con token JWT seguro para el acceso a las APIs. (`IniciarSesionUseCase`, `AuthController`). |
 | `CU-28` | **Valorar Vendedor** | ✅ Implementado | Comprador | Calificación directa del servicio y atención brindada por el vendedor. (`ValorarVendedorUseCase`). |
 
@@ -517,34 +536,39 @@ El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructura
 backend/src/main/java/com/uniquindio/backend/
 ├── domain/                  # Capa de Dominio (Sin dependencias de frameworks)
 │   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion, Promocion, Cupon, MetaRecompensa, MovimientoPuntos, ValoracionVendedor)
-│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Pagina, Contrasena, TipoMovimientoPuntos, Rol)
+│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoProducto, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Pagina, Contrasena, TipoMovimientoPuntos, Rol)
 │   ├── repository/          # Interfaces de Repositorio de Dominio (incluye CatalogoRepository)
-│   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken)
+│   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken, VerificadorCuentaActiva)
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (65 clases *UseCase = 57 casos de uso; ver sección 9)
-│   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, ConsultarHistorialCompras
+│   ├── usecase/             # Lógica de Orquestación (78 clases *UseCase = 63 casos de uso; ver sección 9)
+│   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, MarcarDescargaCompra,
+│   │   │              ExpirarComprasPendientes (automático), ConsultarHistorialCompras
 │   │   ├── Pedidos:   CrearPedido (+ ItemPedido), ConfirmarPedido, CancelarPedido, SolicitarReembolsoPedido
 │   │   ├── Cupones:   CrearCupon, ConsultarCuponesVendedor, ConsultarCupon
-│   │   ├── Productos: PublicarProducto, EliminarProducto, ConsultarMisProductos, ProgramarPreventa, ConsultarPreventas
+│   │   ├── Productos: PublicarProducto, EliminarProducto, ConsultarMisProductos, ActualizarStockProducto, SubirImagenProducto,
+│   │   │              ProgramarPreventa, ModificarPreventa, CancelarPreventa, ConsultarPreventas, NotificarPreventasDisponibles (automático)
 │   │   ├── Catálogo y promos: ModificarProducto, EditarInformacionProducto, CambiarVisibilidadProducto, BuscarProductos,
 │   │   │              AplicarDescuento, QuitarDescuento, ConfigurarDescuentoPromocional, ModificarPromocion, QuitarPromocion,
 │   │   │              ConsultarPromocionesDelVendedor, ConsultarPromocionesVigentes
 │   │   ├── Combos:    CrearCombo, ModificarCombo, ModificarProductosCombo, EliminarCombo, ConsultarCombos (+ ComboConProductos), ComprarCombo
 │   │   ├── Reseñas y puntos: SubirResena, RedimirPuntos, ConsultarHistorialPuntos
 │   │   ├── Regalos y metas:  CrearRegalo, ConsultarRegalosDisponibles, ConsultarMisRegalos, ConsultarRegalosPorEnviar,
-│   │   │              ConsultarProgresoRegalos, AsignarRegaloPorMeta, EnviarRegalo (+ DuenoDeRegalo), ConfirmarEntregaRegalo,
+│   │   │              ConsultarProgresoRegalos, AsignarRegaloPorMeta, EnviarRegalo (+ DuenoDeRegalo), CancelarRegalo, ConfirmarEntregaRegalo,
 │   │   │              GestionarMetasRecompensa, ConsultarMetas
 │   │   ├── Wishlist y notificaciones: AnadirAWishlist, QuitarDeWishlist, ConsultarWishlist, NotificarDescuentoWishlist,
 │   │   │              ConsultarNotificaciones, MarcarNotificacionLeida
-│   │   ├── Cuentas:   RegistrarUsuario, RegistrarVendedor, DarDeBajaVendedor, IniciarSesion, EditarPerfil, CambiarContrasena, ValorarVendedor
+│   │   ├── Cuentas:   RegistrarUsuario, RegistrarVendedor, IniciarSesion, ValorarVendedor, DarDeBajaUsuario, DarDeBajaVendedor,
+│   │   │              ObtenerPerfil, EditarPerfil, CambiarContrasena, ObtenerPerfilVendedor, EditarPerfilVendedor, CambiarContrasenaVendedor
 │   │   └── Reportes:  ReporteVentasVendedor, ReporteMasVendidos, AlertasStockBajo, MetricasResenas, ReporteGlobal
-│   ├── port/out/            # Puertos de salida de consulta (ReporteMasVendidosPort)
+│   ├── port/out/            # Puertos de salida (ReporteMasVendidosPort, AlmacenImagenesProductos)
 │   └── dto/                 # Data Transfer Objects (request y response)
 └── infrastructure/          # Capa de Infraestructura (Spring Boot / Controller / Persistence)
     ├── rest/                # Controladores REST (uno por recurso: Auth, Compra, Pedido, Cupon, Combo, Regalo, Wishlist, Notificacion, Preventa, MetaRecompensa...), mappers y GlobalExceptionHandler
     ├── persistence/         # Repositorios JPA (H2 / MariaDB) y en memoria, con sus mappers de persistencia; CuponUso registra qué comprador usó cada cupón
-    ├── security/            # JwtEmisorToken, JwtAuthenticationFilter, BCryptHashContrasena y RespuestaErrorSeguridad
+    ├── scheduling/          # ComprasScheduler (expira pendientes) y PreventasScheduler (avisa preventas lanzadas)
+    ├── cloudinary/          # CloudinaryAlmacenImagenesProductos (sube las imágenes de producto)
+    ├── security/            # JwtEmisorToken, JwtAuthenticationFilter, BCryptHashContrasena, VerificadorCuentaActivaRepositorio y RespuestaErrorSeguridad
     └── config/              # ClockConfig, SecurityConfig (JWT y CORS) y OpenApiConfig
 ```
 
@@ -568,7 +592,7 @@ Estructura del frontend (`frontend/src/app/`):
 
 ### Seguridad
 
-La API usa Spring Security con JWT (jjwt, HS256). El login (CU-27) autentica compradores y vendedores y emite un token con el rol (`COMPRADOR` o `VENDEDOR`). `/api/**` exige token, salvo `/api/auth/**` y los `POST` de registro.
+La API usa Spring Security con JWT (jjwt, HS256). El login (CU-27) autentica compradores y vendedores y emite un token con el rol (`COMPRADOR` o `VENDEDOR`). `/api/**` exige token, salvo `/api/auth/**`, los `POST` de registro (`/api/usuarios` y `/api/vendedores`) y el catálogo de solo lectura (`GET /api/productos`, `GET /api/combos` y `GET /api/preventas`), que es público: un visitante puede ver el catálogo, pero no comprar. En cada petición el filtro JWT verifica que la cuenta siga activa; si el comprador o vendedor fue dado de baja, responde `401` con `codigo: "CUENTA_INACTIVA"` aunque el token no haya expirado.
 
 Los controllers leen el id del `Authentication` (token), nunca del body ni de la URL, por lo que un usuario no puede actuar sobre recursos de otro. Cada ruta restringe el rol con `@PreAuthorize`: un rol equivocado recibe 403.
 
@@ -622,17 +646,19 @@ En Windows PowerShell, asigna al entorno la misma opción que configuraste en `.
 
 El vendedor publica primero el producto y luego sube su imagen a `POST /api/productos/{id}/imagen` como `multipart/form-data` en el campo `archivo`. El backend acepta PNG/JPEG de hasta 5 MB, firma la petición a Cloudinary y persiste la URL HTTPS; el catálogo muestra la imagen o conserva la ilustración si no hay imagen o falla su carga.
 
-### Limitaciones
+### Limitaciones conocidas
 
-- **No existe un rol ADMIN.** Las metas de recompensa quedan restringidas a `VENDEDOR`, aunque conceptualmente son de administración; como las metas son globales, **cualquier vendedor puede crear, cambiar o desactivar cualquier meta**. El envío de regalos (CU-24) ya no sufre esto: solo lo hace el vendedor dueño del producto o combo del regalo.
-- **Las metas no gobiernan la asignación de regalos.** Se gestionan y se muestran (`GET /api/metas-recompensa`, pantalla de regalos), pero la regla real es un regalo por cada 5 compras completadas (`Usuario.COMPRAS_POR_REGALO`).
-- `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada (son estadísticas del marketplace).
-- Un cupón es de «una vez por comprador», no «una sola compra en total»: mientras queden usos, otros compradores pueden usarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
-- La carga de imágenes depende de configurar Cloudinary (opcional): sin credenciales, o si la subida falla, el producto se publica igual y el catálogo usa la ilustración de respaldo.
-- Un usuario comprador no puede darse de baja (solo existe la baja de vendedor) y el rol `VENDEDOR` no puede editar su perfil ni cambiar su contraseña desde la API.
-  Los endpoints de cada operación están en [`docs/api/mapeo-dominio-api.md`](docs/api/mapeo-dominio-api.md) y en Swagger (`http://localhost:8080/swagger-ui.html`, botón **Authorize** para pegar el token del login).
+- **No existe un rol `ADMIN`.** El sistema solo maneja `COMPRADOR` y `VENDEDOR`, y eso afecta a dos funciones que conceptualmente son de administración:
+    - **Metas de recompensa:** se restringieron a `VENDEDOR`. Como las metas son globales, **cualquier vendedor puede crear, cambiar o desactivar cualquier meta**.
+    - **Reportes del marketplace:** `GET /api/reportes/mas-vendidos` y `GET /api/reportes/global` están abiertos a cualquier sesión autenticada, cuando el reporte global (CU-36) sería propio de un administrador.
 
----
+  Con un rol `ADMIN` bastaría restringir esas rutas con `@PreAuthorize`. El envío de regalos (CU-24) ya no tiene este problema: solo lo hace el vendedor dueño del producto o combo del regalo.
+
+### Decisiones de diseño
+
+- **Las metas son informativas.** Se gestionan y se muestran (`GET /api/metas-recompensa`, pantalla de regalos), pero no gobiernan la asignación de regalos: la regla real es un regalo por cada 5 compras completadas (`Usuario.COMPRAS_POR_REGALO`).
+- **Un cupón se usa una vez por comprador**, no una sola vez en total: mientras queden usos disponibles, otros compradores pueden aplicarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
+- **La carga de imágenes es opcional.** Depende de configurar Cloudinary; sin credenciales, o si la subida falla, el producto se publica igual y el catálogo muestra la ilustración de respaldo.
 
 ## 12. Cómo ejecutar las pruebas
 
