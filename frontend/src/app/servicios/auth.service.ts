@@ -92,9 +92,10 @@ export class AuthService {
     return this.http.post(`${API_URL}/vendedores`, datos);
   }
 
-  cerrarSesion(expirada = false) {
+  /** Cierra la sesión. Con `expirada` avisa al usuario; `mensaje` cambia el texto del aviso. */
+  cerrarSesion(expirada = false, mensaje?: string) {
     this.guardar(null);
-    if (expirada) this.toast.info('Tu sesión terminó o expiró. Vuelve a ingresar.');
+    if (expirada) this.toast.info(mensaje ?? 'Tu sesión terminó o expiró. Vuelve a ingresar.');
     this.router.navigate(['/login']);
   }
 }
