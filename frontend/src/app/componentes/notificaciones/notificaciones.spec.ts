@@ -116,4 +116,14 @@ describe('Notificaciones (pantalla)', () => {
     expect(toast.toasts().find((t) => t.tipo === 'error')?.texto).toContain('no pertenece al usuario');
     expect(servicio.noLeidas()).toBe(1);
   });
+
+  it('muestra las etiquetas de regalo elegido y regalo cancelado', () => {
+    abrirConLista([
+      { ...notificacion('n1'), tipo: 'REGALO_ELEGIDO' },
+      { ...notificacion('n2'), tipo: 'REGALO_CANCELADO' },
+    ]);
+
+    const tipos = Array.from(fixture.nativeElement.querySelectorAll('.tipo')).map((e) => (e as HTMLElement).textContent?.trim());
+    expect(tipos).toEqual(['Regalo elegido', 'Regalo cancelado']);
+  });
 });
