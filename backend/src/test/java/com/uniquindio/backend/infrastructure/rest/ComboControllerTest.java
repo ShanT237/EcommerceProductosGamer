@@ -257,11 +257,22 @@ class ComboControllerTest {
     }
 
     @Test
-    void listarSinTokenRetorna401() throws Exception {
-        mockMvc.perform(get("/api/combos"))
-                .andExpect(status().isUnauthorized());            // 401
+    void listarSinTokenEsPublico() throws Exception {
+        when(consultarCombosUseCase.todos()).thenReturn(List.of());
 
-        Mockito.verifyNoInteractions(consultarCombosUseCase);
+        mockMvc.perform(get("/api/combos"))
+                .andExpect(status().isOk())                       // 200: el catálogo de combos es público
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void comprarSinTokenSigueRetornando401() throws Exception {
+        mockMvc.perform(post("/api/combos/{id}/comprar", comboId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cantidad\": 1}"))
+                .andExpect(status().isUnauthorized());            // 401: ver es público, comprar no
+
+        Mockito.verifyNoInteractions(comprarComboUseCase);
     }
 
     @Test
