@@ -13,6 +13,9 @@ export interface Sesion {
   exp: number;
 }
 
+/** Solo los productos DIGITAL admiten «descargar»; los productos sin tipo se tratan como FISICO. */
+export type TipoProducto = 'DIGITAL' | 'FISICO';
+
 export interface Producto {
   id: string;
   vendedorId: string;
@@ -35,6 +38,8 @@ export interface Producto {
   promocionHasta?: string | null;
   /** `true` si el vendedor lo pausó (no se ve en el catálogo público). Solo lo trae `GET /productos/mios`. */
   pausado?: boolean;
+  /** Físico o digital; puede faltar en respuestas antiguas (equivale a `FISICO`). */
+  tipo?: TipoProducto;
   /** URL HTTPS de Cloudinary; ausente en productos publicados sin fotografía. */
   imagenUrl?: string | null;
 }
@@ -80,6 +85,8 @@ export interface Compra {
   comboId?: string | null;
   /** Nombre guardado al momento de comprar, aunque luego se elimine o cambie el combo. */
   comboNombre?: string | null;
+  /** `true` si ya se marcó la descarga (un producto digital descargado ya no se puede reembolsar). */
+  descargado?: boolean;
 }
 
 /** Respuesta de `POST /api/pedidos` y de `PUT /api/pedidos/{id}/confirmar|cancelar`: una compra por producto. */
@@ -140,6 +147,8 @@ export interface NuevoProducto {
   stock: number;
   gama: Gama;
   exclusividad: Exclusividad;
+  /** Opcional: si no se envía, el backend publica el producto como FISICO. */
+  tipo?: TipoProducto;
 }
 
 export interface ImagenProductoSubida {
@@ -150,7 +159,8 @@ export interface ImagenProductoSubida {
 /** Avisos del comprador (wishlist, metas, regalos) y del vendedor (stock, ventas, reembolsos, reseñas). */
 export type TipoNotificacion =
   | 'DESCUENTO' | 'STOCK_DISPONIBLE' | 'PREVENTA_DISPONIBLE' | 'META_ALCANZADA' | 'REGALO_ENVIADO'
-  | 'STOCK_BAJO' | 'STOCK_AGOTADO' | 'NUEVA_VENTA' | 'REEMBOLSO_SOLICITADO' | 'NUEVA_RESENA' | 'NUEVA_VALORACION';
+  | 'STOCK_BAJO' | 'STOCK_AGOTADO' | 'NUEVA_VENTA' | 'REEMBOLSO_SOLICITADO' | 'NUEVA_RESENA' | 'NUEVA_VALORACION'
+  | 'REGALO_ELEGIDO' | 'REGALO_CANCELADO';
 
 export interface Notificacion {
   id: string;

@@ -64,4 +64,10 @@ describe('RegaloService', () => {
 
     http.expectOne({ method: 'PUT', url: `${API_URL}/regalos/r1/entrega` }).flush({ ...REGALO, estado: 'ENTREGADO' });
   });
+
+  it('cancelar hace PUT a /regalos/{id}/cancelar', () => {
+    servicio.cancelar('r1').subscribe();
+
+    http.expectOne({ method: 'PUT', url: `${API_URL}/regalos/r1/cancelar` }).flush({ ...REGALO, estado: 'CANCELADO' });
+  });
 });

@@ -44,6 +44,11 @@ export class RegaloService {
     return this.http.put<Regalo>(`${API_URL}/regalos/${id}/enviar`, {});
   }
 
+  /** PUT /regalos/{id}/cancelar (vendedor dueño): cancela el regalo desde cualquier estado previo a ENTREGADO. */
+  cancelar(id: string): Observable<Regalo> {
+    return this.http.put<Regalo>(`${API_URL}/regalos/${id}/cancelar`, {});
+  }
+
   /** PUT /regalos/{id}/entrega (comprador destinatario): confirma que lo recibió. */
   confirmarEntrega(id: string): Observable<Regalo> {
     return this.http.put<Regalo>(`${API_URL}/regalos/${id}/entrega`, {});
