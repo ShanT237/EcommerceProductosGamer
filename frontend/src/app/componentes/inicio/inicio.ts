@@ -31,9 +31,9 @@ export class Inicio implements OnInit {
   ];
 
   protected fundadores = [
-    { nombre: 'Juan David Tapiero', usuario: 'Juanda2312' },
-    { nombre: 'Santiago Torres', usuario: 'ShanT237' },
     { nombre: 'Jose Manuel Bedoya', usuario: 'thelegendsxv' },
+    { nombre: 'Santiago Torres', usuario: 'ShanT237' },
+    { nombre: 'Juan David Tapiero', usuario: 'Juanda2312' },
   ];
 
   ngOnInit() {
