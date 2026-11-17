@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Combo, Cupon } from '../../modelos/modelos';
-import { mensajeDeError } from '../../servicios/api.util';
+import { MENSAJE_INGRESAR_PARA_COMPRAR, mensajeDeError } from '../../servicios/api.util';
 import { AuthService } from '../../servicios/auth.service';
 import { ComboService } from '../../servicios/combo.service';
 import { CuponService } from '../../servicios/cupon.service';
@@ -37,6 +37,8 @@ export class Combos implements OnInit {
   protected validandoCupon = signal<string | null>(null);
 
   protected esComprador = computed(() => this.auth.sesion()?.rol === 'COMPRADOR');
+  /** Visitante: ve los combos sin sesión; al intentar comprar se le pide ingresar. */
+  protected esVisitante = computed(() => this.auth.sesion() === null);
 
   ngOnInit() {
     this.cargar();
@@ -123,6 +125,10 @@ export class Combos implements OnInit {
   }
 
   protected comprar(c: Combo) {
+    if (this.esVisitante()) {
+      this.toast.info(MENSAJE_INGRESAR_PARA_COMPRAR);
+      return;
+    }
     if (this.comprando() || this.limite(c) <= 0) return;
     this.comprando.set(c.id);
     this.servicio.comprar(c.id, this.cantidadDe(c), this.cuponAplicado(c)?.codigo).subscribe({

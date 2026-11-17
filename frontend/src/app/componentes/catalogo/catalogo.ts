@@ -12,7 +12,7 @@ import { ProductoService } from '../../servicios/producto.service';
 import { PreventaService } from '../../servicios/preventa.service';
 import { ToastService } from '../../servicios/toast.service';
 import { WishlistService } from '../../servicios/wishlist.service';
-import { mensajeDeError } from '../../servicios/api.util';
+import { MENSAJE_INGRESAR_PARA_COMPRAR, mensajeDeError } from '../../servicios/api.util';
 import {descuentoTotal, fechaDia, precio, precioTachado, precioVigente} from '../../servicios/formato';
 import { ArteProducto } from '../arte-producto/arte-producto';
 import { TarjetaProducto } from '../tarjeta-producto/tarjeta-producto';
@@ -98,6 +98,9 @@ export class Catalogo implements OnInit {
   protected reserva = signal<Pedido | null>(null);
   protected procesando = signal(false);
   protected esComprador = computed(() => this.auth.rol() === 'COMPRADOR');
+  protected esVendedor = computed(() => this.auth.rol() === 'VENDEDOR');
+  /** Visitante: navega el catálogo sin sesión; al intentar comprar se le pide ingresar. */
+  protected esVisitante = computed(() => this.auth.rol() === null);
   protected total = computed(() => {
     const p = this.seleccionado();
     return (p ? precioVigente(p) : 0) * this.cantidad(); // con la promoción vigente, como se cobrará
@@ -201,6 +204,7 @@ export class Catalogo implements OnInit {
   protected alCarrito() {
     const p = this.seleccionado();
     if (!p) return;
+    if (this.esVisitante()) return this.pedirIngreso();
     if (!this.permiteComprar(p)) {
       this.toast.info(this.preventaMensaje(p));
       return;
@@ -213,6 +217,7 @@ export class Catalogo implements OnInit {
   protected reservar() {
     const p = this.seleccionado();
     if (!p) return;
+    if (this.esVisitante()) return this.pedirIngreso();
     if (!this.permiteComprar(p)) {
       this.toast.info(this.preventaMensaje(p));
       return;
@@ -284,6 +289,10 @@ export class Catalogo implements OnInit {
     });
   }
 
+  private pedirIngreso() {
+    this.toast.info(MENSAJE_INGRESAR_PARA_COMPRAR);
+  }
+
   protected unidadesDe(pedido: Pedido): number {
     return pedido.compras.reduce((suma, c) => suma + c.cantidad, 0);
   }
@@ -296,6 +305,7 @@ export class Catalogo implements OnInit {
 
   /** Corazón de una tarjeta de la rejilla (también lo usa el modal). */
   protected alternarDe(p: Producto) {
+    if (this.esVisitante()) return this.pedirIngreso();
     const era = this.wishlist.esFavorito(p.id);
     this.wishlist.alternar(p).subscribe({
       next: () => this.toast.ok(era ? 'Quitado de tus favoritos.' : 'Añadido a tus favoritos.'),

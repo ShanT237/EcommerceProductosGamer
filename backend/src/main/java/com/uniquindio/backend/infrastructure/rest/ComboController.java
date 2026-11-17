@@ -60,8 +60,8 @@ public class ComboController {
         this.mapper = mapper;
     }
 
-    // Catálogo de combos comprables (cualquier sesión: comprador o vendedor)
-    @PreAuthorize("isAuthenticated()")
+    // Catálogo de combos comprables. Público: lo puede ver cualquiera, incluso sin sesión.
+    @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<List<ComboDetalleResponse>> listar() {
         return ResponseEntity.ok(mapper.toDetalleResponses(consultarCombosUseCase.todos()));

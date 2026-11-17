@@ -40,10 +40,11 @@
             <small class="ahorro">Ahorras {{ precio(ahorro(c)) }} por unidad</small>
           </div>
 
-          @if (esComprador()) {
+          @if (esComprador() || esVisitante()) {
             @if (limite(c) <= 0) {
               <p class="rojo">Agotado: algún producto del combo no tiene stock.</p>
             } @else {
+              @if (esComprador()) {
               <div class="cupon">
                 @if (cuponAplicado(c); as cupon) {
                   <p class="muted">Cupón {{ cupon.codigo }} aplicado (−{{ cupon.porcentaje }}%).</p>
@@ -60,6 +61,7 @@
                   @if (erroresCupon()[c.id]) { <p class="rojo">{{ erroresCupon()[c.id] }}</p> }
                 }
               </div>
+              }
               <div class="compra">
                 <div class="cantidad">
                   <button type="button" class="btn btn-chico menos" aria-label="Menos unidades"

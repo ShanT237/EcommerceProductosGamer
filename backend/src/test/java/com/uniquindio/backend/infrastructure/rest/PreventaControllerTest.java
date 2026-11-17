@@ -88,10 +88,11 @@ class PreventaControllerTest {
     }
 
     @Test
-    void listarSinTokenRetorna401() throws Exception {
+    void listarSinTokenEsPublico() throws Exception {
+        when(consultarPreventasUseCase.ejecutar()).thenReturn(java.util.List.of());
+
         mockMvc.perform(get("/api/preventas"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+                .andExpect(status().isOk());                      // 200: el catálogo lo necesita
     }
 
     private String cuerpo(String extra, String descripcion) {

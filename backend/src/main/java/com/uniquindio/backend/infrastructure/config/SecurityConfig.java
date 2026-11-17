@@ -24,7 +24,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 /**
- * Seguridad stateless con JWT: login y registros son públicos, el resto de /api/** exige token.
+ * Seguridad stateless con JWT: login, registros y la consulta del catálogo (productos, combos y
+ * preventas, solo GET) son públicos; el resto de /api/** exige token.
  * Los 401 (sin token o token inválido) y 403 (sin permiso) responden JSON.
  */
 @Configuration
@@ -43,6 +44,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios", "/api/vendedores").permitAll()
+                        // Catálogo público: un visitante puede ver productos y combos, pero no comprarlos.
+                        .requestMatchers(HttpMethod.GET, "/api/productos", "/api/combos", "/api/preventas").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                 "/api-docs/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
                         .anyRequest().authenticated())
