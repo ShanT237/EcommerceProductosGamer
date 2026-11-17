@@ -13,6 +13,7 @@ import com.uniquindio.backend.application.usecase.EnviarRegaloUseCase;
 import com.uniquindio.backend.domain.entity.Regalo;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.RegaloMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +78,9 @@ class RegaloControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

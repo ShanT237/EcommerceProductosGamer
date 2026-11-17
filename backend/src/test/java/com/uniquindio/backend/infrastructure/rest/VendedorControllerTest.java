@@ -9,6 +9,7 @@ import com.uniquindio.backend.domain.entity.Vendedor;
 import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.TipoVendedor;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.VendedorMapper;
@@ -63,6 +64,9 @@ class VendedorControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

@@ -12,6 +12,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.application.usecase.ConsultarPromocionesVigentesUseCase;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.domain.valueobject.Pagina;
@@ -94,6 +95,9 @@ class ProductoControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

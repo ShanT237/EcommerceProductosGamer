@@ -8,6 +8,7 @@ import com.uniquindio.backend.application.usecase.RegistrarUsuarioUseCase;
 import com.uniquindio.backend.domain.entity.Usuario;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.UsuarioMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,9 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

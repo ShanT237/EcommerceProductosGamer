@@ -12,6 +12,7 @@ import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
@@ -67,6 +68,9 @@ class ReporteControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

@@ -4,6 +4,7 @@ import com.uniquindio.backend.application.usecase.ConsultarHistorialPuntosUseCas
 import com.uniquindio.backend.application.usecase.RedimirPuntosUseCase;
 import com.uniquindio.backend.domain.entity.MovimientoPuntos;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.MovimientoPuntosMapper;
 import com.uniquindio.backend.infrastructure.rest.mapper.UsuarioMapper;
@@ -52,6 +53,9 @@ class PuntosControllerTest {
     // SecurityConfig necesita el EmisorToken para armar el filtro JWT; las sesiones se simulan con SesionPrueba.
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

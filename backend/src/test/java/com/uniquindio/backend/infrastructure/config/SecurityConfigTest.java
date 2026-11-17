@@ -7,6 +7,7 @@ import com.uniquindio.backend.application.usecase.ReporteGlobalUseCase;
 import com.uniquindio.backend.application.usecase.ReporteMasVendidosUseCase;
 import com.uniquindio.backend.application.usecase.ReporteVentasVendedorUseCase;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.service.SesionToken;
 import com.uniquindio.backend.domain.valueobject.Rol;
 import com.uniquindio.backend.infrastructure.rest.ReporteController;
@@ -43,6 +44,9 @@ class SecurityConfigTest {
     private EmisorToken emisorToken;
 
     @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
+
+    @MockitoBean
     private ReporteVentasVendedorUseCase reporteVentasVendedorUseCase;
     @MockitoBean
     private ReporteMasVendidosUseCase reporteMasVendidosUseCase;
@@ -74,12 +78,37 @@ class SecurityConfigTest {
 
     @Test
     void conTokenValidoPermiteElAcceso() throws Exception {
-        when(emisorToken.validar("token-bueno"))
-                .thenReturn(Optional.of(new SesionToken(UUID.randomUUID(), Rol.COMPRADOR)));
+        SesionToken sesion = new SesionToken(UUID.randomUUID(), Rol.COMPRADOR);
+        when(emisorToken.validar("token-bueno")).thenReturn(Optional.of(sesion));
+        when(verificadorCuentaActiva.estaActiva(sesion)).thenReturn(true);
         when(reporteGlobalUseCase.ejecutar()).thenReturn(new ReporteGlobalResponse(0, 0.0, 0, 0));
 
         mockMvc.perform(get("/api/reportes/global").header("Authorization", "Bearer token-bueno"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void conTokenValidoDeUnaCuentaDadaDeBajaResponde401ConCodigo() throws Exception {
+        // El token no ha expirado, pero la cuenta ya no está activa: debe cortarse de inmediato.
+        SesionToken sesion = new SesionToken(UUID.randomUUID(), Rol.VENDEDOR);
+        when(emisorToken.validar("token-de-baja")).thenReturn(Optional.of(sesion));
+        when(verificadorCuentaActiva.estaActiva(sesion)).thenReturn(false);
+
+        mockMvc.perform(get("/api/reportes/global").header("Authorization", "Bearer token-de-baja"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.codigo").value("CUENTA_INACTIVA"))
+                .andExpect(jsonPath("$.mensaje").isNotEmpty());
+    }
+
+    @Test
+    void elTokenInvalidoNoLlevaCodigoDeCuentaInactiva() throws Exception {
+        when(emisorToken.validar("token-malo")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/reportes/global").header("Authorization", "Bearer token-malo"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").doesNotExist());
     }
 
     @Test

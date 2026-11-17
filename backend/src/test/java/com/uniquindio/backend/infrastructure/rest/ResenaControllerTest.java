@@ -3,6 +3,7 @@ package com.uniquindio.backend.infrastructure.rest;
 import com.uniquindio.backend.application.usecase.SubirResenaUseCase;
 import com.uniquindio.backend.domain.entity.Resena;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Calificacion;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.ResenaMapper;
@@ -42,6 +43,9 @@ class ResenaControllerTest {
 
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {

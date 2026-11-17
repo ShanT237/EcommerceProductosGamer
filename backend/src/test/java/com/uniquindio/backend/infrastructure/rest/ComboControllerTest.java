@@ -11,6 +11,7 @@ import com.uniquindio.backend.domain.entity.Combo;
 import com.uniquindio.backend.domain.entity.Compra;
 import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.service.EmisorToken;
+import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.domain.valueobject.Precio;
@@ -74,6 +75,9 @@ class ComboControllerTest {
     private EliminarComboUseCase eliminarComboUseCase;
     @MockitoBean
     private EmisorToken emisorToken;
+
+    @MockitoBean
+    private VerificadorCuentaActiva verificadorCuentaActiva;
 
     @BeforeEach
     void configurarMockMvc() {
