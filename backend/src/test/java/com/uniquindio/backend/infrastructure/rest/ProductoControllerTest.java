@@ -327,6 +327,16 @@ class ProductoControllerTest {
     }
 
     @Test
+    void buscarProductosEsPublicoSinToken() throws Exception {
+        when(buscarProductosUseCase.ejecutar(any(), eq(0), eq(20)))
+                .thenReturn(new Pagina<>(List.of(producto()), 0, 20, 1, 1));
+
+        mockMvc.perform(get("/api/productos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenido[0].nombre").value("Mouse"));
+    }
+
+    @Test
     void cualquierSesionPuedeBuscarProductos() throws Exception {
         when(buscarProductosUseCase.ejecutar(any(), eq(0), eq(20)))
                 .thenReturn(new Pagina<>(List.of(producto()), 0, 20, 1, 1));

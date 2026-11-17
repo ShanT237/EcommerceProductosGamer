@@ -169,8 +169,8 @@ public class ProductoController {
         return ResponseEntity.ok(mapper.toEditarInformacionResponse(producto)); // 200 OK
     }
 
-    // CU-20 Filtrar y Buscar Productos (solo visibles: no eliminados ni pausados)
-    @PreAuthorize("isAuthenticated()")
+    // CU-20 Filtrar y Buscar Productos (solo visibles: no eliminados ni pausados). Público: no exige sesión.
+    @PreAuthorize("permitAll()")
     @GetMapping
     public PaginaResponse<BuscarProductoResponse> buscar(
             @ModelAttribute BuscarProductosRequest request,
