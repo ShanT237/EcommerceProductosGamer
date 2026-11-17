@@ -25,7 +25,7 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 8. [Reglas de Negocio e Invariantes del Dominio](#8-reglas-de-negocio-e-invariantes-del-dominio)
 9. [Casos de Uso del Sistema (63 Casos de Uso)](#9-casos-de-uso-del-sistema-63-casos-de-uso)
 10. [Arquitectura del Software (Clean Architecture)](#10-arquitectura-del-software-clean-architecture)
-11. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#11-Seguridad-Base-de-Datos,-Limitaciones-y-Decisiones-de-diseño)
+11. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#11-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño)
 12. [Cómo ejecutar las pruebas](#12-cómo-ejecutar-las-pruebas)
 13. [Pruebas avanzadas](#13-pruebas-avanzadas)
 14. [Gestión del Proyecto (Trello)](#14-gestión-del-proyecto-trello)
