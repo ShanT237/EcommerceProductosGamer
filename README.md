@@ -5,6 +5,10 @@
 ![Gradle](https://img.shields.io/badge/Gradle-Build-blue?style=for-the-badge&logo=gradle)
 ![MariaDB](https://img.shields.io/badge/MariaDB-Database-003545?style=for-the-badge&logo=mariadb)
 ![Architecture](https://img.shields.io/badge/Architecture-DDD%20%2B%20Clean%20Arch-purple?style=for-the-badge)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel)
+![Render](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
+![Aiven](https://img.shields.io/badge/Base%20de%20datos-Aiven-FF3554?style=for-the-badge&logo=aiven)
+[![Demo en vivo](https://img.shields.io/badge/Demo-en%20vivo-success?style=for-the-badge)](https://ecommerce-productos-gamer.vercel.app/)
 
 Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo **Gaming**, desarrollado para la asignatura de Programación Avanzada / Ingeniería de Software en la **Universidad del Quindío**. El proyecto está guiado bajo los principios de **Domain-Driven Design (DDD)** y **Clean Architecture**.
  
@@ -12,23 +16,24 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 
 ## 📋 Tabla de Contenidos
 1. [Integrantes y nicho](#1-integrantes-y-nicho)
-2. [Cómo ejecutar el proyecto y usuarios de prueba](#2-cómo-ejecutar-el-proyecto-y-usuarios-de-prueba)
-  - [2.1 Frontend, carrito y pantallas](#21-frontend-carrito-y-pantallas)
+2. [Despliegue](#2-despliegue)
+3. [Cómo ejecutar el proyecto y usuarios de prueba](#3-cómo-ejecutar-el-proyecto-y-usuarios-de-prueba)
+  - [3.1 Frontend, carrito y pantallas](#31-frontend-carrito-y-pantallas)
     - [Mapa de pantallas por rol](#mapa-de-pantallas-por-rol)
     - [Carrito, pedido y cupones](#carrito-pedido-y-cupones)
     - [Panel del vendedor](#panel-del-vendedor)
-3. [Endpoints principales](#3-endpoints-principales)
-4. [Correcciones de la Entrega 1](#4-correcciones-de-la-entrega-1)
-5. [¿Quién compra y por qué?](#5-quién-compra-y-por-qué)
-6. [¿Qué hace único a sus vendedores?](#6-qué-hace-único-a-sus-vendedores)
-7. [Lenguaje Ubicuo (DDD)](#7-lenguaje-ubicuo-ddd)
-8. [Reglas de Negocio e Invariantes del Dominio](#8-reglas-de-negocio-e-invariantes-del-dominio)
-9. [Casos de Uso del Sistema (63 Casos de Uso)](#9-casos-de-uso-del-sistema-63-casos-de-uso)
-10. [Arquitectura del Software (Clean Architecture)](#10-arquitectura-del-software-clean-architecture)
-11. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#11-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño)
-12. [Cómo ejecutar las pruebas](#12-cómo-ejecutar-las-pruebas)
-13. [Pruebas avanzadas](#13-pruebas-avanzadas)
-14. [Gestión del Proyecto (Trello)](#14-gestión-del-proyecto-trello)
+4. [Endpoints principales](#4-endpoints-principales)
+5. [Correcciones de la Entrega 1](#5-correcciones-de-la-entrega-1)
+6. [¿Quién compra y por qué?](#6-quién-compra-y-por-qué)
+7. [¿Qué hace único a sus vendedores?](#7-qué-hace-único-a-sus-vendedores)
+8. [Lenguaje Ubicuo (DDD)](#8-lenguaje-ubicuo-ddd)
+9. [Reglas de Negocio e Invariantes del Dominio](#9-reglas-de-negocio-e-invariantes-del-dominio)
+10. [Casos de Uso del Sistema (63 Casos de Uso)](#10-casos-de-uso-del-sistema-63-casos-de-uso)
+11. [Arquitectura del Software (Clean Architecture)](#11-arquitectura-del-software-clean-architecture)
+12. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#12-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño)
+13. [Cómo ejecutar las pruebas](#13-cómo-ejecutar-las-pruebas)
+14. [Pruebas avanzadas](#14-pruebas-avanzadas)
+15. [Gestión del Proyecto (Trello)](#15-gestión-del-proyecto-trello)
 
 ---
 
@@ -46,7 +51,48 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 
 ---
 
-## 2. Cómo ejecutar el proyecto y usuarios de prueba
+## 2. Despliegue
+
+El proyecto está desplegado en tres servicios independientes:
+
+| Capa | Plataforma | URL |
+| :--- | :--- | :--- |
+| Frontend (Angular) | **Vercel** | https://ecommerce-productos-gamer.vercel.app/ |
+| Backend (Spring Boot) | **Render** | `https://TU-BACKEND.onrender.com` |
+| Base de datos | **Aiven** | Servicio gestionado (credenciales por variables de entorno) |
+
+```text
+Navegador ──► Vercel (Angular) ──HTTPS──► Render (Spring Boot, perfil mariadb) ──JDBC/SSL──► Aiven (BD)
+```
+
+- Swagger en producción: `https://TU-BACKEND.onrender.com/swagger-ui.html`
+- Probar la demo: entra a la URL del frontend y regístrate (ver nota abajo).
+
+### Configuración por servicio
+
+**Base de datos (Aiven).** Se crea el servicio y se toman los datos de conexión (host, puerto, usuario, contraseña y base). Aiven exige SSL, así que la URL JDBC debe incluirlo.
+
+**Backend (Render).** Se despliega como Web Service desde la carpeta `backend`, con el perfil `mariadb` y estas variables de entorno:
+
+| Variable | Descripción |
+| :--- | :--- |
+| `SPRING_PROFILES_ACTIVE` | `mariadb` |
+| `DB_URL` | URL JDBC de Aiven (con SSL) |
+| `DB_USERNAME` / `DB_PASSWORD` | Credenciales de Aiven |
+| `JWT_SECRET` | Secreto JWT de producción (mínimo 32 caracteres) |
+| `CLOUDINARY_*` o `CLOUDINARY_URL` | Opcional: subida de imágenes (ver sección 12) |
+
+**Frontend (Vercel).** Se despliega desde la carpeta `frontend`. La URL del backend se define en `frontend/src/app/config.ts` (`API_URL`) y debe apuntar a la URL de Render.
+
+### Notas importantes
+
+- **Sin datos de demo en producción.** El perfil `mariadb` no carga `data.sql`, por lo que los usuarios de prueba de la sección 3 no existen: hay que crear un vendedor (`POST /api/vendedores`) y un comprador (`/registro`).
+- **CORS.** El backend debe permitir el origen `https://ecommerce-productos-gamer.vercel.app` además de `localhost:4200` y `localhost:3000`.
+- **Arranque en frío.** En el plan gratuito de Render el servicio se suspende por inactividad, así que la primera petición puede tardar un poco.
+
+---
+
+## 3. Cómo ejecutar el proyecto y usuarios de prueba
 
 **Requisitos:** Java 21. No hace falta instalar Gradle (se usa el wrapper).
 
@@ -61,7 +107,7 @@ Por defecto usa **H2 en memoria** y carga `data.sql` al arrancar. Cuando aparezc
 - Consola H2: http://localhost:8080/h2-console (URL JDBC: `jdbc:h2:mem:marketplacedb`, usuario `SA`)
 
 Si el puerto 8080 está ocupado: `.\gradlew.bat bootRun --args="--server.port=8081"`.
-Para MariaDB, ver la sección [11](#11-seguridad-base-de-datos-y-limitaciones).
+Para MariaDB, ver la sección [12](#12-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño). Para la versión desplegada (Vercel, Render y Aiven), ver la sección [2](#2-despliegue).
 
 ### Usuarios de prueba (perfil H2 por defecto)
 
@@ -95,11 +141,11 @@ El recorrido completo, con los módulos nuevos (favoritos, notificaciones, combo
 
 ---
 
-## 2.1. Frontend, carrito y pantallas
+## 3.1. Frontend, carrito y pantallas
 
 El frontend es una aplicación **Angular 21** (componentes standalone, signals y formularios reactivos) que consume la API del backend.
 
-**Requisitos:** Node 20 o superior y el backend corriendo en `http://localhost:8080` (sección 2).
+**Requisitos:** Node 20 o superior y el backend corriendo en `http://localhost:8080` (sección 3).
 
 ```powershell
 cd frontend
@@ -107,7 +153,7 @@ npm install
 npm start                      # abre http://localhost:4200
 ```
 
-La URL de la API está en `frontend/src/app/config.ts` (`API_URL`); hay que cambiarla ahí al desplegar. Para entrar usa los usuarios de prueba de la sección 2: la pantalla de login tiene botones que rellenan las cuentas de demo. El token de sesión es lo único que se guarda en el navegador (`localStorage`, clave `gamerzone.token`).
+La URL de la API está en `frontend/src/app/config.ts` (`API_URL`); hay que cambiarla ahí al desplegar (ver sección 2). Para entrar usa los usuarios de prueba de la sección 3: la pantalla de login tiene botones que rellenan las cuentas de demo. El token de sesión es lo único que se guarda en el navegador (`localStorage`, clave `gamerzone.token`).
 
 ### Mapa de pantallas por rol
 
@@ -218,7 +264,7 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 
 ---
 
-## 3. Endpoints principales
+## 4. Endpoints principales
 
 | Método y ruta | Rol | Qué hace |
 | :--- | :--- | :--- |
@@ -279,7 +325,7 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 
 ---
 
-## 4. Correcciones de la Entrega 1
+## 5. Correcciones de la Entrega 1
 
 | Observación que nos dieron | Qué cambiamos | Dónde se ve |
 | :--- | :--- | :--- |
@@ -295,7 +341,7 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 
 ---
 
-## 5. ¿Quién compra y por qué?
+## 6. ¿Quién compra y por qué?
 
 El marketplace está diseñado conceptualmente para atender las necesidades específicas de la comunidad gamer:
 
@@ -304,7 +350,7 @@ El marketplace está diseñado conceptualmente para atender las necesidades espe
 - 🕹️ **Jugadores Casuales:** buscan productos accesibles que garanticen confort, entretenimiento y una experiencia de juego amigable en su tiempo libre.
 ---
 
-## 6. ¿Qué hace único a sus vendedores?
+## 7. ¿Qué hace único a sus vendedores?
 
 El sistema opera como un **marketplace multi-vendedor**, donde diversos comercios independientes pueden registrarse, gestionar su reputación y publicar su propia oferta comercial.
 
@@ -317,7 +363,7 @@ Categorías habilitadas en el catálogo:
 - 🎁 **Combos Gamer:** paquetes promocionales de 2 o más productos ofrecidos a precio preferencial.
 ---
 
-## 7. Lenguaje Ubicuo (DDD)
+## 8. Lenguaje Ubicuo (DDD)
 
 | Término | Definición en el Dominio |
 | :--- | :--- |
@@ -356,7 +402,7 @@ Categorías habilitadas en el catálogo:
 | Vendedor | `REGALO_ELEGIDO` | Un comprador elige un regalo del vendedor: ya puede enviarlo |
 ---
 
-## 8. Reglas de Negocio e Invariantes del Dominio
+## 9. Reglas de Negocio e Invariantes del Dominio
 
 | # | Regla | Dónde se garantiza | Estado |
 |---|---|---|---|
@@ -408,7 +454,7 @@ Categorías habilitadas en el catálogo:
 - Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
 ---
 
-## 9. Casos de Uso del Sistema (63 Casos de Uso)
+## 10. Casos de Uso del Sistema (63 Casos de Uso)
 
 **Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
@@ -520,7 +566,7 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
  
 ---
 
-## 10. Arquitectura del Software (Clean Architecture)
+## 11. Arquitectura del Software (Clean Architecture)
 
 El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructurado en capas desacopladas.
 
@@ -541,7 +587,7 @@ backend/src/main/java/com/uniquindio/backend/
 │   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken, VerificadorCuentaActiva)
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (78 clases *UseCase = 63 casos de uso; ver sección 9)
+│   ├── usecase/             # Lógica de Orquestación (78 clases *UseCase = 63 casos de uso; ver sección 10)
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, MarcarDescargaCompra,
 │   │   │              ExpirarComprasPendientes (automático), ConsultarHistorialCompras
 │   │   ├── Pedidos:   CrearPedido (+ ItemPedido), ConfirmarPedido, CancelarPedido, SolicitarReembolsoPedido
@@ -583,12 +629,12 @@ Estructura del frontend (`frontend/src/app/`):
 │                  # producto, reporte, usuario) y utilidades (api.util con mensajeDeError, formato, toast, confirmacion)
 ├── core/          # auth.interceptor (agrega el JWT) y guards (authGuard, rolGuard, guestGuard)
 ├── modelos/       # Interfaces TypeScript de las respuestas de la API
-└── app.routes.ts  # Rutas protegidas por guards (sección 2.1)
+└── app.routes.ts  # Rutas protegidas por guards (sección 3.1)
 ```
  
 ---
 
-## 11. Seguridad, Base de Datos, Limitaciones y Decisiones de diseño
+## 12. Seguridad, Base de Datos, Limitaciones y Decisiones de diseño
 
 ### Seguridad
 
@@ -596,13 +642,13 @@ La API usa Spring Security con JWT (jjwt, HS256). El login (CU-27) autentica com
 
 Los controllers leen el id del `Authentication` (token), nunca del body ni de la URL, por lo que un usuario no puede actuar sobre recursos de otro. Cada ruta restringe el rol con `@PreAuthorize`: un rol equivocado recibe 403.
 
-CORS está habilitado para el frontend en desarrollo (`localhost:4200` y `localhost:3000`) dentro de la cadena de seguridad, de modo que el preflight `OPTIONS` se responde sin exigir token.
+CORS está habilitado para el frontend en desarrollo (`localhost:4200` y `localhost:3000`) y para el frontend desplegado en Vercel (ver sección 2), dentro de la cadena de seguridad, de modo que el preflight `OPTIONS` se responde sin exigir token.
 
 En desarrollo el secreto JWT tiene un valor por defecto; en producción debe definirse la variable de entorno `JWT_SECRET` (mínimo 32 caracteres).
 
 ### Base de datos y consultas
 
-El perfil predeterminado usa H2 en memoria para desarrollo y pruebas, con datos de demo cargados desde `data.sql`. Para MariaDB, crear la base `ecommerce_productos_gamer` y arrancar desde `backend` con el perfil `mariadb`.
+El perfil predeterminado usa H2 en memoria para desarrollo y pruebas, con datos de demo cargados desde `data.sql`. Para MariaDB, crear la base `ecommerce_productos_gamer` y arrancar desde `backend` con el perfil `mariadb`. En producción la base de datos es un servicio gestionado en **Aiven** (ver sección 2).
 
 PowerShell:
 
@@ -642,7 +688,7 @@ set +a
 ./gradlew bootRun
 ```
 
-En Windows PowerShell, asigna al entorno la misma opción que configuraste en `.env` antes de iniciar `.\gradlew.bat bootRun`; PowerShell no carga `.env` automáticamente.
+En Windows PowerShell, asigna al entorno la misma opción que configuraste en `.env` antes de iniciar `.\gradlew.bat bootRun`; PowerShell no carga `.env` automáticamente. En Render, estas variables se definen en el panel de variables de entorno del servicio.
 
 El vendedor publica primero el producto y luego sube su imagen a `POST /api/productos/{id}/imagen` como `multipart/form-data` en el campo `archivo`. El backend acepta PNG/JPEG de hasta 5 MB, firma la petición a Cloudinary y persiste la URL HTTPS; el catálogo muestra la imagen o conserva la ilustración si no hay imagen o falla su carga.
 
@@ -660,7 +706,9 @@ El vendedor publica primero el producto y luego sube su imagen a `POST /api/prod
 - **Un cupón se usa una vez por comprador**, no una sola vez en total: mientras queden usos disponibles, otros compradores pueden aplicarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
 - **La carga de imágenes es opcional.** Depende de configurar Cloudinary; sin credenciales, o si la subida falla, el producto se publica igual y el catálogo muestra la ilustración de respaldo.
 
-## 12. Cómo ejecutar las pruebas
+---
+
+## 13. Cómo ejecutar las pruebas
 
 ```powershell
 cd backend
@@ -677,7 +725,7 @@ npx ng build
  
 ---
 
-## 13. Pruebas avanzadas
+## 14. Pruebas avanzadas
 
 En esta parte agregamos pruebas para revisar que el backend no solo funcione por encima, sino que también guarde bien la información y responda como debe cuando alguien intenta hacer algo que no puede. Para organizarlas usamos el patrón AAA: primero preparamos los datos, después ejecutamos la acción y al final revisamos si pasó lo que esperábamos. Las pruebas se ejecutan con `./gradlew test`.
 
@@ -728,7 +776,9 @@ En `FlujoCompletoIntegracionTest` recorremos el flujo real con `MockMvc` y H2: u
 
 Cada módulo sigue la misma plantilla: una prueba del caso de uso con repositorios en memoria, una del repositorio con `@DataJpaTest` cuando se añadió una consulta, y una del controller con `SesionTest` para fijar `401` (sin token), `403` (rol equivocado) y el código de éxito. Algunos casos que fijan reglas: una wishlist vacía devuelve `[]` y no `404`; una notificación ajena responde `422`; un combo con un producto pausado no aparece en el catálogo pero sí en el panel de su vendedor; una preventa con fecha de lanzamiento igual a hoy ya no cuenta como futura; un vendedor no puede crear ni enviar el regalo de un producto ajeno (`DuenoDeRegaloTest`); y el progreso de regalos calcula cuántos puede elegir el comprador y cuántas compras le faltan. En el frontend cada servicio y pantalla nuevos tienen su `*.spec.ts` (por ejemplo `wishlist.service.spec.ts`, `notificacion.service.spec.ts`, `combos.spec.ts`, `regalos.spec.ts`).
 
-## 14. Gestión del Proyecto (Trello)
+---
+
+## 15. Gestión del Proyecto (Trello)
 
 El avance del proyecto se gestiona en un tablero público de Trello:
 
@@ -745,4 +795,4 @@ El avance del proyecto se gestiona en un tablero público de Trello:
 
 **Etiquetas:** `Caso de Uso`, `Comprador`, `Vendedor` e `Infraestructura`.
 
-**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 9 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
+**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 10 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
