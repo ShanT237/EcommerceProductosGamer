@@ -34,6 +34,9 @@ public class EnviarRegaloUseCase {
             throw new ReglaDominioException("El regalo no pertenece al vendedor");
         }
 
+        // Deja notificado = true, consistente con la notificación REGALO_ENVIADO. Exige estado ELEGIDO,
+        // por eso va antes del cambio de estado (un regalo ya enviado se rechaza aquí).
+        regalo.notificar(regalo.getIdUsuario());
         regalo.enviar();
 
         regaloRepository.guardar(regalo);
