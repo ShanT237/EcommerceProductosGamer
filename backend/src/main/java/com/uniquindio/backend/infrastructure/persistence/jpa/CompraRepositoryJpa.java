@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,6 +44,13 @@ public class CompraRepositoryJpa implements CompraRepository {
     @Override
     public List<Compra> obtenerPorPedidoId(UUID pedidoId) {
         return dataRepository.findByPedidoId(pedidoId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Compra> obtenerPendientesAnterioresA(LocalDateTime limite) {
+        return dataRepository.findByEstadoAndFechaBefore(EstadoCompra.PENDIENTE, limite).stream()
                 .map(mapper::toDomain)
                 .toList();
     }

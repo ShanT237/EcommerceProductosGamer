@@ -2,6 +2,7 @@ package com.uniquindio.backend.domain.repository;
 
 import com.uniquindio.backend.domain.entity.Compra;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -53,4 +54,10 @@ public interface CompraRepository {
      * Todas las compras (cualquier estado). La usan los casos de uso de reportes.
      */
     List<Compra> obtenerTodas();
+
+    /**
+     * Compras en estado PENDIENTE cuya fecha es estrictamente anterior a {@code limite}.
+     * La usa ExpirarComprasPendientesUseCase.
+     */
+    List<Compra> obtenerPendientesAnterioresA(LocalDateTime limite);
 }
