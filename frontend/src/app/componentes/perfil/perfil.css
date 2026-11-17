@@ -4,3 +4,8 @@
 .nota { font-size: 15px; }
 .error { color: var(--rojo); background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.35); padding: 10px 14px; border-radius: 10px; font-size: 16px; }
 @media (max-width: 860px) { .columnas { grid-template-columns: 1fr; } }
+.fijos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0; }
+.fijos dt { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--texto-2); }
+.fijos dd { margin: 2px 0 0; font-size: 18px; }
+.baja { margin-top: 24px; border-color: rgba(255, 77, 109, 0.35); align-items: flex-start; }
+.baja h3 { color: var(--rojo); }

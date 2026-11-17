@@ -8,13 +8,20 @@
     <form class="panel caja aparece" (ngSubmit)="guardarPerfil()">
       <h3>Datos personales</h3>
       <div class="campo">
-        <label for="nombre">Nombre</label>
+        <label for="nombre">{{ esVendedor() ? 'Nombre o razón social' : 'Nombre' }}</label>
         <input id="nombre" name="nombre" class="entrada" maxlength="100" [(ngModel)]="nombre" [disabled]="cargandoPerfil()">
       </div>
       <div class="campo">
         <label for="correo">Correo</label>
         <input id="correo" name="correo" class="entrada" type="email" maxlength="150" [(ngModel)]="correo" [disabled]="cargandoPerfil()">
       </div>
+      @if (esVendedor() && cuenta()) {
+        <dl class="fijos">
+          <div><dt>Tipo</dt><dd>{{ etiquetaTipo() }}</dd></div>
+          <div><dt>{{ etiquetaDocumento() }}</dt><dd>{{ cuenta()?.documento }}</dd></div>
+        </dl>
+        <p class="muted nota">El tipo y el documento no se pueden modificar.</p>
+      }
       <p class="muted nota">Si cambias el correo, tendrás que ingresar de nuevo.</p>
       @if (errorPerfil()) { <p class="error">{{ errorPerfil() }}</p> }
       <button class="btn btn-neon" type="submit" [disabled]="guardandoPerfil() || cargandoPerfil()">{{ guardandoPerfil() ? 'Guardando…' : 'Guardar cambios' }}</button>
@@ -38,4 +45,18 @@
       <button class="btn btn-neon" type="submit" [disabled]="guardandoClave()">{{ guardandoClave() ? 'Guardando…' : 'Actualizar contraseña' }}</button>
     </form>
   </div>
+
+  <section class="panel caja baja aparece">
+    <h3>Dar de baja mi cuenta</h3>
+    <p class="muted nota">
+      @if (esVendedor()) {
+        Dejarás de poder ingresar y de publicar productos. Tu historial de ventas se conserva.
+      } @else {
+        Dejarás de poder ingresar y de comprar. Tu historial de compras se conserva.
+      }
+      Esta acción no se puede deshacer.
+    </p>
+    @if (errorBaja()) { <p class="error">{{ errorBaja() }}</p> }
+    <button class="btn btn-peligro" type="button" (click)="darDeBaja()" [disabled]="dandoBaja() || cargandoPerfil()">{{ dandoBaja() ? 'Procesando…' : 'Dar de baja mi cuenta' }}</button>
+  </section>
 </div>
