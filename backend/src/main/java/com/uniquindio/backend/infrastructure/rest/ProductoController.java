@@ -115,7 +115,8 @@ public class ProductoController {
                 request.precio(),
                 request.stock(),
                 request.gama(),
-                request.exclusividad()
+                request.exclusividad(),
+                request.tipo()
         );
 
         PublicarProductoResponse response = mapper.toPublicarResponse(producto);

@@ -2,6 +2,7 @@ package com.uniquindio.backend.application.dto.response;
 
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -22,5 +23,6 @@ public record BuscarProductoResponse(
         Double precioPromocional,     // precio que se cobrará con la promoción de temporada vigente hoy; null si no hay
         Double porcentajePromocion,   // porcentaje de esa promoción; null si no hay
         LocalDate promocionHasta,     // último día de la promoción (inclusive); null si no hay
-        String imagenUrl
+        String imagenUrl,
+        TipoProducto tipo             // FISICO o DIGITAL (solo los digitales se pueden descargar)
 ) {}

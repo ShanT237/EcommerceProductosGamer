@@ -15,6 +15,7 @@ import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
 import com.uniquindio.backend.domain.valueobject.Pagina;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import com.uniquindio.backend.infrastructure.config.SecurityConfig;
 import com.uniquindio.backend.infrastructure.rest.mapper.ProductoMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -114,7 +115,7 @@ class ProductoControllerTest {
     @Test
     void publicarUsaElVendedorDelToken() throws Exception {
         when(publicarProductoUseCase.ejecutar(any(), eq(vendedorId), eq("Mouse"), eq("Mouse RGB"),
-                eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL))).thenReturn(producto());
+                eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL), any())).thenReturn(producto());
 
         mockMvc.perform(post("/api/productos")
                         .with(vendedor(vendedorId))
@@ -125,7 +126,43 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.vendedorId").value(vendedorId.toString()));
 
         Mockito.verify(publicarProductoUseCase).ejecutar(any(), eq(vendedorId), eq("Mouse"),
-                eq("Mouse RGB"), eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL));
+                eq("Mouse RGB"), eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL), any());
+    }
+
+    @Test
+    void publicarDigitalPasaElTipoAlCasoDeUso() throws Exception {
+        Producto digital = Producto.publicar(productoId, vendedorId, "Mouse", "Mouse RGB", 100, 5,
+                Gama.MEDIA, Exclusividad.NORMAL, "General", TipoProducto.DIGITAL);
+        when(publicarProductoUseCase.ejecutar(any(), eq(vendedorId), eq("Mouse"), eq("Mouse RGB"),
+                eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL), eq(TipoProducto.DIGITAL)))
+                .thenReturn(digital);
+
+        mockMvc.perform(post("/api/productos")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoPublicar("\"tipo\": \"DIGITAL\",")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tipo").value("DIGITAL"));
+
+        Mockito.verify(publicarProductoUseCase).ejecutar(any(), eq(vendedorId), eq("Mouse"),
+                eq("Mouse RGB"), eq(100.0), eq(5), eq(Gama.MEDIA), eq(Exclusividad.NORMAL),
+                eq(TipoProducto.DIGITAL));
+    }
+
+    @Test
+    void publicarSinTipoPasaNull() throws Exception {
+        when(publicarProductoUseCase.ejecutar(any(), eq(vendedorId), any(), any(),
+                Mockito.anyDouble(), Mockito.anyInt(), any(), any(), any())).thenReturn(producto());
+
+        mockMvc.perform(post("/api/productos")
+                        .with(vendedor(vendedorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoPublicar("")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tipo").value("FISICO"));
+
+        Mockito.verify(publicarProductoUseCase).ejecutar(any(), eq(vendedorId), any(), any(),
+                Mockito.anyDouble(), Mockito.anyInt(), any(), any(), Mockito.isNull());
     }
 
     @Test
@@ -148,7 +185,7 @@ class ProductoControllerTest {
     void publicarIgnoraUnVendedorIdEnElBody() throws Exception {
         UUID ajeno = UUID.randomUUID();
         when(publicarProductoUseCase.ejecutar(any(), eq(vendedorId), any(), any(),
-                Mockito.anyDouble(), Mockito.anyInt(), any(), any())).thenReturn(producto());
+                Mockito.anyDouble(), Mockito.anyInt(), any(), any(), any())).thenReturn(producto());
 
         mockMvc.perform(post("/api/productos")
                         .with(vendedor(vendedorId))
@@ -157,7 +194,7 @@ class ProductoControllerTest {
                 .andExpect(status().isCreated());
 
         Mockito.verify(publicarProductoUseCase, Mockito.never()).ejecutar(any(), eq(ajeno), any(), any(),
-                Mockito.anyDouble(), Mockito.anyInt(), any(), any());
+                Mockito.anyDouble(), Mockito.anyInt(), any(), any(), any());
     }
 
     @Test

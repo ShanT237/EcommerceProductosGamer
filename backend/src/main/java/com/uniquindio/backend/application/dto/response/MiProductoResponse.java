@@ -2,6 +2,7 @@ package com.uniquindio.backend.application.dto.response;
 
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -24,5 +25,6 @@ public record MiProductoResponse(
         Double porcentajePromocion,
         LocalDate promocionHasta,
         boolean pausado,              // true = el vendedor lo pausó y no se ve en el catálogo público
-        String imagenUrl
+        String imagenUrl,
+        TipoProducto tipo
 ) {}

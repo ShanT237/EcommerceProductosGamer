@@ -5,6 +5,7 @@ import com.uniquindio.backend.domain.entity.Producto;
 import com.uniquindio.backend.domain.entity.Promocion;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -77,5 +78,15 @@ class ProductoMapperTest {
         assertEquals(100.0, respuesta.precio(), 0.001);
         assertNull(respuesta.precioOriginal());
         assertNull(respuesta.porcentajeDescuento());
+    }
+
+    @Test
+    void exponeElTipoDelProductoEnBuscarMiProductoYPublicar() {
+        Producto p = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Juego", "Juego digital",
+                100, 5, Gama.MEDIA, Exclusividad.NORMAL, "General", TipoProducto.DIGITAL);
+
+        assertEquals(TipoProducto.DIGITAL, mapper.toBuscarResponse(p).tipo());
+        assertEquals(TipoProducto.DIGITAL, mapper.toMiProductoResponse(p, null).tipo());
+        assertEquals(TipoProducto.DIGITAL, mapper.toPublicarResponse(p).tipo());
     }
 }

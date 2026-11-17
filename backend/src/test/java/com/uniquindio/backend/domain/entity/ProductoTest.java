@@ -3,6 +3,7 @@ package com.uniquindio.backend.domain.entity;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -228,5 +229,39 @@ class ProductoTest {
         assertTrue(e2.getMessage().contains("una unidad"));
 
         assertThrows(ReglaDominioException.class, () -> normal.validarCompraExclusiva(false, 0));
+    }
+
+    @Test
+    @DisplayName("Publicar sin indicar tipo deja el producto como FISICO")
+    void publicarSinTipoEsFisico() {
+        Producto p = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Desc", 100.0, 5,
+                Gama.MEDIA, Exclusividad.NORMAL);
+        assertEquals(TipoProducto.FISICO, p.getTipo());
+        assertFalse(p.esDigital());
+    }
+
+    @Test
+    @DisplayName("Publicar un producto digital conserva el tipo y permite la descarga")
+    void publicarDigitalConservaElTipo() {
+        Producto p = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Juego", "Desc", 100.0, 5,
+                Gama.MEDIA, Exclusividad.NORMAL, "General", TipoProducto.DIGITAL);
+        assertTrue(p.esDigital());
+        assertDoesNotThrow(p::asegurarEsDigital);
+    }
+
+    @Test
+    @DisplayName("Un producto físico no admite la descarga")
+    void asegurarEsDigitalRechazaUnProductoFisico() {
+        Producto fisico = Producto.publicar(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Desc", 100.0, 5,
+                Gama.MEDIA, Exclusividad.NORMAL);
+        assertThrows(ReglaDominioException.class, fisico::asegurarEsDigital);
+    }
+
+    @Test
+    @DisplayName("Reconstruir con tipo nulo (filas anteriores) da FISICO")
+    void reconstruirSinTipoEsFisico() {
+        Producto p = Producto.reconstruir(UUID.randomUUID(), UUID.randomUUID(), "Mouse", "Desc", 100.0, 5,
+                Gama.MEDIA, Exclusividad.NORMAL, false, null, false, "General", null, null);
+        assertEquals(TipoProducto.FISICO, p.getTipo());
     }
 }

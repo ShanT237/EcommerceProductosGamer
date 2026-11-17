@@ -2,6 +2,7 @@ package com.uniquindio.backend.infrastructure.persistence.jpa.entity;
 
 import com.uniquindio.backend.domain.valueobject.Exclusividad;
 import com.uniquindio.backend.domain.valueobject.Gama;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,6 +59,11 @@ public class ProductoEntity {
     // Nullable: las filas anteriores a CU-20 (p. ej. data.sql) no traen categoria.
     @Column(length = 50)
     private String categoria;
+
+    // Nullable, igual que categoria: las filas anteriores no traen tipo y se leen como FISICO.
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private TipoProducto tipo;
 
     @Column(name = "imagen_url", length = 1000)
     private String imagenUrl;

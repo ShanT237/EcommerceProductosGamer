@@ -1,6 +1,7 @@
 package com.uniquindio.backend.infrastructure.persistence.jpa.mapper;
 
 import com.uniquindio.backend.domain.entity.Producto;
+import com.uniquindio.backend.domain.valueobject.TipoProducto;
 import com.uniquindio.backend.infrastructure.persistence.jpa.entity.ProductoEntity;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ public class ProductoPersistenceMapper {
         entity.setPausado(producto.isPausado());
         entity.setCategoria(producto.getCategoria());
         entity.setImagenUrl(producto.getImagenUrl());
+        entity.setTipo(producto.getTipo());
         return entity;
     }
 
@@ -43,6 +45,7 @@ public class ProductoPersistenceMapper {
                 (entity.getCategoria() == null || entity.getCategoria().isBlank())
                         ? Producto.CATEGORIA_POR_DEFECTO
                         : entity.getCategoria(),
-                entity.getImagenUrl());
+                entity.getImagenUrl(),
+                entity.getTipo() == null ? TipoProducto.FISICO : entity.getTipo());
     }
 }
