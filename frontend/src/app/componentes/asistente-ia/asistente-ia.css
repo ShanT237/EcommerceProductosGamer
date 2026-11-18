@@ -1,7 +1,7 @@
 :host { display: contents; }
 
 .asistente-fab {
-  position: fixed; right: 20px; bottom: 20px; z-index: 150;
+  position: fixed; left: 20px; bottom: 20px; z-index: 150;
   display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px;
   border: none; border-radius: 999px; color: #07060f; font-weight: 700; font-size: 16px; letter-spacing: 0.04em;
   background: linear-gradient(110deg, var(--cian), var(--violeta) 55%, var(--magenta));
@@ -11,7 +11,7 @@
 .asistente-fab:hover { transform: translateY(-2px); box-shadow: 0 0 34px rgba(34, 228, 255, 0.55), 0 0 60px rgba(255, 46, 166, 0.3); }
 
 .asistente-panel {
-  position: fixed; right: 20px; bottom: 20px; z-index: 150;
+  position: fixed; left: 20px; bottom: 20px; z-index: 150;
   width: min(380px, calc(100vw - 24px)); height: min(560px, calc(100vh - 100px));
   display: flex; flex-direction: column; overflow: hidden;
   background: rgba(13, 11, 28, 0.96); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), var(--brillo-cian);
