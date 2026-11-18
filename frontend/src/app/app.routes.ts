@@ -11,6 +11,7 @@ import { Favoritos } from './componentes/favoritos/favoritos';
 import { Combos } from './componentes/combos/combos';
 import { Perfil } from './componentes/perfil/perfil';
 import { Notificaciones } from './componentes/notificaciones/notificaciones';
+import { ChatEnVivo } from './componentes/chat-en-vivo/chat-en-vivo';
 import { Regalos } from './componentes/regalos/regalos';
 import { PanelVendedor } from './componentes/panel-vendedor/panel-vendedor';
 import { guestGuard, rolGuard } from './core/guards';
@@ -29,6 +30,8 @@ export const routes: Routes = [
   { path: 'perfil', component: Perfil, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Mi perfil · GamerZone' },
   { path: 'regalos', component: Regalos, canActivate: [rolGuard('COMPRADOR')], title: 'Regalos · GamerZone' },
   { path: 'notificaciones', component: Notificaciones, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Notificaciones · GamerZone' },
+  { path: 'chat', component: ChatEnVivo, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Chat · GamerZone' },
+  { path: 'chat/:id', component: ChatEnVivo, canActivate: [rolGuard('COMPRADOR', 'VENDEDOR')], title: 'Chat · GamerZone' },
   { path: 'vendedor', component: PanelVendedor, canActivate: [rolGuard('VENDEDOR')], title: 'Panel de vendedor · GamerZone' },
   { path: '**', pathMatch: 'full', redirectTo: '' },
 ];
