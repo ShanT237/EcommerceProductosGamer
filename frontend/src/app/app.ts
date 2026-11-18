@@ -7,10 +7,11 @@ import { ToastService } from './servicios/toast.service';
 import { ConfirmacionService } from './servicios/confirmacion.service';
 import { WishlistService } from './servicios/wishlist.service';
 import { Confirmacion } from './componentes/confirmacion/confirmacion';
+import { AsistenteIa } from './componentes/asistente-ia/asistente-ia';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Confirmacion],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Confirmacion, AsistenteIa],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
