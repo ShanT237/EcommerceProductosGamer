@@ -326,3 +326,14 @@ export interface NuevaMeta {
   comprasRequeridas: number;
   productoRegaloId: string;
 }
+
+/** Un turno de la conversación con el asistente de IA (`/api/asistente/*`). */
+export interface MensajeAsistente {
+  rol: 'user' | 'assistant';
+  contenido: string;
+}
+
+/** Respuesta de `POST /api/asistente/comprador` y `/api/asistente/vendedor`. */
+export interface RespuestaAsistente {
+  respuesta: string;
+}
