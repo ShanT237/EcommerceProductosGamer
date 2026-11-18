@@ -14,19 +14,17 @@
   background: radial-gradient(260px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.16), transparent 60%);
 }
 .tarjeta:hover .brillo { opacity: 1; }
-/* La zona de arte tiene proporción fija: todas las tarjetas miden lo mismo y la imagen se encoge
-   según cuántas etiquetas haya (las etiquetas ocupan espacio, ya no flotan encima de la imagen). */
+/* La imagen ocupa toda la zona de arte; las etiquetas van debajo, encima del título, en tamaño pequeño. */
 .arte {
-  position: relative; display: flex; flex-direction: column; gap: 8px;
-  aspect-ratio: 1.46 / 1; padding: 12px 14px 8px;
+  position: relative; display: flex; flex-direction: column;
+  aspect-ratio: 1.46 / 1; padding: 12px 14px 4px;
   background: radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.18), transparent 70%);
   transform: translateZ(30px);
 }
-.etiquetas { flex: 0 0 auto; display: flex; gap: 6px; flex-wrap: wrap; padding-right: 44px; /* espacio para el corazón */ }
-/* El arte ocupa lo que sobra bajo las etiquetas; el mínimo evita que se aplaste del todo (la tarjeta crece si hace falta). */
 app-arte-producto { flex: 1 1 0; min-height: 90px; }
 app-arte-producto ::ng-deep svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.etiqueta.preventa { color: var(--ambar); border-color: var(--ambar); background: rgba(255, 176, 32, 0.1); }
+.etiquetas { display: flex; gap: 4px; flex-wrap: wrap; }
+.etiquetas .etiqueta { padding: 1px 7px; font-size: 10px; letter-spacing: 0.08em; }
 .info { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 h3 { font-size: 16px; }
 .desc { color: var(--texto-2); font-size: 16px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

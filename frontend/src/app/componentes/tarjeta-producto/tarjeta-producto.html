@@ -1,6 +1,15 @@
 <article class="tarjeta card h-100" (mousemove)="inclinar($event)" (mouseleave)="soltar()" (click)="ver.emit(producto())" tabindex="0" (keydown.enter)="ver.emit(producto())">
   <div class="brillo"></div>
   <div class="arte">
+    <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" [imagenUrl]="producto().imagenUrl ?? null" />
+    @if (favorito() !== null) {
+      <button type="button" class="corazon" [class.activo]="favorito()"
+              [attr.aria-pressed]="favorito()"
+              [attr.aria-label]="favorito() ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+              (click)="alAlternar($event)" (keydown.enter)="$event.stopPropagation()">{{ favorito() ? '♥' : '♡' }}</button>
+    }
+  </div>
+  <div class="info card-body">
     <div class="etiquetas">
       <span class="etiqueta gama-{{ producto().gama }}">{{ producto().gama }}</span>
       @if (producto().porcentajeDescuento) {
@@ -16,15 +25,6 @@
         <span class="etiqueta excl">Exclusivo</span>
       }
     </div>
-    <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" [imagenUrl]="producto().imagenUrl ?? null" />
-    @if (favorito() !== null) {
-      <button type="button" class="corazon" [class.activo]="favorito()"
-              [attr.aria-pressed]="favorito()"
-              [attr.aria-label]="favorito() ? 'Quitar de favoritos' : 'Añadir a favoritos'"
-              (click)="alAlternar($event)" (keydown.enter)="$event.stopPropagation()">{{ favorito() ? '♥' : '♡' }}</button>
-    }
-  </div>
-  <div class="info card-body">
     <h3 class="card-title mb-0">{{ producto().nombre }}</h3>
     <p class="desc card-text mb-0">{{ producto().descripcion }}</p>
     <div class="pie">
