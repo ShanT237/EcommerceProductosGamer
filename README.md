@@ -388,7 +388,7 @@ Categorías habilitadas en el catálogo:
 ## Tipos de notificación
 | Destinatario | Tipo | Cuándo se genera |
 |---|---|---|
-| Comprador | `DESCUENTO` (ya existía) | El vendedor rebaja un producto de su wishlist |
+| Comprador | `DESCUENTO`  | El vendedor rebaja un producto de su wishlist |
 | Comprador | `STOCK_DISPONIBLE` | Producto de su wishlist estaba en 0 y vuelve a tener stock (cancelación, reembolso, expiración de una compra pendiente o reposición del vendedor con `PUT /api/productos/{id}/stock`) |
 | Comprador | `PREVENTA_DISPONIBLE` | Llega la fecha de lanzamiento de una preventa de su wishlist (job diario 00:05 + al arrancar; no duplica) |
 | Comprador | `META_ALCANZADA` | Sus compras COMPLETADAS cruzan un múltiplo de 5 (confirmar compra o pedido) |
