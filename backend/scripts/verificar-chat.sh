@@ -40,7 +40,24 @@ comprobar() {
   if [ "$2" = "$3" ]; then pasa "$1"; else falla "$1" "esperado '$2', obtenido '$3'"; fi
 }
 
-nuevo_uuid() { cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen | tr 'A-Z' 'a-z'; }
+# UUID v4 portable: /proc (Linux), uuidgen, o RANDOM puro (Git Bash en Windows no trae ninguno de los dos).
+nuevo_uuid() {
+  if [ -r /proc/sys/kernel/random/uuid ]; then
+    cat /proc/sys/kernel/random/uuid
+  elif command -v uuidgen >/dev/null 2>&1; then
+    uuidgen | tr 'A-Z' 'a-z'
+  else
+    local a b c d e f g h ns
+    # Cada $(...) es un subproceso que podría heredar la misma semilla: se mezcla el PID y los nanosegundos.
+    ns=$(date +%N 2>/dev/null); ns=${ns//[^0-9]/}
+    RANDOM=$(( (BASHPID * 7919 + 10#${ns:-0}) % 32768 ))
+    a=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 )); b=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 ))
+    c=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 )); d=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 ))
+    e=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 )); f=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 ))
+    g=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 )); h=$(( (RANDOM << 1 | (RANDOM & 1)) & 65535 ))
+    printf '%04x%04x-%04x-4%03x-%x%03x-%04x%04x%04x\n' "$a" "$b" "$c" $((d & 4095)) $((8 + (e & 3))) $((f & 4095)) "$g" "$h" $(( (a ^ h) & 65535 ))
+  fi
+}
 
 # codigo <METHOD> <ruta> [token] [cuerpo]  → imprime solo el código HTTP
 codigo() {
@@ -179,7 +196,12 @@ comprobar "reenvío idempotente: devuelve el mismo id" \
   "$(echo "$HISTORIAL" | jq -r --arg k "$CLIENTE_1" '.mensajes[] | select(.clienteId == $k) | .id')" "$R1"
 
 # 8. Paginación por cursor
-for i in 1 2 3 4 5; do enviar "$TOKEN_A" "$CONV_ID" "$(nuevo_uuid)" "Mensaje de paginación $i" >/dev/null; sleep 0.05; done
+# Texto solo ASCII: en Git Bash los argumentos con tildes pasan por la página de códigos de Windows y pueden corromperse.
+for i in 1 2 3 4 5; do
+  respuesta=$(enviar "$TOKEN_A" "$CONV_ID" "$(nuevo_uuid)" "Mensaje de paginacion $i")
+  [ -n "$(echo "$respuesta" | jq -r '.id // empty' 2>/dev/null)" ] || falla "envío del mensaje de paginación $i" "respuesta: $respuesta"
+  sleep 0.05
+done
 TODOS=($(ids_historial "$TOKEN_A" "$CONV_ID" "tamano=100"))
 N=${#TODOS[@]}
 PAG1_JSON=$(cuerpo_http GET "/chat/conversaciones/$CONV_ID/mensajes?tamano=2" "$TOKEN_A")
@@ -197,13 +219,14 @@ comprobar "despuesDe devuelve los siguientes en ascendente" \
 comprobar "422 si se piden antesDe y despuesDe a la vez" "422" \
   "$(codigo GET "/chat/conversaciones/$CONV_ID/mensajes?antesDe=${TODOS[1]}&despuesDe=${TODOS[0]}" "$TOKEN_A")"
 
-# 9. Unicode (detecta una MariaDB que no sea utf8mb4)
-TEXTO_UNICODE="Hola 🎮 ñandú"
+# 9. Unicode (detecta una MariaDB que no sea utf8mb4). El cuerpo y la comparación usan escapes \u (solo ASCII)
+# para que ni la consola de Windows ni jq.exe alteren el texto: lo que se prueba es la base de datos.
 CLIENTE_U=$(nuevo_uuid)
-enviar "$TOKEN_A" "$CONV_ID" "$CLIENTE_U" "$TEXTO_UNICODE" >/dev/null
+cuerpo_http POST "/chat/conversaciones/$CONV_ID/mensajes" "$TOKEN_A" \
+  "{\"clienteId\":\"$CLIENTE_U\",\"contenido\":\"Hola \\ud83c\\udfae \\u00f1and\\u00fa\"}" >/dev/null
 RELEIDO=$(cuerpo_http GET "/chat/conversaciones/$CONV_ID/mensajes?tamano=100" "$TOKEN_A" \
-  | jq -r --arg k "$CLIENTE_U" '.mensajes[] | select(.clienteId == $k) | .contenido')
-comprobar "Unicode se guarda y se relee idéntico" "$TEXTO_UNICODE" "$RELEIDO"
+  | jq -r --arg k "$CLIENTE_U" '.mensajes[] | select(.clienteId == $k) | .contenido == "Hola \ud83c\udfae \u00f1and\u00fa"')
+comprobar "Unicode (emoji, ñ, tilde) se guarda y se relee idéntico" "true" "$RELEIDO"
 
 # Marcador para la fase 2 (persistencia tras reiniciar el backend)
 MARCADOR="marcador-persistencia-$(date +%s)"
