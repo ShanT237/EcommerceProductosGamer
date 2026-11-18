@@ -33,6 +33,12 @@
           <a routerLink="/vendedor" routerLinkActive="activo" (click)="cerrarMenu()">Mi tienda</a>
           <a routerLink="/perfil" routerLinkActive="activo" (click)="cerrarMenu()">Perfil</a>
         }
+        <a routerLink="/chat" routerLinkActive="activo" (click)="cerrarMenu()"
+           [attr.aria-label]="chat.noLeidasTotal() > 0 ? 'Mensajes, ' + chat.noLeidasTotal() + ' sin leer' : 'Mensajes'">Mensajes
+          @if (chat.noLeidasTotal() > 0) {
+            <span class="contador-carrito">{{ chat.noLeidasTotal() }}</span>
+          }
+        </a>
         <a routerLink="/notificaciones" routerLinkActive="activo" class="campana" (click)="cerrarMenu()"
            [attr.aria-label]="notificaciones.noLeidas() > 0 ? 'Notificaciones, ' + notificaciones.noLeidas() + ' sin leer' : 'Notificaciones'"
            title="Notificaciones">

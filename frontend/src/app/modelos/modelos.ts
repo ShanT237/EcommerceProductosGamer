@@ -337,3 +337,44 @@ export interface MensajeAsistente {
 export interface RespuestaAsistente {
   respuesta: string;
 }
+
+/** Contexto de una conversación de chat: un producto o una orden de compra. */
+export type TipoContextoChat = 'PRODUCTO' | 'ORDEN';
+
+/** Conversación comprador–vendedor (`/api/chat/conversaciones`), vista por quien la consulta. */
+export interface ConversacionChat {
+  id: string;
+  tipo: TipoContextoChat;
+  referenciaId: string;
+  compradorId: string;
+  vendedorId: string;
+  titulo: string;
+  contraparteNombre: string;
+  vistaPrevia: string | null;
+  ultimaActividad: string;
+  noLeidos: number;
+}
+
+/** Mensaje de chat. `clienteId` lo genera el cliente: reenviarlo no duplica el mensaje. */
+export interface MensajeChat {
+  id: string;
+  conversacionId: string;
+  remitenteId: string;
+  clienteId: string;
+  contenido: string;
+  enviadoEn: string;
+  leidoEn: string | null;
+}
+
+/** Página de historial (siempre en orden cronológico ascendente). */
+export interface HistorialChat {
+  mensajes: MensajeChat[];
+  hayMas: boolean;
+}
+
+/** Evento SSE `leidos`: `lectorId` leyó los mensajes pendientes de la conversación. */
+export interface LecturaChat {
+  conversacionId: string;
+  lectorId: string;
+  leidoEn: string;
+}

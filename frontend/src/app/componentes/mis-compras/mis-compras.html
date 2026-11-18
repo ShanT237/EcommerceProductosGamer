@@ -73,6 +73,10 @@
                   </div>
                   <div class="detalle-linea-acciones">
                     <strong>{{ precio(linea.subtotal) }}</strong>
+                    @if (vendedorDe(linea.productoId); as vendedorId) {
+                      <button class="btn btn-chico" [disabled]="ocupada() === 'chat-' + op.id"
+                              (click)="chatearConVendedor(op, vendedorId)">Chatear con el vendedor</button>
+                    }
                     @if (linea.estado === 'COMPLETADA') {
                       @if (linea.descargado) {
                         <span class="muted">Descargado</span>

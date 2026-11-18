@@ -1,0 +1,109 @@
+<div class="contenedor pagina">
+  <header class="cabecera aparece">
+    <h1 class="titulo-seccion">Mis <span class="degradado">mensajes</span></h1>
+    <p class="muted">Conversa en tiempo real con el vendedor o el comprador de un producto o una orden.</p>
+  </header>
+
+  @if (!conectado()) {
+    <div class="banner" role="status">Reconectando… tus mensajes se enviarán al volver la conexión</div>
+  }
+
+  <div class="chat panel" [class.con-hilo]="!!idActivo()">
+    <aside class="lista" aria-label="Conversaciones">
+      @if (cargandoLista() && servicio.conversaciones().length === 0) {
+        @for (i of [1, 2, 3]; track i) { <div class="esqueleto"></div> }
+      } @else if (servicio.conversaciones().length === 0) {
+        <div class="vacio">
+          <p class="grande">◈</p>
+          <p>Aún no tienes conversaciones</p>
+        </div>
+      } @else {
+        @for (c of servicio.conversaciones(); track c.id) {
+          <a class="conversacion" [routerLink]="['/chat', c.id]" [class.activa]="c.id === idActivo()"
+             [class.no-leida]="c.noLeidos > 0">
+            <span class="fila">
+              <strong class="titulo">{{ c.titulo }}</strong>
+              @if (c.noLeidos > 0) {
+                <span class="insignia" [attr.aria-label]="c.noLeidos + ' mensajes sin leer'">{{ c.noLeidos }}</span>
+              }
+            </span>
+            <span class="muted contraparte">{{ etiquetaContexto(c.tipo) }} · {{ c.contraparteNombre }}</span>
+            <span class="previa">{{ c.vistaPrevia ?? 'Sin mensajes todavía' }}</span>
+            <span class="muted fecha">{{ fechaHora(c.ultimaActividad) }}</span>
+          </a>
+        }
+      }
+    </aside>
+
+    <section class="hilo-panel" aria-label="Conversación">
+      @if (!idActivo()) {
+        <div class="vacio sin-seleccion">
+          <p class="grande">◈</p>
+          <p>Selecciona una conversación para ver sus mensajes</p>
+        </div>
+      } @else if (errorHilo()) {
+        <div class="cabecera-hilo">
+          <a class="volver" routerLink="/chat">← Volver</a>
+        </div>
+        <div class="vacio">
+          <p>No se pudo abrir esta conversación.</p>
+        </div>
+      } @else {
+        <div class="cabecera-hilo">
+          <a class="volver" routerLink="/chat">← Volver</a>
+          <div>
+            <strong>{{ conversacionActiva()?.titulo ?? 'Conversación' }}</strong>
+            @if (conversacionActiva(); as c) {
+              <span class="muted contraparte">{{ etiquetaContexto(c.tipo) }} · {{ c.contraparteNombre }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="hilo" #hilo (scroll)="alScroll()">
+          @if (hayMasAnteriores()) {
+            <button type="button" class="btn btn-chico anteriores" [disabled]="cargandoAnteriores()"
+                    (click)="cargarAnteriores()">
+              {{ cargandoAnteriores() ? 'Cargando…' : 'Cargar mensajes anteriores' }}
+            </button>
+          }
+          @if (cargandoHilo() && mensajes().length === 0) {
+            @for (i of [1, 2, 3]; track i) { <div class="esqueleto burbuja-esqueleto"></div> }
+          } @else if (mensajes().length === 0) {
+            <p class="muted centrado">Escribe el primer mensaje.</p>
+          } @else {
+            @for (m of mensajes(); track m.clienteId) {
+              <div class="mensaje" [class.mio]="esMio(m)" [class.fallido]="m.estadoEnvio === 'fallido'">
+                <div class="burbuja">{{ m.contenido }}</div>
+                <div class="meta muted">
+                  <span>{{ fechaHora(m.enviadoEn) }}</span>
+                  @if (esMio(m)) {
+                    @switch (m.estadoEnvio) {
+                      @case ('enviando') { <span>· Enviando…</span> }
+                      @case ('fallido') {
+                        <span class="error">· No enviado ·</span>
+                        <button type="button" class="reintentar" (click)="reintentar(m)">Reintentar</button>
+                      }
+                      @default { <span>· {{ m.leidoEn ? 'Visto' : 'Enviado' }}</span> }
+                    }
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="redactor">
+          <textarea class="entrada" rows="2" [maxLength]="maximo" placeholder="Escribe un mensaje…"
+                    aria-label="Mensaje" [value]="borrador()" (input)="alEscribir($event)"
+                    (keydown)="alTecla($event)"></textarea>
+          <div class="acciones">
+            <span class="muted contador">{{ borrador().length }}/{{ maximo }}</span>
+            <button type="button" class="btn btn-neon btn-chico" [disabled]="!puedeEnviar()" (click)="enviar()">
+              Enviar
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+</div>

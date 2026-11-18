@@ -4,6 +4,7 @@ import com.uniquindio.backend.domain.service.EmisorToken;
 import com.uniquindio.backend.domain.service.VerificadorCuentaActiva;
 import com.uniquindio.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.uniquindio.backend.infrastructure.security.RespuestaErrorSeguridad;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,6 +51,10 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(h -> h.frameOptions(f -> f.sameOrigin())) // consola H2
                 .authorizeHttpRequests(auth -> auth
+                        // El re-despacho asíncrono (al completar/expirar un SseEmitter) no vuelve a pasar por
+                        // JwtAuthenticationFilter (OncePerRequestFilter); sin esto se rechazaría con la respuesta
+                        // ya enviada. El despacho REQUEST inicial sigue exigiendo autenticación.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios", "/api/vendedores").permitAll()
