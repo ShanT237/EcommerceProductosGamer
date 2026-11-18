@@ -1,5 +1,6 @@
 package com.uniquindio.backend.infrastructure.rest.exception;
 
+import com.uniquindio.backend.domain.exception.AccesoProhibidoException;
 import com.uniquindio.backend.domain.exception.AutenticacionException;
 import com.uniquindio.backend.domain.exception.ConflictoException;
 import com.uniquindio.backend.domain.exception.ReglaDominioException;
@@ -32,6 +33,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ReglaDominioException.class)
     public ResponseEntity<Map<String, Object>> manejarReglaDominio(ReglaDominioException ex) {
         return construirRespuesta(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage()); // -> 422
+    }
+
+    // Acceso a un recurso ajeno (p. ej. una conversación de chat donde no participa): 403
+    @ExceptionHandler(AccesoProhibidoException.class)
+    public ResponseEntity<Map<String, Object>> manejarAccesoProhibido(AccesoProhibidoException ex) {
+        return construirRespuesta(HttpStatus.FORBIDDEN, ex.getMessage()); // -> 403
     }
 
     @ExceptionHandler(AutenticacionException.class)
