@@ -1,7 +1,6 @@
 <article class="tarjeta card h-100" (mousemove)="inclinar($event)" (mouseleave)="soltar()" (click)="ver.emit(producto())" tabindex="0" (keydown.enter)="ver.emit(producto())">
   <div class="brillo"></div>
   <div class="arte">
-    <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" [imagenUrl]="producto().imagenUrl ?? null" />
     <div class="etiquetas">
       <span class="etiqueta gama-{{ producto().gama }}">{{ producto().gama }}</span>
       @if (producto().porcentajeDescuento) {
@@ -16,13 +15,8 @@
       @if (producto().exclusividad === 'EXCLUSIVO') {
         <span class="etiqueta excl">Exclusivo</span>
       }
-      @if (producto().porcentajeDescuento) {
-        <span class="etiqueta descuento">-{{ producto().porcentajeDescuento }}%</span>
-      }
-      @if (producto().porcentajePromocion) {
-        <span class="etiqueta promo">Promo -{{ producto().porcentajePromocion }}%</span>
-      }
     </div>
+    <app-arte-producto [nombre]="producto().nombre" [categoria]="producto().categoria" [gama]="producto().gama" [imagenUrl]="producto().imagenUrl ?? null" />
     @if (favorito() !== null) {
       <button type="button" class="corazon" [class.activo]="favorito()"
               [attr.aria-pressed]="favorito()"

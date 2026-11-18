@@ -14,8 +14,18 @@
   background: radial-gradient(260px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.16), transparent 60%);
 }
 .tarjeta:hover .brillo { opacity: 1; }
-.arte { position: relative; padding: 22px 18px 8px; background: radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.18), transparent 70%); transform: translateZ(30px); }
-.etiquetas { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+/* La zona de arte tiene proporción fija: todas las tarjetas miden lo mismo y la imagen se encoge
+   según cuántas etiquetas haya (las etiquetas ocupan espacio, ya no flotan encima de la imagen). */
+.arte {
+  position: relative; display: flex; flex-direction: column; gap: 8px;
+  aspect-ratio: 1.46 / 1; padding: 12px 14px 8px;
+  background: radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.18), transparent 70%);
+  transform: translateZ(30px);
+}
+.etiquetas { flex: 0 0 auto; display: flex; gap: 6px; flex-wrap: wrap; padding-right: 44px; /* espacio para el corazón */ }
+/* El arte ocupa lo que sobra bajo las etiquetas; el mínimo evita que se aplaste del todo (la tarjeta crece si hace falta). */
+app-arte-producto { flex: 1 1 0; min-height: 90px; }
+app-arte-producto ::ng-deep svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .etiqueta.preventa { color: var(--ambar); border-color: var(--ambar); background: rgba(255, 176, 32, 0.1); }
 .info { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 h3 { font-size: 16px; }
