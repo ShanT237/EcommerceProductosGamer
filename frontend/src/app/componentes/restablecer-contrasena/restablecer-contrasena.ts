@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../servicios/auth.service';
@@ -20,7 +20,7 @@ function conNumero(c: AbstractControl): ValidationErrors | null {
   templateUrl: './restablecer-contrasena.html',
   styleUrl: './restablecer-contrasena.css',
 })
-export class RestablecerContrasena {
+export class RestablecerContrasena implements OnInit {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
@@ -35,6 +35,14 @@ export class RestablecerContrasena {
   });
   protected cargando = signal(false);
   protected error = signal('');
+
+  ngOnInit(): void {
+    if (this.token && typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      const canal = new BroadcastChannel('gamerzone_recuperacion');
+      canal.postMessage({ tipo: 'ENLACE_ABIERTO' });
+      canal.close();
+    }
+  }
 
   protected noCoinciden(): boolean {
     const { nueva, confirmar } = this.formulario.getRawValue();
