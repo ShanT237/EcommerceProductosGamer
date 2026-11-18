@@ -60,12 +60,11 @@ export class AsistenteIa {
   }
 
   /** Enter envía; Shift+Enter inserta un salto de línea. */
-  protected alEnter(evento: KeyboardEvent) {
-    if (evento.shiftKey) return;
+  protected alEnter(evento: Event) {
+    if ((evento as KeyboardEvent).shiftKey) return;
     evento.preventDefault();
     this.enviar();
   }
-
   protected enviar(entrada?: string) {
     const mensaje = (entrada ?? this.texto()).trim();
     if (!mensaje || this.cargando()) return;
