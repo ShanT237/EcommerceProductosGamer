@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, Injector, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Compra, EstadoCompra } from '../../modelos/modelos';
+import { ChatService } from '../../servicios/chat.service';
 import { CompraService } from '../../servicios/compra.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
@@ -32,6 +33,8 @@ export class MisCompras implements OnInit {
   private productos = inject(ProductoService);
   private toast = inject(ToastService);
   private confirmacion = inject(ConfirmacionService);
+  private injector = inject(Injector); // ChatService se obtiene al usarlo: instanciarlo abre el stream SSE
+  private router = inject(Router);
   protected precio = precio;
   protected fechaHora = fechaHora;
 
@@ -92,6 +95,27 @@ export class MisCompras implements OnInit {
 
   protected nombreDe(productoId: string): string {
     return this.productos.catalogo().find((p) => p.id === productoId)?.nombre ?? 'Producto';
+  }
+
+  /** Vendedor del producto de una línea (del catálogo ya cargado); si no está, no se ofrece el chat. */
+  protected vendedorDe(productoId: string): string | null {
+    return this.productos.catalogo().find((p) => p.id === productoId)?.vendedorId ?? null;
+  }
+
+  /** Abre el chat de la orden con el vendedor de esa línea (el id de operación es pedidoId ?? id). */
+  protected chatearConVendedor(op: OperacionCompra, vendedorId: string) {
+    if (this.ocupada() === `chat-${op.id}`) return;
+    this.ocupada.set(`chat-${op.id}`);
+    this.injector.get(ChatService).iniciar('ORDEN', op.pedidoId ?? op.id, vendedorId).subscribe({
+      next: (conversacion) => {
+        this.ocupada.set(null);
+        void this.router.navigate(['/chat', conversacion.id]);
+      },
+      error: (e) => {
+        this.ocupada.set(null);
+        this.toast.error(mensajeDeError(e));
+      },
+    });
   }
 
   /** Solo los productos digitales se pueden descargar; si no está en el catálogo cargado, no se ofrece. */

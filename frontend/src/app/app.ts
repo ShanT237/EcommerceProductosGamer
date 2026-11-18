@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './servicios/auth.service';
 import { CarritoService } from './servicios/carrito.service';
+import { ChatService } from './servicios/chat.service';
 import { NotificacionService } from './servicios/notificacion.service';
 import { ToastService } from './servicios/toast.service';
 import { ConfirmacionService } from './servicios/confirmacion.service';
@@ -20,6 +21,7 @@ export class App {
   protected toast = inject(ToastService);
   protected carrito = inject(CarritoService);
   protected notificaciones = inject(NotificacionService); // al inyectarlo carga los avisos de la sesión (comprador o vendedor)
+  protected chat = inject(ChatService); // al inyectarlo abre el stream de mensajes de la sesión (comprador o vendedor)
   protected wishlist = inject(WishlistService);
   private confirmacion = inject(ConfirmacionService);
   protected menuAbierto = signal(false);

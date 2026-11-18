@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, Injector, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { Subject, debounceTime } from 'rxjs';
 import { Gama, Pagina, Pedido, Producto } from '../../modelos/modelos';
 import { AuthService } from '../../servicios/auth.service';
 import { CarritoService } from '../../servicios/carrito.service';
+import { ChatService } from '../../servicios/chat.service';
 import { CompraService } from '../../servicios/compra.service';
 import { ConfirmacionService } from '../../servicios/confirmacion.service';
 import { ProductoService } from '../../servicios/producto.service';
@@ -34,6 +35,9 @@ export class Catalogo implements OnInit {
   private ruta = inject(ActivatedRoute);
   protected preventas = inject(PreventaService);
   protected wishlist = inject(WishlistService);
+  // Se obtiene al usarlo: instanciar ChatService abre el stream SSE, y esta pantalla no lo necesita para pintarse.
+  private injector = inject(Injector);
+  protected abriendoChat = signal(false);
   protected auth = inject(AuthService);
   protected precio = precio;
   protected precioVigente = precioVigente;
@@ -194,6 +198,23 @@ export class Catalogo implements OnInit {
     if (this.procesando()) return;
     this.seleccionado.set(null);
     this.reserva.set(null);
+  }
+
+  /** Abre (o recupera) la conversación con el vendedor del producto abierto y va al chat. */
+  protected preguntarAlVendedor() {
+    const p = this.seleccionado();
+    if (!p || this.abriendoChat()) return;
+    this.abriendoChat.set(true);
+    this.injector.get(ChatService).iniciar('PRODUCTO', p.id).subscribe({
+      next: (conversacion) => {
+        this.abriendoChat.set(false);
+        void this.router.navigate(['/chat', conversacion.id]);
+      },
+      error: (e) => {
+        this.abriendoChat.set(false);
+        this.toast.error(mensajeDeError(e));
+      },
+    });
   }
 
   protected cambiarCantidad(delta: number) {
