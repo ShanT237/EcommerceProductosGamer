@@ -8,3 +8,5 @@ h1 { font-size: 28px; }
 .pie { text-align: center; font-size: 16px; }
 .enlace { color: var(--cian); font-weight: 700; }
 .enlace:hover { text-decoration: underline; }
+.olvido { align-self: flex-end; margin-top: -8px; font-size: 15px; color: var(--cian); }
+.olvido:hover { text-decoration: underline; }

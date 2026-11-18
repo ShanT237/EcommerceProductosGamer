@@ -1,0 +1,51 @@
+<div class="contenedor centro">
+  @if (!token) {
+    <div class="panel caja aparece">
+      <span class="sello">◈ Enlace incompleto</span>
+      <h1>Este enlace no <span class="degradado">es válido</span></h1>
+      <p class="muted ayuda">Abre el enlace completo que te llegó por correo o solicita uno nuevo.</p>
+      <a routerLink="/olvide-contrasena" class="btn btn-neon">Solicitar un enlace nuevo</a>
+    </div>
+  } @else {
+    <form class="panel caja aparece" [formGroup]="formulario" (ngSubmit)="guardar()">
+      <span class="sello">◈ Nueva contraseña</span>
+      <h1>Elige tu nueva <span class="degradado">contraseña</span></h1>
+
+      <div class="campo">
+        <label for="nueva">Nueva contraseña</label>
+        <input id="nueva" name="nueva" class="entrada form-control" type="password" autocomplete="new-password" placeholder="••••••••" formControlName="nueva" [attr.aria-invalid]="formulario.controls.nueva.invalid && formulario.controls.nueva.touched">
+        <p class="muted ayuda">Mínimo 8 caracteres, con al menos una mayúscula y un número.</p>
+        @if (formulario.controls.nueva.touched) {
+          @if (formulario.controls.nueva.hasError('required')) {
+            <p class="error">La contraseña es obligatoria.</p>
+          } @else if (formulario.controls.nueva.hasError('minlength')) {
+            <p class="error">Debe tener al menos 8 caracteres.</p>
+          } @else if (formulario.controls.nueva.hasError('mayuscula')) {
+            <p class="error">Debe incluir al menos una mayúscula.</p>
+          } @else if (formulario.controls.nueva.hasError('numero')) {
+            <p class="error">Debe incluir al menos un número.</p>
+          }
+        }
+      </div>
+
+      <div class="campo">
+        <label for="confirmar">Repite la contraseña</label>
+        <input id="confirmar" name="confirmar" class="entrada form-control" type="password" autocomplete="new-password" placeholder="••••••••" formControlName="confirmar" [attr.aria-invalid]="noCoinciden()">
+        @if (noCoinciden()) {
+          <p class="error">Las contraseñas no coinciden.</p>
+        }
+      </div>
+
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+        <a routerLink="/olvide-contrasena" class="enlace">Solicitar un enlace nuevo</a>
+      }
+
+      <button class="btn btn-neon" type="submit" [disabled]="cargando()">
+        {{ cargando() ? 'Guardando…' : 'Guardar contraseña' }}
+      </button>
+
+      <p class="muted pie"><a routerLink="/login" class="enlace">Volver a ingresar</a></p>
+    </form>
+  }
+</div>

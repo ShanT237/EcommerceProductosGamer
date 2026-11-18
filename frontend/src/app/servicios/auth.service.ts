@@ -92,6 +92,16 @@ export class AuthService {
     return this.http.post(`${API_URL}/vendedores`, datos);
   }
 
+  /** Paso 1 de la recuperación: pide el enlace por correo. Siempre responde igual, exista o no el correo. */
+  solicitarRecuperacion(correo: string) {
+    return this.http.post<{ mensaje: string }>(`${API_URL}/auth/olvide-contrasena`, { correo });
+  }
+
+  /** Paso 2: elige la contraseña nueva con el token que llegó en el enlace del correo. */
+  restablecerContrasena(token: string, contrasenaNueva: string) {
+    return this.http.post<{ mensaje: string }>(`${API_URL}/auth/restablecer-contrasena`, { token, contrasenaNueva });
+  }
+
   /** Cierra la sesión. Con `expirada` avisa al usuario; `mensaje` cambia el texto del aviso. */
   cerrarSesion(expirada = false, mensaje?: string) {
     this.guardar(null);

@@ -19,3 +19,9 @@ services:
         sync: false
       - key: CLOUDINARY_URL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: CORREO_REMITENTE
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
