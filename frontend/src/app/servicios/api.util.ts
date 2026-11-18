@@ -9,7 +9,11 @@ const MENSAJE_POR_ESTADO: Record<number, string> = {
   404: 'No se encontró lo que buscabas.',
   409: 'Esa información ya existe o cambió. Revisa e inténtalo de nuevo.',
   422: 'La operación no cumple las reglas del negocio.',
+  429: 'El asistente está recibiendo muchas solicitudes. Intenta de nuevo en unos segundos.',
   500: 'Error del servidor. Inténtalo de nuevo en unos minutos.',
+  502: 'El servicio externo devolvió una respuesta inválida. Inténtalo de nuevo.',
+  503: 'El servicio no está disponible en este momento. Inténtalo de nuevo en unos minutos.',
+  504: 'El servicio tardó demasiado en responder. Inténtalo de nuevo.',
 };
 
 /** Código que manda el backend en un 401 cuando el token sigue vigente pero la cuenta fue dada de baja. */

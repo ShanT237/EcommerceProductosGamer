@@ -77,3 +77,7 @@
 </div>
 
 <app-confirmacion />
+
+@if (auth.autenticado()) {
+  <app-asistente-ia />
+}

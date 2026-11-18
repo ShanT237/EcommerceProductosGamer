@@ -1,0 +1,45 @@
+@if (!abierto()) {
+  <button class="asistente-fab" (click)="abierto.set(true)" aria-label="Abrir asistente de IA" title="Asistente de IA">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M17 5h4"/>
+    </svg>
+    <span>Asistente IA</span>
+  </button>
+} @else {
+  <section class="asistente-panel panel" role="dialog" aria-label="Asistente GamerZone">
+    <header class="asistente-cab">
+      <strong>Asistente GamerZone</strong>
+      <span class="asistente-acciones">
+        <button class="btn btn-chico" (click)="reiniciar(false)" [disabled]="cargando() || mensajes().length === 0">Nueva conversación</button>
+        <button class="asistente-cerrar" (click)="abierto.set(false)" aria-label="Cerrar asistente">✕</button>
+      </span>
+    </header>
+
+    <div class="asistente-lista" #lista aria-live="polite">
+      @if (mensajes().length === 0 && !cargando()) {
+        <p class="muted asistente-saludo">¡Hola! Pregúntame lo que necesites o elige una sugerencia:</p>
+        <div class="asistente-chips">
+          @for (s of sugerencias(); track s) {
+            <button class="asistente-chip" (click)="enviar(s)">{{ s }}</button>
+          }
+        </div>
+      }
+      @for (m of mensajes(); track $index) {
+        <div class="burbuja" [class.usuario]="m.rol === 'user'" [class.ia]="m.rol === 'assistant'">{{ m.contenido }}</div>
+      }
+      @if (cargando()) {
+        <div class="burbuja ia escribiendo">Escribiendo…</div>
+      }
+      @if (error()) {
+        <div class="burbuja error">{{ error() }}</div>
+      }
+    </div>
+
+    <div class="asistente-entrada">
+      <textarea rows="2" maxlength="1000" placeholder="Escribe tu pregunta…" aria-label="Tu pregunta"
+                [value]="texto()" [disabled]="cargando()"
+                (input)="alEscribir($event)" (keydown.enter)="alEnter($event)"></textarea>
+      <button class="btn btn-neon btn-chico" (click)="enviar()" [disabled]="!texto().trim() || cargando()">Enviar</button>
+    </div>
+  </section>
+}
