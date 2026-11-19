@@ -133,6 +133,9 @@ textarea.entrada { resize: vertical; min-height: 90px; }
 .gama-MEDIA { color: var(--cian); }
 .gama-BAJA { color: var(--lima); }
 .excl { color: var(--ambar); }
+/* Tipo de producto que ve el comprador: digital (se descarga) o físico. */
+.tipo-DIGITAL { color: #a78bfa; }
+.tipo-FISICO { color: #9fb3d1; }
 /* Descuento inmediato: insignia "-20%" y precio anterior tachado (catálogo, detalle, carrito y panel). */
 .etiqueta.descuento { color: var(--magenta); background: rgba(255, 46, 166, 0.12); }
 .etiqueta.promo { color: var(--lima); background: rgba(163, 255, 107, 0.1); }
