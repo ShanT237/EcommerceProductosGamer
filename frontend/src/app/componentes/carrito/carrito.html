@@ -26,6 +26,7 @@
                   @if (precioTachado(i.producto); as original) { <s class="precio-original">{{ precio(original) }}</s> }
                   {{ precio(precioVigente(i.producto)) }} c/u
                 </p>
+                <span class="etiqueta {{ i.producto.tipo === 'DIGITAL' ? 'tipo-DIGITAL' : 'tipo-FISICO' }}">{{ i.producto.tipo === 'DIGITAL' ? 'Digital' : 'Físico' }}</span>
                 @if (i.producto.porcentajePromocion) {
                   <span class="etiqueta promo">Promo -{{ i.producto.porcentajePromocion }}%</span>
                 }
