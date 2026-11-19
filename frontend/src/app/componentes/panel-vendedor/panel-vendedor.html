@@ -76,6 +76,7 @@
                   <p class="muted">{{ p.descripcion }}</p>
                   <div class="etiquetas">
                     <span class="etiqueta gama-{{ p.gama }}">{{ p.gama }}</span>
+                    <span class="etiqueta {{ p.tipo === 'DIGITAL' ? 'tipo-DIGITAL' : 'tipo-FISICO' }}">{{ p.tipo === 'DIGITAL' ? 'Digital' : 'Físico' }}</span>
                     @if (p.exclusividad === 'EXCLUSIVO') { <span class="etiqueta excl">Exclusivo</span> }
                     @if (p.pausado) { <span class="etiqueta pausado">Pausado</span> }
                   </div>
