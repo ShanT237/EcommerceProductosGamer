@@ -513,7 +513,7 @@ Categorías habilitadas en el catálogo:
 
 ## 10. Casos de Uso del Sistema (72 Casos de Uso)
 
-**Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
+✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
 Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a `CU-57` se añadieron al construir las pantallas y la gestión que faltaban (pedidos, cupones, wishlist, notificaciones, combos, preventas, regalos y metas); `CU-58` a `CU-63` completaron el ciclo de vida de preventas y regalos, la expiración de compras, la descarga de productos digitales, la subida de imágenes y la notificación de preventas lanzadas; `CU-64` y `CU-65` añadieron la recuperación de contraseña por correo; `CU-66` a `CU-72` añadieron el chat comprador–vendedor y el asistente de IA. Un caso de uso puede agrupar varias clases (el backend tiene 87 clases `*UseCase`; todas aparecen en las tablas).
 
