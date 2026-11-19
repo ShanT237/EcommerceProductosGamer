@@ -20,11 +20,11 @@ export const guestGuard: CanActivateFn = () => {
 };
 
 /** Solo deja pasar a los roles indicados (COMPRADOR y/o VENDEDOR). */
-export const rolGuard = (...roles: Rol[]): CanActivateFn => () => {
+export const rolGuard = (...roles: Rol[]): CanActivateFn => (_ruta, estado) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   auth.verificarSesion();
-  if (!auth.autenticado()) return router.createUrlTree(['/login']);
+  if (!auth.autenticado()) return router.createUrlTree(['/login'], { queryParams: { volver: estado.url } });
   const actual = auth.rol();
   return actual !== null && roles.includes(actual) ? true : router.createUrlTree(['/']);
 };
