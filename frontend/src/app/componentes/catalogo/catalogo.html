@@ -116,11 +116,15 @@
       <div class="modal-info">
         <div class="etiquetas">
           <span class="etiqueta gama-{{ p.gama }}">Gama {{ p.gama }}</span>
+          <span class="etiqueta {{ p.tipo === 'DIGITAL' ? 'tipo-DIGITAL' : 'tipo-FISICO' }}">{{ p.tipo === 'DIGITAL' ? 'Producto digital' : 'Producto físico' }}</span>
           @if (p.exclusividad === 'EXCLUSIVO') { <span class="etiqueta excl">Exclusivo</span> }
           @if (p.categoria) { <span class="etiqueta muted">{{ p.categoria }}</span> }
         </div>
         <h2>{{ p.nombre }}</h2>
         <p class="muted descripcion">{{ p.descripcion }}</p>
+        @if (p.tipo === 'DIGITAL') {
+          <p class="muted">Es un producto digital: no se envía nada físico. Lo descargas desde «Mis compras» cuando el pago esté confirmado.</p>
+        }
         <p class="precio-grande">
           {{ precio(precioVigente(p)) }}
           @if (precioTachado(p); as original) {
@@ -177,9 +181,6 @@
             <button class="btn btn-neon" [disabled]="procesando() || !permiteComprar(p)" (click)="reservar()">{{ procesando() ? 'Reservando…' : 'Comprar' }}</button>
             <button class="btn" [disabled]="procesando() || !permiteComprar(p)" (click)="alCarrito()">Añadir al carrito</button>
             <button class="btn" (click)="alternarFavorito()">{{ esFavorito() ? '♥ En favoritos' : '♡ Favoritos' }}</button>
-            @if (esComprador()) {
-              <button class="btn" [disabled]="abriendoChat()" (click)="preguntarAlVendedor()">{{ abriendoChat() ? 'Abriendo chat…' : 'Preguntar al vendedor' }}</button>
-            }
           </div>
         }
       </div>
