@@ -82,6 +82,32 @@ Guion para recorrer el sistema completo (backend + frontend) antes de entregar. 
 | 30 | Comprador (Jose) | En `/regalos`, **Confirmar recepción** del regalo `ENVIADO`. | `PUT /api/regalos/{id}/entrega` (`200`); queda `ENTREGADO`. | ✔ |
 | 31 | Vendedor / Comprador | **Metas** → crear una meta de 3 compras con "Auriculares de ensayo"; ver `/regalos` como Jose; luego desactivar la meta. | La meta responde `201` y Jose la ve como información en `/regalos`; al desactivarla (`200`) deja de aparecer. La regla de los regalos no cambia (sigue siendo 5 compras). | ✔ |
 
+## G. Tipo de producto y recuperación de contraseña
+
+| Paso | Quién | Acción | Resultado esperado | ✔ |
+| :---: | :--- | :--- | :--- | :---: |
+| 32 | Vendedor | **Publicar** un producto con tipo **Digital** y otro con tipo **Físico**; mirar la vista previa antes de publicar. | La vista previa muestra la etiqueta **Digital** o **Físico** en la tarjeta, y los dos productos publican con `201`. | |
+| 33 | Comprador (Jose) | En el catálogo, buscar los dos productos de la prueba; abrir el digital. Añadirlo al carrito y abrir `/carrito`. | Las tarjetas y el detalle muestran la etiqueta; el detalle del digital avisa de que no se envía nada físico y se descarga desde «Mis compras». El carrito muestra la etiqueta en cada línea. | |
+| 34 | Anónimo | En `/login`, pulsar **¿Olvidaste tu contraseña?**, escribir un correo con formato inválido y enviar; luego escribir `jose.demo@correo.com` y enviar. | El formato inválido no envía ninguna petición. Con el correo válido sale `POST /api/auth/olvide-contrasena` (`200`) y el aviso «Si el correo está registrado…». Repetir con `nadie@correo.com` muestra exactamente el mismo aviso. | |
+| 35 | Sistema | Sin Brevo configurado, mirar la consola del backend. Con Brevo configurado y un correo real, abrir la bandeja (y spam). | El backend imprime el correo con el enlace (o el correo llega con el botón **Crear nueva contraseña**). Pedir otro enlace dentro del primer minuto no genera un segundo correo. | |
+| 36 | Comprador | Abrir el enlace `/restablecer?token=…`. Probar `abc` y luego una contraseña de 8+ caracteres sin número; después una válida con la confirmación distinta; por último una válida con la confirmación igual. | Cada intento inválido muestra su aviso sin enviar petición. El último responde `200`, sale el toast de éxito y lleva a `/login`; entrar con la contraseña nueva funciona y la anterior ya no. | |
+| 37 | Comprador | Abrir otra vez el mismo enlace y enviar una contraseña válida. | `422` «El enlace no es válido o ya venció. Solicita uno nuevo.» El enlace es de un solo uso. | |
+
+## H. Chat en vivo y asistente de IA
+
+Para este bloque hacen falta dos ventanas del navegador (o una normal y una privada): una con el comprador (Jose) y otra con el vendedor (`demo@gamerzone.com`).
+
+| Paso | Quién | Acción | Resultado esperado | ✔ |
+| :---: | :--- | :--- | :--- | :---: |
+| 38 | Comprador (Jose) | En el catálogo, abrir un producto del vendedor demo y pulsar **Preguntar al vendedor**; escribir un mensaje y enviarlo. | Se abre `/chat/:id` con la conversación (`POST /api/chat/conversaciones`, `200`). El mensaje aparece de inmediato y se guarda (`POST …/mensajes`, `201`). | |
+| 39 | Vendedor | Sin recargar la página, mirar la barra de navegación. | **Mensajes** muestra el contador en 1 y el mensaje llega en vivo (la pestaña Network muestra la conexión abierta a `/api/chat/stream`). | |
+| 40 | Vendedor / Comprador | El vendedor abre la conversación y responde; el comprador mira su hilo. | La respuesta llega en vivo al comprador. Al leerla el vendedor, el mensaje del comprador pasa a **Visto** (`PUT …/leidos`, `200`) y el contador baja a 0. | |
+| 41 | Comprador | Reenviar el mismo mensaje con el mismo `clienteId` (por ejemplo, repetir en Swagger el `POST …/mensajes`). | `201` con el mismo `id`: el hilo no se duplica. | |
+| 42 | Comprador (Ana) | Con el token de Ana en Swagger, `GET /api/chat/conversaciones/{id}/mensajes` de la conversación de Jose. | `403`: solo participan Jose y el vendedor. Con el token del vendedor, `POST /api/chat/conversaciones` responde `403` (solo el comprador inicia). | |
+| 43 | Comprador (Jose) | En `/mis-compras`, abrir una operación y pulsar **Chatear con el vendedor**. | Abre (o reutiliza) la conversación de esa orden; si la orden tuviera varios vendedores, la API responde `422` pidiendo indicar con cuál. | |
+| 44 | Comprador (Jose) | Pulsar el botón flotante del asistente y pedir «¿Qué producto me recomiendas?». Repetir como vendedor con «¿Cómo van mis ventas?». | Con `OPENROUTER_API_KEY` configurada, responde con recomendaciones del catálogo (comprador) o un análisis de la tienda (vendedor). Sin la clave, `POST /api/asistente/…` responde `503` y el panel muestra «El asistente de IA no está configurado». | |
+| 45 | Sistema | Con el backend arrancado, ejecutar `bash backend/scripts/verificar-chat.sh` (necesita `curl` y `jq`). | Todas las líneas salen `PASS` y el código de salida es 0. | |
+
 ## Verificaciones automáticas complementarias
 
 | Qué | Comando | Resultado esperado |
