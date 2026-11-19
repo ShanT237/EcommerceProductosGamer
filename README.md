@@ -14,6 +14,30 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
  
 ---
 
+## 🚀 Entrega 3: probar el frontend publicado
+
+**Frontend:** https://ecommerce-productos-gamer.vercel.app
+
+Quien lo revise puede crear sus propias cuentas directamente en el enlace, sin usuarios previos: en `/registro` están las dos pestañas, **Quiero comprar** (rol `COMPRADOR`) y **Quiero vender** (rol `VENDEDOR`). Con esas cuentas se puede probar todo el flujo: iniciar sesión, ver el catálogo, buscar, cambiar de página, comprar o publicar un producto y ver el aviso. Los usuarios de la sección 3 existen solo al correr el backend en local (perfil H2). En Render gratuito la primera petición puede tardar unos segundos mientras el servicio despierta.
+
+### Mínimos de la Entrega 3: dónde está cada uno
+
+| Mínimo | Dónde verlo |
+| :--- | :--- |
+| 2.1 Conexión al backend | `frontend/src/app/servicios/` (un servicio por grupo de endpoints), `modelos/modelos.ts` (interfaces espejo de los DTO), `environments/` |
+| 2.2 Login con JWT | `componentes/login/login.ts`, `servicios/auth.service.ts` (token en `localStorage`, clave `gamerzone.token`) |
+| 2.3 Interceptor | `core/auth.interceptor.ts` (agrega `Bearer` y maneja el 401) |
+| 2.4 Guards | `core/guards.ts` y `app.routes.ts` |
+| 2.5 Catálogo paginado y con búsqueda | `componentes/catalogo/` y `ProductoService.buscar` (envía `page`, `size` y `texto`) |
+| 2.6 Operación de negocio con formulario | `componentes/formulario-publicar/` (publicar) y `componentes/carrito/` (comprar) |
+| 2.7 Avisos | `servicios/toast.service.ts` |
+| 2.8 Bootstrap | `angular.json` (estilos) y clases `row-cols`, `card`, `form-control`, `btn` |
+| 2.9 Funcionalidad propia | Combos, cupones, wishlist, regalos por meta, preventas, chat en vivo y asistente de IA |
+
+**Extras:** MariaDB en Aiven, despliegue en la nube, imágenes en Cloudinary, variables de entorno (`environment.ts`) y búsqueda reactiva con signals y `debounceTime`.
+
+---
+
 ## 📋 Tabla de Contenidos
 1. [Integrantes y nicho](#1-integrantes-y-nicho)
 2. [Despliegue](#2-despliegue)
@@ -513,7 +537,7 @@ Categorías habilitadas en el catálogo:
 
 ## 10. Casos de Uso del Sistema (72 Casos de Uso)
 
-✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
+**Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
 Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a `CU-57` se añadieron al construir las pantallas y la gestión que faltaban (pedidos, cupones, wishlist, notificaciones, combos, preventas, regalos y metas); `CU-58` a `CU-63` completaron el ciclo de vida de preventas y regalos, la expiración de compras, la descarga de productos digitales, la subida de imágenes y la notificación de preventas lanzadas; `CU-64` y `CU-65` añadieron la recuperación de contraseña por correo; `CU-66` a `CU-72` añadieron el chat comprador–vendedor y el asistente de IA. Un caso de uso puede agrupar varias clases (el backend tiene 87 clases `*UseCase`; todas aparecen en las tablas).
 
