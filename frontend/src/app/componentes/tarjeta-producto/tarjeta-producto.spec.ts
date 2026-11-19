@@ -108,3 +108,37 @@ describe('TarjetaProducto (descuento)', () => {
     expect(raiz().querySelector('.etiqueta.preventa')).toBeNull();
   });
 });
+
+
+describe('TarjetaProducto (tipo de producto)', () => {
+  let fixture: ComponentFixture<TarjetaProducto>;
+  const raiz = () => fixture.nativeElement as HTMLElement;
+
+  function mostrar(p: Producto) {
+    fixture = TestBed.createComponent(TarjetaProducto);
+    fixture.componentRef.setInput('producto', p);
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => TestBed.configureTestingModule({ imports: [TarjetaProducto] }));
+
+  it('productoDigitalMuestraLaEtiquetaDigital', () => {
+    mostrar(producto({ tipo: 'DIGITAL' }));
+
+    expect(raiz().querySelector('.etiqueta.tipo-DIGITAL')?.textContent).toContain('Digital');
+    expect(raiz().querySelector('.etiqueta.tipo-FISICO')).toBeNull();
+  });
+
+  it('productoFisicoMuestraLaEtiquetaFisico', () => {
+    mostrar(producto({ tipo: 'FISICO' }));
+
+    expect(raiz().querySelector('.etiqueta.tipo-FISICO')?.textContent).toContain('Físico');
+    expect(raiz().querySelector('.etiqueta.tipo-DIGITAL')).toBeNull();
+  });
+
+  it('productoSinTipoSeTrataComoFisico', () => {
+    mostrar(producto());
+
+    expect(raiz().querySelector('.etiqueta.tipo-FISICO')?.textContent).toContain('Físico');
+  });
+});

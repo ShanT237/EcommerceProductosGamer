@@ -12,6 +12,7 @@
   <div class="info card-body">
     <div class="etiquetas">
       <span class="etiqueta gama-{{ producto().gama }}">{{ producto().gama }}</span>
+      <span class="etiqueta {{ producto().tipo === 'DIGITAL' ? 'tipo-DIGITAL' : 'tipo-FISICO' }}">{{ producto().tipo === 'DIGITAL' ? 'Digital' : 'Físico' }}</span>
       @if (producto().porcentajeDescuento) {
         <span class="etiqueta descuento">Oferta -{{ producto().porcentajeDescuento }}%</span>
       }

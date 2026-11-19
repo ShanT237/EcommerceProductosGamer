@@ -28,7 +28,7 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
 7. [¿Qué hace único a sus vendedores?](#7-qué-hace-único-a-sus-vendedores)
 8. [Lenguaje Ubicuo (DDD)](#8-lenguaje-ubicuo-ddd)
 9. [Reglas de Negocio e Invariantes del Dominio](#9-reglas-de-negocio-e-invariantes-del-dominio)
-10. [Casos de Uso del Sistema (63 Casos de Uso)](#10-casos-de-uso-del-sistema-63-casos-de-uso)
+10. [Casos de Uso del Sistema (72 Casos de Uso)](#10-casos-de-uso-del-sistema-72-casos-de-uso)
 11. [Arquitectura del Software (Clean Architecture)](#11-arquitectura-del-software-clean-architecture)
 12. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#12-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño)
 13. [Cómo ejecutar las pruebas](#13-cómo-ejecutar-las-pruebas)
@@ -80,7 +80,12 @@ Navegador ──► Vercel (Angular) ──HTTPS──► Render (Spring Boot, p
 | `DB_URL` | URL JDBC de Aiven (con SSL) |
 | `DB_USERNAME` / `DB_PASSWORD` | Credenciales de Aiven |
 | `JWT_SECRET` | Secreto JWT de producción (mínimo 32 caracteres) |
+| `CORS_ALLOWED_ORIGINS` | Orígenes permitidos, separados por comas (debe incluir la URL de Vercel) |
 | `CLOUDINARY_*` o `CLOUDINARY_URL` | Opcional: subida de imágenes (ver sección 12) |
+| `FRONTEND_URL` | URL pública del frontend, sin barra final (`https://ecommerce-productos-gamer.vercel.app`): a ella apuntan los enlaces de los correos |
+| `BREVO_API_KEY` · `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` | Opcional: envío de correos con Brevo (recuperación de contraseña y notificaciones; ver sección 12). El remitente debe estar verificado en Brevo; el nombre es opcional (`GamerZone` por defecto) |
+| `NOTIFICACIONES_CORREO_HABILITADO` | Opcional: `false` desactiva los correos de notificación (por defecto `true`) |
+| `OPENROUTER_API_KEY` · `OPENROUTER_MODEL` · `OPENROUTER_BASE_URL` | Opcional: asistente de IA (ver sección 12). Sin la clave, el asistente responde `503` |
 
 **Frontend (Vercel).** Se despliega desde la carpeta `frontend`. La URL del backend se define en `frontend/src/app/config.ts` (`API_URL`) y debe apuntar a la URL de Render.
 
@@ -162,15 +167,19 @@ Las rutas se protegen con guards (`authGuard`, `rolGuard`, `guestGuard`): sin se
 | Ruta | Quién entra | Qué hace | Endpoints que usa |
 | :--- | :--- | :--- | :--- |
 | `/` | Todos | Portada | — |
-| `/login` · `/registro` | Anónimo | Ingreso (con botones de demo) y registro de comprador | `POST /api/auth/login`, `POST /api/usuarios` |
-| `/catalogo` | Cualquier sesión | Catálogo paginado con búsqueda y filtros (texto, categoría, gama, precio, solo preventa). Al abrir un producto: añadir al carrito, **Comprar** (pedido de un ítem, con cupón opcional), corazón de favorito, insignia de **preventa** (Comprar y Añadir al carrito quedan deshabilitados hasta el lanzamiento) y precio con descuento o promoción vigente | `GET /api/productos`, `GET /api/preventas`, `POST /api/pedidos`, wishlist |
+| `/login` · `/registro` | Anónimo | Ingreso (con botones de demo, y el enlace «¿Olvidaste tu contraseña?») y registro de comprador | `POST /api/auth/login`, `POST /api/usuarios` |
+| `/olvide-contrasena` | Anónimo | Pide el correo de la cuenta y muestra siempre el mismo aviso, exista o no | `POST /api/auth/olvide-contrasena` |
+| `/restablecer?token=…` | Quien abre el enlace del correo | Pide la contraseña nueva (con confirmación) y, al guardar, lleva al login | `POST /api/auth/restablecer-contrasena` |
+| `/catalogo` | Cualquier sesión | Catálogo paginado con búsqueda y filtros (texto, categoría, gama, precio, solo preventa). Cada producto muestra una etiqueta **Físico** o **Digital** (en la tarjeta y en el detalle, que además avisa de que un producto digital no se envía y se descarga desde «Mis compras»). Al abrir un producto: **Preguntar al vendedor** (abre el chat), añadir al carrito, **Comprar** (pedido de un ítem, con cupón opcional), corazón de favorito, insignia de **preventa** (Comprar y Añadir al carrito quedan deshabilitados hasta el lanzamiento) y precio con descuento o promoción vigente | `GET /api/productos`, `GET /api/preventas`, `POST /api/pedidos`, wishlist |
 | `/combos` | Cualquier sesión (comprar solo `COMPRADOR`) | Combos con sus productos, precio sin y con descuento y ahorro; selector de cantidad y cupón opcional por combo | `GET /api/combos`, `POST /api/combos/{id}/comprar`, `GET /api/cupones/{codigo}` |
-| `/carrito` | `COMPRADOR` | Cantidades limitadas por el stock, cupón con vista previa del descuento y **Pagar (simulado)** | `POST /api/pedidos`, `PUT /api/pedidos/{id}/confirmar`, `GET /api/cupones/{codigo}` |
-| `/mis-compras` | `COMPRADOR` | Historial agrupado por operación (pedido o combo, con filtro por estado): confirmar pago, cancelar, reembolso, reseñar, valorar al vendedor y redimir puntos | `GET /api/compras`, `PUT /api/pedidos/{id}/…`, `POST /api/resenas`, `POST /api/valoraciones-vendedor`, `POST /api/puntos/redimir`, `GET /api/puntos/historial` |
+| `/carrito` | `COMPRADOR` | Etiqueta Físico o Digital en cada línea, cantidades limitadas por el stock, cupón con vista previa del descuento y **Pagar (simulado)** | `POST /api/pedidos`, `PUT /api/pedidos/{id}/confirmar`, `GET /api/cupones/{codigo}` |
+| `/mis-compras` | `COMPRADOR` | Historial agrupado por operación (pedido o combo, con filtro por estado) y etiqueta Físico o Digital en cada producto: confirmar pago, cancelar, reembolso, reseñar, valorar al vendedor, **Chatear con el vendedor** y redimir puntos | `GET /api/compras`, `PUT /api/pedidos/{id}/…`, `POST /api/resenas`, `POST /api/valoraciones-vendedor`, `POST /api/puntos/redimir`, `GET /api/puntos/historial` |
 | `/favoritos` | `COMPRADOR` | Wishlist cargada desde el servidor: el corazón sigue marcado tras recargar la página (F5) | `GET/POST /api/wishlists`, `DELETE /api/wishlists/{productoId}` |
 | `/notificaciones` | `COMPRADOR` | Avisos de descuento de la wishlist; la campana de la barra muestra el contador de no leídas y al abrir una se marca como leída | `GET /api/notificaciones`, `PUT /api/notificaciones/{id}/leida` |
 | `/regalos` | `COMPRADOR` | Progreso hacia el siguiente regalo (uno por cada 5 compras completadas), regalos disponibles para elegir, mis regalos con confirmación de recepción y las metas activas como información | `GET /api/regalos/progreso`, `/disponibles`, `/mios`, `PUT /api/regalos/{id}/asignar`, `PUT /api/regalos/{id}/entrega`, `GET /api/metas-recompensa` |
 | `/perfil` | `COMPRADOR` | Editar nombre y correo, y cambiar contraseña | `PUT /api/usuarios/me/perfil`, `PUT /api/usuarios/me/contrasena` |
+| `/chat` · `/chat/:id` | `COMPRADOR` y `VENDEDOR` | Mensajes: lista de conversaciones con su contador de no leídos y el hilo seleccionado, con envío inmediato, «Visto», historial hacia atrás y aviso de reconexión (en pantallas estrechas muestra un solo panel) | `GET/POST /api/chat/conversaciones`, `GET/POST /api/chat/conversaciones/{id}/mensajes`, `PUT …/leidos`, `GET /api/chat/stream` |
+| Asistente de IA (botón flotante) | `COMPRADOR` y `VENDEDOR` | Chat con la IA visible en todas las pantallas con sesión: el comprador pide recomendaciones y el vendedor, un análisis de su tienda | `POST /api/asistente/comprador`, `POST /api/asistente/vendedor` |
 | `/vendedor` | `VENDEDOR` | Panel «Mi tienda» (ver abajo) | varios |
 
 ### Carrito, pedido y cupones
@@ -206,6 +215,24 @@ La ruta `/vendedor` (**Mi tienda**) tiene una pestaña por módulo:
 ### Publicar un producto (formulario reactivo)
 
 En **Mi tienda → Publicar**, el vendedor llena un formulario reactivo que valida antes de enviar: nombre y descripción obligatorios, precio mayor a cero y stock entero de cero o más. Puede añadir una imagen PNG/JPEG de hasta 5 MB; Spring Boot la sube a Cloudinary y guarda solo la URL en el producto. Si la carga falla, el producto queda publicado con la ilustración de respaldo y se informa el error. Si hay errores no se envía ninguna petición y cada campo muestra su aviso. Al enviar, el botón queda bloqueado ("Publicando…") y, si el backend rechaza la petición, se muestra su mensaje (por ejemplo `403` si el rol no corresponde o `422` si el vendedor está dado de baja). Una vista previa muestra cómo quedará la tarjeta en el catálogo.
+
+### Tipo de producto: físico o digital
+
+El vendedor elige el tipo al publicar (**Físico** por defecto). El comprador lo ve con una etiqueta en la tarjeta del catálogo, en favoritos, en el detalle del producto, en el carrito y en «Mis compras» (el panel del vendedor muestra la misma etiqueta). El detalle de un producto digital aclara que no se envía nada físico y que se descarga desde «Mis compras» cuando el pago está confirmado; solo los productos digitales permiten marcar la compra como descargada (ver sección 9). Un producto sin tipo se trata como físico.
+
+### Recuperación de contraseña
+
+Desde el login, **¿Olvidaste tu contraseña?** lleva a `/olvide-contrasena`, donde la persona escribe el correo de su cuenta (de comprador o de vendedor). Si el correo pertenece a una cuenta activa, recibe un correo con un enlace a `/restablecer?token=…` en el frontend desplegado; allí elige su contraseña nueva y vuelve al login. Detalles de seguridad y de configuración del correo en la sección 12.
+
+### Chat comprador–vendedor
+
+Hay dos entradas para el comprador: **Preguntar al vendedor** en el detalle de un producto del catálogo y **Chatear con el vendedor** en una operación de «Mis compras». Ambas abren `/chat/:id` con la conversación (si ya existía, se reutiliza). El vendedor ve las conversaciones de sus productos en `/chat`. La barra de navegación muestra **Mensajes** con el contador de mensajes sin leer.
+
+Los mensajes llegan en vivo por **Server-Sent Events** (`GET /api/chat/stream`), sin recargar: el servidor empuja los mensajes nuevos y las confirmaciones de lectura. El mensaje se muestra de inmediato al enviarlo; si la red falla, el reintento no lo duplica porque cada mensaje lleva un `clienteId` generado por el cliente. Al leer una conversación se marca como leída y el otro participante ve «Visto». Si la conexión en vivo se cae, la pantalla avisa, se reconecta y se pone al día con el historial (`despuesDe`). El historial se pagina por cursor (`antesDe`) y siempre se entrega en orden cronológico.
+
+### Asistente de IA
+
+Un botón flotante abre un chat con el asistente en cualquier pantalla con sesión. Para el **comprador** da recomendaciones de compra, apoyado en sus compras completadas, sus favoritos, los más vendidos, el catálogo con stock y los combos. Para el **vendedor** analiza su tienda (ventas, más vendidos, stock bajo y reseñas). El asistente usa un modelo de [OpenRouter](https://openrouter.ai) y guarda el hilo solo en la pantalla: el cliente reenvía hasta los 10 turnos anteriores en cada pregunta. Al modelo no se le envía nada que identifique a la persona (ni correo, ni nombre, ni ids). Sin `OPENROUTER_API_KEY` el endpoint responde `503` con «El asistente de IA no está configurado» (configuración en la sección 12).
 
 ### Mensajes de error
 
@@ -258,6 +285,18 @@ Todos los errores HTTP pasan por `mensajeDeError`: se muestra el `mensaje` que m
 ![Metas de recompensa](docs/pantallas/15-metas-vendedor.png)
 *Pestaña Metas del panel del vendedor.*
 
+![Olvidé mi contraseña](docs/pantallas/16-olvide-contrasena.png)
+*Solicitud de recuperación de contraseña con envío de enlace temporal al correo.*
+
+![Restablecer contraseña](docs/pantallas/17-restablecer-contrasena.png)
+*Formulario de cambio de contraseña validado mediante token de un solo uso.*
+
+![Chat entre comprador y vendedor](docs/pantallas/18-chat.png)
+*Hilo de mensajería directa entre comprador y vendedor vinculado al producto.*
+
+![Asistente virtual](docs/pantallas/19-asistente.png)
+*Panel del asistente integrado para consultas y recomendaciones dentro del catálogo.*
+
 ### Ensayo de punta a punta
 
 El recorrido completo (publicar, comprar con carrito y cupón, errores de negocio y de seguridad, favoritos, notificaciones, combos, preventas y regalos) está en [`docs/ensayo-punta-a-punta.md`](docs/ensayo-punta-a-punta.md), con el resultado esperado de cada paso. La colección de Postman equivalente para la API está en [`docs/postman/flujo-completo.json`](docs/postman/flujo-completo.json).
@@ -269,6 +308,8 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 | Método y ruta | Rol | Qué hace |
 | :--- | :--- | :--- |
 | `POST /api/auth/login` | Público | Inicia sesión y devuelve el JWT |
+| `POST /api/auth/olvide-contrasena` | Público | Envía por correo el enlace para restablecer la contraseña; responde `200` con el mismo mensaje exista o no el correo |
+| `POST /api/auth/restablecer-contrasena` | Público | Cambia la contraseña con el token del enlace (`422` si el enlace no es válido, venció o ya se usó, o si la contraseña no cumple las reglas) |
 | `POST /api/usuarios` | Público | Registra un comprador |
 | `POST /api/vendedores` | Público | Registra un vendedor |
 | `GET /api/usuarios/me` · `PUT /api/usuarios/me/perfil` · `PUT /api/usuarios/me/contrasena` | `COMPRADOR` | Consulta y edita el perfil, y cambia la contraseña |
@@ -320,8 +361,16 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 | `POST /api/metas-recompensa` · `PUT …/{id}/umbral` · `PUT …/{id}/desactivar` | `VENDEDOR` | Gestiona las metas de recompensa |
 | `GET /api/reportes/ventas` · `/stock-bajo` · `/metricas-resenas` | `VENDEDOR` | Ventas, alertas de stock y métricas de reseñas del vendedor |
 | `GET /api/reportes/mas-vendidos` · `/global` | Autenticado | Ranking de más vendidos (JOIN + GROUP BY) y reporte global |
+| `POST /api/chat/conversaciones` | `COMPRADOR` | Inicia (o reutiliza) la conversación con el vendedor de un producto o de una orden propia (`200`; `403` si la orden no es suya, `422` si la orden tiene varios vendedores y no se indica cuál) |
+| `GET /api/chat/conversaciones` | `COMPRADOR` y `VENDEDOR` | Conversaciones propias, la más reciente primero, con los mensajes sin leer |
+| `GET /api/chat/conversaciones/{id}/mensajes` | `COMPRADOR` y `VENDEDOR` | Historial paginado por cursor (`antesDe`, `despuesDe`, `tamano` = 30 por defecto); `422` si se piden los dos cursores a la vez, `403` si no participa |
+| `POST /api/chat/conversaciones/{id}/mensajes` | `COMPRADOR` y `VENDEDOR` | Envía un mensaje (`201`; `clienteId` hace idempotente el reintento; máximo 2000 caracteres; `403` si no participa) |
+| `PUT /api/chat/conversaciones/{id}/leidos` | `COMPRADOR` y `VENDEDOR` | Marca como leídos los mensajes del otro participante y avisa en vivo |
+| `GET /api/chat/stream` | `COMPRADOR` y `VENDEDOR` | Canal en vivo (SSE, `text/event-stream`): mensajes nuevos y confirmaciones de lectura |
+| `POST /api/asistente/comprador` | `COMPRADOR` | Pregunta al asistente de IA de compras (`mensaje` de hasta 1000 caracteres y hasta 10 turnos de `historial`) |
+| `POST /api/asistente/vendedor` | `VENDEDOR` | Pregunta al asistente de IA de análisis de su tienda |
 
-`Público` = sin token; `Autenticado` = cualquier sesión con token (comprador o vendedor). La lista completa (78 endpoints), con códigos de respuesta, cuerpos y procesos automáticos, está en [`docs/api/mapeo-dominio-api.md`](docs/api/mapeo-dominio-api.md) y en Swagger.
+`Público` = sin token; `Autenticado` = cualquier sesión con token (comprador o vendedor). La lista completa (88 endpoints), con códigos de respuesta, cuerpos y procesos automáticos, está en [`docs/api/mapeo-dominio-api.md`](docs/api/mapeo-dominio-api.md) y en Swagger.
 
 ---
 
@@ -384,6 +433,9 @@ Categorías habilitadas en el catálogo:
 | **Tipo de producto** | `FISICO` (por defecto) o `DIGITAL`. Solo los productos digitales permiten marcar la compra como descargada, lo que bloquea el reembolso. |
 | **Exclusividad** | Condición de un producto especial: cada usuario puede comprarlo una sola vez y de a una unidad. |
 | **Unidades** | Cantidad disponible de un producto para su venta (nunca negativa; cero significa agotado). |
+| **Conversación** | Chat entre un comprador y un vendedor sobre un producto o una orden. Solo ellos dos participan; hay una por comprador, vendedor y contexto. |
+| **Asistente de IA** | Asistente conversacional (un modelo de OpenRouter) que recomienda al comprador y analiza la tienda del vendedor, con contexto armado a partir de datos del propio sistema. |
+| **Token de recuperación** | Código de un solo uso, con vencimiento de 30 minutos, que llega por correo y permite elegir una contraseña nueva sin conocer la actual. |
 
 ## Tipos de notificación
 | Destinatario | Tipo | Cuándo se genera |
@@ -400,6 +452,8 @@ Categorías habilitadas en el catálogo:
 | Vendedor | `REEMBOLSO_SOLICITADO` | Reembolso individual o de pedido sobre un producto suyo |
 | Vendedor | `NUEVA_RESENA` / `NUEVA_VALORACION` | Reseña de producto / valoración del vendedor |
 | Vendedor | `REGALO_ELEGIDO` | Un comprador elige un regalo del vendedor: ya puede enviarlo |
+
+**Reenvío por correo.** Ocho de estos avisos se mandan también por correo (el resto son solo internos): para el comprador, `DESCUENTO`, `STOCK_DISPONIBLE` y `PREVENTA_DISPONIBLE`; para el vendedor, `STOCK_BAJO`, `STOCK_AGOTADO`, `REEMBOLSO_SOLICITADO`, `NUEVA_RESENA` y `NUEVA_VALORACION`. El correo es de mejor esfuerzo (si falla, la notificación interna queda igual), solo sale cuando la transacción se confirma, no se envía a cuentas dadas de baja y se puede apagar con `NOTIFICACIONES_CORREO_HABILITADO=false`.
 ---
 
 ## 9. Reglas de Negocio e Invariantes del Dominio
@@ -447,6 +501,9 @@ Categorías habilitadas en el catálogo:
 - Preventas: `GET /api/preventas` lista solo las de lanzamiento **estrictamente posterior a hoy** (el mismo día del lanzamiento el producto ya se puede comprar), de la más próxima a la más lejana; programar una exige una fecha futura y un producto propio sin preventa previa.
 - Promociones y precios: el catálogo, la wishlist y «Mis productos» muestran el precio con la promoción de temporada vigente hoy, el mismo que cobra el backend al reservar; solo el vendedor dueño modifica o quita una promoción.
 - Una `MetaRecompensa` exige un umbral de compras positivo, un producto regalo existente y no eliminado, y se desactiva una sola vez (nunca se borra). Las metas **se muestran, pero no gobiernan** la asignación de regalos: esa regla sigue siendo `Usuario.COMPRAS_POR_REGALO = 5`.
+- Recuperación de contraseña: el enlace del correo lleva un token aleatorio de 256 bits que vence a los **30 minutos** y sirve **una sola vez**; en la base solo se guarda su hash SHA-256 (tabla `tokens_recuperacion`). Un enlace nuevo invalida los anteriores, solo se envía un correo por minuto por cuenta y las cuentas dadas de baja no reciben correo. Una contraseña débil se rechaza sin consumir el token, para poder reintentar. Los enlaces inexistentes, vencidos o ya usados dan siempre el mismo error.
+- Chat: solo el comprador inicia una conversación, sobre un producto disponible (el vendedor sale del producto) o sobre una orden propia (`403` si es ajena; si tiene varios vendedores hay que indicar con cuál, y el indicado debe pertenecer a la orden). Es idempotente por comprador, vendedor y contexto. Solo los dos participantes consultan o escriben (`403` a cualquier otra persona, `404` si la conversación no existe) y el remitente sale siempre del token, nunca del body. Un mensaje tiene entre 1 y 2000 caracteres; reenviarlo con el mismo `clienteId` devuelve el ya guardado sin duplicarlo ni volver a avisar. Marcar como leído solo afecta a los mensajes del otro participante. No se pueden pedir `antesDe` y `despuesDe` a la vez (`422`).
+- Asistente de IA: el id de la persona sale del token. Al modelo solo viaja un contexto compacto de datos del sistema, sin correo, nombre ni ids; el vendedor solo ve el contexto de su propia tienda. El mensaje admite hasta 1000 caracteres y el historial hasta 10 turnos. Los fallos del proveedor se traducen a `429` (límite), `503` (sin configurar o no disponible), `504` (tardó demasiado) y `502` (respuesta inválida); nunca se registran la clave ni el contenido de la conversación.
 - El vendedor se valora una vez por compra completada. La comisión del marketplace es 5% de los ingresos completados.
 - Las contraseñas (de compradores y vendedores) exigen 8+ caracteres, mayúscula y número, y solo se guarda su hash (BCrypt). La sesión usa JWT HS256 con el rol en el token (`COMPRADOR` o `VENDEDOR`) y `/api/**` exige token salvo `/api/auth/**`, los `POST` de registro y las consultas públicas del catálogo (`GET /api/productos`, `/api/combos` y `/api/preventas`).
 - El id del comprador o vendedor sale siempre del token, nunca del body ni de la URL; cada ruta valida el rol con `@PreAuthorize`.
@@ -454,11 +511,11 @@ Categorías habilitadas en el catálogo:
 - Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
 ---
 
-## 10. Casos de Uso del Sistema (63 Casos de Uso)
+## 10. Casos de Uso del Sistema (72 Casos de Uso)
 
 **Leyenda:** ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
-Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a `CU-57` se añadieron al construir las pantallas y la gestión que faltaban (pedidos, cupones, wishlist, notificaciones, combos, preventas, regalos y metas); `CU-58` a `CU-63` completaron el ciclo de vida de preventas y regalos, la expiración de compras, la descarga de productos digitales, la subida de imágenes y la notificación de preventas lanzadas. Un caso de uso puede agrupar varias clases (el backend tiene 78 clases `*UseCase`; todas aparecen en las tablas).
+Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a `CU-57` se añadieron al construir las pantallas y la gestión que faltaban (pedidos, cupones, wishlist, notificaciones, combos, preventas, regalos y metas); `CU-58` a `CU-63` completaron el ciclo de vida de preventas y regalos, la expiración de compras, la descarga de productos digitales, la subida de imágenes y la notificación de preventas lanzadas; `CU-64` y `CU-65` añadieron la recuperación de contraseña por correo; `CU-66` a `CU-72` añadieron el chat comprador–vendedor y el asistente de IA. Un caso de uso puede agrupar varias clases (el backend tiene 87 clases `*UseCase`; todas aparecen en las tablas).
 
 ### 📈 Resumen de avance
 
@@ -469,9 +526,10 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | Combos Promocionales | 4 | 0 | 0 | 4 |
 | Reseñas, Puntos y Recompensas | 9 | 0 | 0 | 9 |
 | Lista de Deseos (Wishlist) y Notificaciones | 7 | 0 | 0 | 7 |
-| Usuarios, Vendedores y Autenticación | 5 | 0 | 0 | 5 |
+| Usuarios, Vendedores y Autenticación | 7 | 0 | 0 | 7 |
 | Consultas, Métricas y Reportes | 8 | 0 | 0 | 8 |
-| **Total** | **63** | **0** | **0** | **63** |
+| Chat en vivo y Asistente de IA | 7 | 0 | 0 | 7 |
+| **Total** | **72** | **0** | **0** | **72** |
 
 ### 🛒 Módulo 1: Compras y Checkout
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -551,6 +609,8 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-26` | **Editar Perfil y Seguridad** | ✅ Implementado | Comprador / Vendedor | Consulta del perfil propio, modificación de nombre y correo (el vendedor no cambia tipo ni documento; el correo no puede repetirse con otro vendedor ni con un comprador) y cambio de contraseña exigiendo la actual (`ObtenerPerfilUseCase`, `EditarPerfilUseCase`, `CambiarContrasenaUseCase`, `ObtenerPerfilVendedorUseCase`, `EditarPerfilVendedorUseCase`, `CambiarContrasenaVendedorUseCase`). |
 | `CU-27` | **Iniciar Sesión (JWT)** | ✅ Implementado | Todos | Autenticación con token JWT seguro para el acceso a las APIs. (`IniciarSesionUseCase`, `AuthController`). |
 | `CU-28` | **Valorar Vendedor** | ✅ Implementado | Comprador | Calificación directa del servicio y atención brindada por el vendedor. (`ValorarVendedorUseCase`). |
+| `CU-64` | **Solicitar Recuperación de Contraseña** | ✅ Implementado | Público | Envía por correo (Brevo) un enlace de un solo uso, válido 30 minutos, a la cuenta activa (comprador o vendedor) dueña del correo. Responde siempre lo mismo, exista o no el correo, y solo manda un correo por minuto por cuenta (`SolicitarRecuperacionContrasenaUseCase`, `POST /api/auth/olvide-contrasena`). |
+| `CU-65` | **Restablecer Contraseña** | ✅ Implementado | Público | Cambia la contraseña con el token del enlace del correo. La contraseña nueva debe cumplir las mismas reglas que al registrarse; el token se consume solo si se cambió (`RestablecerContrasenaUseCase`, `POST /api/auth/restablecer-contrasena`). |
 
 ### 📊 Módulo 7: Consultas, Métricas y Reportes
 | Código | Caso de Uso | Estado Código | Actor | Descripción |
@@ -563,6 +623,19 @@ Los códigos `CU-01` a `CU-37` son los de la especificación original; `CU-38` a
 | `CU-34` | **Alertas de Stock Bajo** | ✅ Implementado | Vendedor | Reporte de inventario crítico o agotado para reabastecimiento. (`AlertasStockBajoUseCase`). |
 | `CU-35` | **Métricas de Reseñas** | ✅ Implementado | Admin / Vendedor | Dashboard de satisfacción del cliente y calificaciones. (`MetricasResenasUseCase`). |
 | `CU-36` | **Reporte Global del Marketplace** | ✅ Implementado | Admin | Consolidado ejecutivo del volumen total de operaciones. (`ReporteGlobalUseCase`). |
+
+### 💬 Módulo 8: Chat en vivo y Asistente de IA
+| Código | Caso de Uso | Estado Código | Actor | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `CU-66` | **Iniciar Conversación de Chat** | ✅ Implementado | Comprador | Abre (o reutiliza) la conversación con el vendedor de un producto o de una orden propia. Es idempotente: hay una sola conversación por comprador, vendedor y contexto. Solo la inicia el comprador; si la orden tiene varios vendedores debe indicar con cuál (`IniciarConversacionChatUseCase`, `POST /api/chat/conversaciones`). |
+| `CU-67` | **Enviar Mensaje de Chat** | ✅ Implementado | Comprador / Vendedor | Envía un mensaje (máximo 2000 caracteres) a una conversación en la que participa. Es idempotente por `clienteId`: un reintento tras una caída de red devuelve el mensaje ya guardado sin duplicarlo. El otro participante lo recibe en vivo (`EnviarMensajeChatUseCase`, `POST /api/chat/conversaciones/{id}/mensajes`). |
+| `CU-68` | **Listar Conversaciones** | ✅ Implementado | Comprador / Vendedor | Conversaciones del usuario autenticado, la más reciente primero, con su vista previa y los mensajes sin leer (`ListarConversacionesChatUseCase`, `GET /api/chat/conversaciones`). |
+| `CU-69` | **Consultar Historial de Chat** | ✅ Implementado | Comprador / Vendedor | Mensajes de una conversación paginados por cursor (`antesDe` para ir hacia atrás, `despuesDe` para ponerse al día), siempre en orden cronológico ascendente (`ConsultarHistorialChatUseCase`, `GET /api/chat/conversaciones/{id}/mensajes`). |
+| `CU-70` | **Marcar Mensajes como Leídos** | ✅ Implementado | Comprador / Vendedor | Marca como leídos los mensajes que envió el otro participante y avisa en vivo a ambos («Visto») (`MarcarLeidosChatUseCase`, `PUT /api/chat/conversaciones/{id}/leidos`). |
+| `CU-71` | **Asistente de IA para el Comprador** | ✅ Implementado | Comprador | Responde con recomendaciones de compra usando el modelo de OpenRouter y un contexto armado con datos que ya existen (compras completadas, favoritos, más vendidos, catálogo con stock y combos). Al modelo no viaja nada que identifique a la persona (`ChatAsistenteCompradorUseCase`, puerto `AsistenteIAPort`, `POST /api/asistente/comprador`). |
+| `CU-72` | **Asistente de IA para el Vendedor** | ✅ Implementado | Vendedor | Analiza la tienda del vendedor (ventas, más vendidos, stock bajo y reseñas), siempre con el `vendedorId` del token: solo ve el contexto de su propia tienda (`ChatAsistenteVendedorUseCase`, `POST /api/asistente/vendedor`). |
+
+Además de estos casos de uso, `GET /api/chat/stream` abre el canal en vivo (SSE) por el que el servidor empuja los mensajes nuevos y las confirmaciones de lectura (puerto `CanalChatEnVivo`, adaptador `SseCanalChatEnVivo`).
  
 ---
 
@@ -575,19 +648,20 @@ El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructura
 - **Producto**: raíz del agregado de catálogo e inventario. Protege invariantes como stock no negativo, baja lógica y visibilidad. El vendedor se referencia por `vendedorId`; no se carga como parte de este agregado.
 - **Compra**: raíz del agregado de compra. Controla cantidad, precio unitario congelado y transiciones de estado, además de las reglas de reseña, puntos y reembolso. Referencia `usuarioId` y `productoId` sin contener esos agregados.
 - **Cupon**: raíz del agregado de descuento por código. Protege el código normalizado, el porcentaje válido, el vencimiento y los usos máximos; con `vendedorId` es de un vendedor y sin él es global. La regla «una vez por comprador» depende del historial y vive en los casos de uso (`CuponRepository.fueUsadoPor`).
+- **ConversacionChat**: raíz del agregado de chat. Une a un comprador y un vendedor alrededor de un producto o una orden, y solo ellos dos pueden consultarla o escribir en ella (`asegurarParticipante`). Sus `MensajeChat` (hasta 2000 caracteres, con `clienteId` para la idempotencia y marca de lectura) se guardan aparte y la referencian por `conversacionId`.
 - **Pedido**: no es una raíz propia, sino un conjunto de `Compra` que comparten `pedidoId` (el carrito o un combo). Su atomicidad la garantizan los casos de uso con `@Transactional`, validando todas las líneas antes de modificar nada.
   Los casos de uso coordinan cambios que afectan a más de un agregado; cada entidad protege sus propias reglas. Las entidades JPA son adaptadores de persistencia separados de estas raíces de dominio.
 
 ```
 backend/src/main/java/com/uniquindio/backend/
 ├── domain/                  # Capa de Dominio (Sin dependencias de frameworks)
-│   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion, Promocion, Cupon, MetaRecompensa, MovimientoPuntos, ValoracionVendedor)
-│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoProducto, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Pagina, Contrasena, TipoMovimientoPuntos, Rol)
+│   ├── entity/              # Entidades Raíz de Agregados (Producto, Compra, Vendedor, Usuario, Regalo, Resena, Wishlist, Combo, Preventa, Notificacion, Promocion, Cupon, MetaRecompensa, MovimientoPuntos, ValoracionVendedor, TokenRecuperacion, ConversacionChat, MensajeChat)
+│   ├── valueobject/         # Objetos de Valor (Gama, EstadoCompra, EstadoRegalo, TipoVendedor, TipoProducto, TipoNotificacion, Precio, Puntos, Unidades, Calificacion, Exclusividad, FiltroProducto, Pagina, Contrasena, TipoMovimientoPuntos, Rol, TipoContextoChat)
 │   ├── repository/          # Interfaces de Repositorio de Dominio (incluye CatalogoRepository)
 │   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken, VerificadorCuentaActiva)
-│   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException)
+│   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException, AccesoProhibidoException → 403)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (78 clases *UseCase = 63 casos de uso; ver sección 10)
+│   ├── usecase/             # Lógica de Orquestación (87 clases *UseCase = 72 casos de uso; ver sección 10)
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, MarcarDescargaCompra,
 │   │   │              ExpirarComprasPendientes (automático), ConsultarHistorialCompras
 │   │   ├── Pedidos:   CrearPedido (+ ItemPedido), ConfirmarPedido, CancelarPedido, SolicitarReembolsoPedido
@@ -605,15 +679,22 @@ backend/src/main/java/com/uniquindio/backend/
 │   │   ├── Wishlist y notificaciones: AnadirAWishlist, QuitarDeWishlist, ConsultarWishlist, NotificarDescuentoWishlist,
 │   │   │              ConsultarNotificaciones, MarcarNotificacionLeida
 │   │   ├── Cuentas:   RegistrarUsuario, RegistrarVendedor, IniciarSesion, ValorarVendedor, DarDeBajaUsuario, DarDeBajaVendedor,
-│   │   │              ObtenerPerfil, EditarPerfil, CambiarContrasena, ObtenerPerfilVendedor, EditarPerfilVendedor, CambiarContrasenaVendedor
+│   │   │              ObtenerPerfil, EditarPerfil, CambiarContrasena, ObtenerPerfilVendedor, EditarPerfilVendedor, CambiarContrasenaVendedor,
+│   │   │              SolicitarRecuperacionContrasena, RestablecerContrasena
+│   │   ├── Chat e IA: IniciarConversacionChat, ListarConversacionesChat, ConsultarHistorialChat, EnviarMensajeChat, MarcarLeidosChat,
+│   │   │              ChatAsistenteComprador, ChatAsistenteVendedor (+ HistorialChat y ResumenConversacionChat como resultados)
 │   │   └── Reportes:  ReporteVentasVendedor, ReporteMasVendidos, AlertasStockBajo, MetricasResenas, ReporteGlobal
-│   ├── port/out/            # Puertos de salida (ReporteMasVendidosPort, AlmacenImagenesProductos)
+│   ├── service/             # Servicios de aplicación (NotificadorEventos, CorreoNotificaciones, HashToken, ArmadorResumenChat, ConversacionAsistente)
+│   ├── port/out/            # Puertos de salida (ReporteMasVendidosPort, AlmacenImagenesProductos, EnviadorCorreos, CanalChatEnVivo + EventoChat, AsistenteIAPort + MensajeIA)
 │   └── dto/                 # Data Transfer Objects (request y response)
 └── infrastructure/          # Capa de Infraestructura (Spring Boot / Controller / Persistence)
-    ├── rest/                # Controladores REST (uno por recurso: Auth, Compra, Pedido, Cupon, Combo, Regalo, Wishlist, Notificacion, Preventa, MetaRecompensa...), mappers y GlobalExceptionHandler
+    ├── rest/                # Controladores REST (uno por recurso: Auth, Compra, Pedido, Cupon, Combo, Regalo, Wishlist, Notificacion, Preventa, MetaRecompensa, Chat, ChatStream, Asistente...), mappers y GlobalExceptionHandler
     ├── persistence/         # Repositorios JPA (H2 / MariaDB) y en memoria, con sus mappers de persistencia; CuponUso registra qué comprador usó cada cupón
     ├── scheduling/          # ComprasScheduler (expira pendientes) y PreventasScheduler (avisa preventas lanzadas)
     ├── cloudinary/          # CloudinaryAlmacenImagenesProductos (sube las imágenes de producto)
+    ├── correo/              # BrevoEnviadorCorreos (envía correos por la API HTTPS de Brevo)
+    ├── chat/                # SseCanalChatEnVivo (canal en vivo del chat sobre Server-Sent Events)
+    ├── openrouter/          # OpenRouterAsistenteIA (adaptador del asistente de IA)
     ├── security/            # JwtEmisorToken, JwtAuthenticationFilter, BCryptHashContrasena, VerificadorCuentaActivaRepositorio y RespuestaErrorSeguridad
     └── config/              # ClockConfig, SecurityConfig (JWT y CORS) y OpenApiConfig
 ```
@@ -623,11 +704,12 @@ Estructura del frontend (`frontend/src/app/`):
 ```
 ├── componentes/   # Pantallas standalone: catalogo, combos, carrito, mis-compras, favoritos, notificaciones, regalos, perfil,
 │                  # panel-vendedor y sus pestañas (formulario-publicar, combos-vendedor, cupones-vendedor, regalos-vendedor,
-│                  # preventas-vendedor, metas-vendedor), login, registro, inicio y componentes de apoyo (tarjeta-producto,
+│                  # preventas-vendedor, metas-vendedor), login, registro, olvide-contrasena, restablecer-contrasena, chat-en-vivo, asistente-ia,
+│                  # inicio y componentes de apoyo (tarjeta-producto,
 │                  # confirmacion, arte-producto, escena3d)
 ├── servicios/     # Un servicio por módulo (auth, wishlist, notificacion, carrito, compra, combo, cupon, regalo, preventa, meta,
-│                  # producto, reporte, usuario) y utilidades (api.util con mensajeDeError, formato, toast, confirmacion)
-├── core/          # auth.interceptor (agrega el JWT) y guards (authGuard, rolGuard, guestGuard)
+│                  # producto, reporte, usuario, chat, asistente) y utilidades (api.util con mensajeDeError, formato, toast, confirmacion)
+├── core/          # auth.interceptor (agrega el JWT), sse-client (flujo en vivo con el token) y guards (authGuard, rolGuard, guestGuard)
 ├── modelos/       # Interfaces TypeScript de las respuestas de la API
 └── app.routes.ts  # Rutas protegidas por guards (sección 3.1)
 ```
@@ -645,6 +727,10 @@ Los controllers leen el id del `Authentication` (token), nunca del body ni de la
 CORS está habilitado para el frontend en desarrollo (`localhost:4200` y `localhost:3000`) y para el frontend desplegado en Vercel (ver sección 2), dentro de la cadena de seguridad, de modo que el preflight `OPTIONS` se responde sin exigir token.
 
 En desarrollo el secreto JWT tiene un valor por defecto; en producción debe definirse la variable de entorno `JWT_SECRET` (mínimo 32 caracteres).
+
+**Recuperación de contraseña.** `POST /api/auth/olvide-contrasena` y `POST /api/auth/restablecer-contrasena` son públicos (están bajo `/api/auth/**`). Para no revelar qué correos están registrados, el primero responde siempre `200` con el mismo mensaje. El token del enlace es aleatorio (256 bits), vence a los 30 minutos y es de un solo uso; en la base de datos solo se guarda su hash SHA-256, de modo que un volcado de la tabla no sirve para restablecer cuentas. Un enlace nuevo invalida los anteriores y se limita a un correo por minuto por cuenta. El correo se envía en segundo plano para que el tiempo de respuesta no delate si la cuenta existe.
+
+**Chat y asistente.** `/api/chat/**` y `/api/asistente/**` exigen token y rol; la identidad sale del JWT, nunca del body. Un usuario que no participa en una conversación recibe `403` (`AccesoProhibidoException`). El canal en vivo (SSE) también autentica la petición inicial; el re-despacho asíncrono que Spring hace al completar o expirar un `SseEmitter` no vuelve a pasar por el filtro JWT, por lo que `SecurityConfig` lo permite solo para ese tipo de despacho (`DispatcherType.ASYNC`) y el despacho `REQUEST` sigue exigiendo autenticación. El asistente de IA nunca recibe datos que identifiquen a la persona.
 
 ### Base de datos y consultas
 
@@ -690,7 +776,46 @@ set +a
 
 En Windows PowerShell, asigna al entorno la misma opción que configuraste en `.env` antes de iniciar `.\gradlew.bat bootRun`; PowerShell no carga `.env` automáticamente. En Render, estas variables se definen en el panel de variables de entorno del servicio.
 
+```powershell
+cd backend
+$env:CLOUDINARY_URL = "cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
+$env:BREVO_API_KEY = "tu-clave"
+$env:CORREO_REMITENTE = "tu-correo-verificado@gmail.com"
+$env:OPENROUTER_API_KEY = "tu-clave"
+.\gradlew.bat bootRun
+```
+
 El vendedor publica primero el producto y luego sube su imagen a `POST /api/productos/{id}/imagen` como `multipart/form-data` en el campo `archivo`. El backend acepta PNG/JPEG de hasta 5 MB, firma la petición a Cloudinary y persiste la URL HTTPS; el catálogo muestra la imagen o conserva la ilustración si no hay imagen o falla su carga.
+
+### Correo (Brevo): recuperación de contraseña y notificaciones
+
+El correo se envía por la API HTTPS de **Brevo**, no por SMTP: el plan gratuito de Render bloquea los puertos SMTP salientes. Lo usan la recuperación de contraseña y los correos de notificación (ver «Tipos de notificación», sección 8). Para habilitarlo, crea una cuenta en Brevo, verifica el correo remitente (Senders), genera una API key y define estas variables (en Render, en el panel del servicio; en local, en `backend/.env`):
+
+| Variable | Descripción |
+| :--- | :--- |
+| `BREVO_API_KEY` | Clave de la API de Brevo |
+| `CORREO_REMITENTE` | Correo remitente, verificado en Brevo |
+| `CORREO_REMITENTE_NOMBRE` | Opcional: nombre que ve quien recibe el correo (`GamerZone` por defecto) |
+| `FRONTEND_URL` | URL pública del frontend, sin barra final (`http://localhost:4200` por defecto); a ella apuntan los enlaces de los correos |
+| `NOTIFICACIONES_CORREO_HABILITADO` | `false` desactiva solo los correos de notificación; la recuperación de contraseña no se ve afectada (por defecto `true`) |
+
+Sin `BREVO_API_KEY` o `CORREO_REMITENTE` no se envía nada: el backend escribe el correo, con el enlace, en su log (modo desarrollo), lo que permite probar el flujo sin proveedor. Con un remitente de Gmail, el correo puede tardar o llegar a la carpeta de spam; para evitarlo haría falta un dominio propio autenticado.
+
+### Asistente de IA (OpenRouter)
+
+El asistente llama a la API de [OpenRouter](https://openrouter.ai) desde el backend; la clave nunca llega al navegador. Variables:
+
+| Variable | Descripción |
+| :--- | :--- |
+| `OPENROUTER_API_KEY` | Clave de OpenRouter. Sin ella, el asistente responde `503` («El asistente de IA no está configurado») y el resto de la aplicación funciona igual |
+| `OPENROUTER_MODEL` | Modelo a usar (por defecto `openrouter/auto`, que deja a OpenRouter elegir) |
+| `OPENROUTER_BASE_URL` | URL base de la API (por defecto `https://openrouter.ai/api/v1`) |
+
+La respuesta se limita a 700 tokens (`openrouter.max-tokens`) y la llamada espera hasta 30 s. Los errores del proveedor se traducen a `429`, `502`, `503` o `504` con un mensaje claro, sin filtrar detalles del proveedor.
+
+### Chat en vivo (SSE)
+
+El chat usa Server-Sent Events. Dos ajustes opcionales, en milisegundos: `CHAT_SSE_TIMEOUT_MS` (duración de cada conexión, `300000` por defecto) y `CHAT_SSE_HEARTBEAT_MS` (latido para mantener viva la conexión, `25000` por defecto). El cliente se reconecta solo cuando la conexión termina.
 
 ### Limitaciones conocidas
 
@@ -700,10 +825,17 @@ El vendedor publica primero el producto y luego sube su imagen a `POST /api/prod
 
   Con un rol `ADMIN` bastaría restringir esas rutas con `@PreAuthorize`. El envío de regalos (CU-24) ya no tiene este problema: solo lo hace el vendedor dueño del producto o combo del regalo.
 
+- **Recuperación de contraseña.** Cambiar la contraseña no cierra las sesiones ya iniciadas: siguen válidas hasta que venza su JWT (2 horas por defecto). El límite de un correo por minuto es por cuenta, no por IP. Los tokens vencidos no usados se quedan en la tabla hasta que la cuenta pida un enlace nuevo o restablezca su contraseña.
+- **Chat en vivo.** El registro de conexiones SSE vive en la memoria de una sola instancia del backend; escalar a varias instancias exigiría un intermediario de mensajes (broker). En Render gratuito el servicio se duerme por inactividad y las conexiones en vivo se cortan: el cliente se reconecta y recupera lo pendiente con el historial.
+- **Asistente de IA.** Depende de un servicio externo y de su cuota: puede responder `429` o `503`. Sus respuestas son orientativas y no se guardan en el servidor.
+
 ### Decisiones de diseño
 
 - **Las metas son informativas.** Se gestionan y se muestran (`GET /api/metas-recompensa`, pantalla de regalos), pero no gobiernan la asignación de regalos: la regla real es un regalo por cada 5 compras completadas (`Usuario.COMPRAS_POR_REGALO`).
 - **Un cupón se usa una vez por comprador**, no una sola vez en total: mientras queden usos disponibles, otros compradores pueden aplicarlo. El cupón de demo `VERANO26` vence el 31/12/2026.
+- **El correo no usa SMTP.** Render bloquea los puertos SMTP en el plan gratuito, por lo que se usa la API HTTPS de Brevo. Los casos de uso solo conocen el puerto `EnviadorCorreos`; cambiar de proveedor implica escribir otro adaptador. Los correos de notificación reutilizan ese mismo puerto.
+- **La IA es opcional y está detrás de un puerto.** Los casos de uso del asistente solo conocen `AsistenteIAPort`; sin clave de OpenRouter solo ese endpoint falla y el resto de la aplicación no se ve afectado. Al modelo solo viaja un contexto sin datos personales.
+- **El chat es en vivo, pero el historial es la fuente de verdad.** El canal SSE solo avisa; todo mensaje se guarda antes de publicarse y, al reconectar, el cliente se pone al día con el historial.
 - **La carga de imágenes es opcional.** Depende de configurar Cloudinary; sin credenciales, o si la subida falla, el producto se publica igual y el catálogo muestra la ilustración de respaldo.
 
 ---
@@ -741,6 +873,10 @@ En esta parte agregamos pruebas para revisar que el backend no solo funcione por
 | 5. Errores HTTP de compra y publicación (401, 422 y 400) | `integracion/FlujoCompletoIntegracionTest` |
 | 6. Pedido atómico y cupones | `CrearPedidoUseCaseTest`, `ConfirmarPedidoUseCaseTest`, `CancelarPedidoUseCaseTest`, `SolicitarReembolsoPedidoUseCaseTest`, `PedidoControllerTest`, `CuponTest`, `CrearCuponUseCaseTest`, `ConsultarCuponUseCaseTest`, `CuponControllerTest`, `CuponRepositoryJpaTest`, `integracion/FlujoCompletoIntegracionTest` |
 | 7. Consultas y gestión de los módulos con pantalla | `ConsultarWishlistUseCaseTest`, `WishlistControllerTest`, `ConsultarNotificacionesUseCaseTest`, `MarcarNotificacionLeidaUseCaseTest`, `NotificacionControllerTest`, `ConsultarCombosUseCaseTest`, `ComboRepositoryJpaTest`, `ComboControllerTest`, `ConsultarPreventasUseCaseTest`, `PreventaRepositoryJpaTest`, `PreventaControllerTest`, `CrearRegaloUseCaseTest`, `ConsultarProgresoRegalosUseCaseTest`, `DuenoDeRegaloTest`, `RegaloRepositoryJpaTest`, `RegaloControllerTest`, `ConsultarMetasUseCaseTest`, `MetaRecompensaControllerTest` |
+| 8. Recuperación de contraseña | `RecuperacionContrasenaUseCaseTest` |
+| 9. Correos de notificación | `CorreoNotificacionesTest`, `NotificadorEventosCorreoTest`, `NotificarDescuentoWishlistCorreoTest` |
+| 10. Asistente de IA | `OpenRouterAsistenteIAIntegracionTest` |
+| 11. Chat en vivo | `backend/scripts/verificar-chat.sh` (script con el backend arrancado) |
 
 ### 0. Pruebas del repositorio
 
@@ -775,6 +911,22 @@ En `FlujoCompletoIntegracionTest` recorremos el flujo real con `MockMvc` y H2: u
 ### 7. Módulos con pantalla (wishlist, notificaciones, combos, preventas, regalos y metas)
 
 Cada módulo sigue la misma plantilla: una prueba del caso de uso con repositorios en memoria, una del repositorio con `@DataJpaTest` cuando se añadió una consulta, y una del controller con `SesionTest` para fijar `401` (sin token), `403` (rol equivocado) y el código de éxito. Algunos casos que fijan reglas: una wishlist vacía devuelve `[]` y no `404`; una notificación ajena responde `422`; un combo con un producto pausado no aparece en el catálogo pero sí en el panel de su vendedor; una preventa con fecha de lanzamiento igual a hoy ya no cuenta como futura; un vendedor no puede crear ni enviar el regalo de un producto ajeno (`DuenoDeRegaloTest`); y el progreso de regalos calcula cuántos puede elegir el comprador y cuántas compras le faltan. En el frontend cada servicio y pantalla nuevos tienen su `*.spec.ts` (por ejemplo `wishlist.service.spec.ts`, `notificacion.service.spec.ts`, `combos.spec.ts`, `regalos.spec.ts`).
+
+### 8. Recuperación de contraseña
+
+`RecuperacionContrasenaUseCaseTest` prueba los dos casos de uso con repositorios en memoria, un reloj que se puede adelantar y un enviador de correos falso que guarda lo que recibe (el token se extrae del enlace del correo). Casos que fijan las reglas: un correo registrado recibe el enlace hacia el frontend; un correo inexistente no envía nada ni falla; una cuenta dada de baja no recibe correo; pedir el enlace dos veces seguidas envía un solo correo y, pasado un minuto, el enlace nuevo invalida el anterior; con el enlace se cambia la contraseña una sola vez; un enlace vencido (31 minutos) o inventado se rechaza sin cambiar nada; una contraseña débil se rechaza y el enlace sigue sirviendo; y el flujo funciona también para vendedores. En el frontend, `tarjeta-producto.spec.ts` cubre la etiqueta Físico o Digital (con un producto sin tipo tratado como físico).
+
+### 9. Correos de notificación
+
+`CorreoNotificacionesTest` fija qué avisos se mandan por correo: el comprador recibe descuento, stock y preventa; el vendedor, stock bajo, agotado, reembolso, reseña y valoración; solo ocho tipos tienen plantilla y el resto no envía nada; un aviso de vendedor dirigido a un comprador no se envía; una cuenta inactiva o un destinatario inexistente no falla ni envía; el apagado por configuración no envía; el HTML del mensaje y del nombre se escapa; si el enviador falla no se propaga la excepción; y con una transacción activa el correo sale solo tras el `commit` (si se revierte, no se manda nada). `NotificadorEventosCorreoTest` y `NotificarDescuentoWishlistCorreoTest` comprueban que `NotificadorEventos` y el caso de uso de descuentos piden el correo junto con la notificación interna.
+
+### 10. Asistente de IA
+
+`OpenRouterAsistenteIAIntegracionTest` verifica el adaptador contra el contrato HTTP de OpenRouter, simulado: una respuesta correcta devuelve el texto y envía el modelo, el `Bearer` y los mensajes; un `429` se traduce a `429` con mensaje amable; una clave inválida (`401`) o un error `500` se traducen a `503` sin filtrar el detalle del proveedor; un tiempo de espera, a `504`; una respuesta sin `choices` o con contenido vacío, a `502`; y sin API key responde `503` sin llamar al proveedor. Con la variable `OPENROUTER_API_KEY` definida, una prueba adicional llama al servicio real.
+
+### 11. Chat en vivo
+
+El chat se verifica con `backend/scripts/verificar-chat.sh`, un script de Bash que necesita `curl` y `jq` y el backend arrancado (`BASE_URL` por defecto `http://localhost:8080/api`). Imprime `PASS` o `FAIL` por comprobación y termina con código distinto de cero si alguna falla. Comprueba: `401` sin token en el stream, la lista y el envío; `403` si el vendedor intenta iniciar una conversación o si una persona ajena consulta, escribe o marca leídos; que un `remitenteId` enviado en el body se ignora; el contador de no leídos antes y después de leer, y que marcar leídos dos veces no marca nada más; que reenviar el mismo `clienteId` no duplica el mensaje y devuelve el mismo id; la paginación por cursor (`tamano`, `hayMas`, `antesDe`, `despuesDe`, orden ascendente y `422` al pedir ambos cursores); y que Unicode (emoji, ñ, tildes) se guarda y se relee idéntico. Con `FASE=2` relee el historial tras reiniciar el backend para comprobar la persistencia.
 
 ---
 

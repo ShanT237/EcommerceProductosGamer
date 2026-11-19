@@ -69,14 +69,11 @@
                 <div class="linea-producto">
                   <div>
                     <strong>{{ nombreDe(linea.productoId) }}</strong>
+                    <span class="etiqueta {{ esDigital(linea.productoId) ? 'tipo-DIGITAL' : 'tipo-FISICO' }}">{{ esDigital(linea.productoId) ? 'Digital' : 'Físico' }}</span>
                     <p class="muted">{{ linea.cantidad }} × {{ precio(linea.precioUnitario) }}</p>
                   </div>
                   <div class="detalle-linea-acciones">
                     <strong>{{ precio(linea.subtotal) }}</strong>
-                    @if (vendedorDe(linea.productoId); as vendedorId) {
-                      <button class="btn btn-chico" [disabled]="ocupada() === 'chat-' + op.id"
-                              (click)="chatearConVendedor(op, vendedorId)">Chatear con el vendedor</button>
-                    }
                     @if (linea.estado === 'COMPLETADA') {
                       @if (linea.descargado) {
                         <span class="muted">Descargado</span>
