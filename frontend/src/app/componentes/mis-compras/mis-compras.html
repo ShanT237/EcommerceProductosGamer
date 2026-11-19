@@ -62,6 +62,11 @@
               }
               @default { <span class="muted">Sin acciones disponibles</span> }
             }
+            @if (vendedorDe(op.lineas[0].productoId); as vendedorId) {
+              <button class="btn btn-chico" type="button"
+                      [disabled]="ocupada() === 'chat-' + op.id"
+                      (click)="chatearConVendedor(op, vendedorId)">Chatear con el vendedor</button>
+            }
           </div>
           @if (detallesAbiertos()[op.id]) {
             <div class="detalle-operacion">
