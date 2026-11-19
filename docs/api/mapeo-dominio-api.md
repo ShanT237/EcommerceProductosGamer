@@ -14,6 +14,8 @@ Cada operación del dominio y el endpoint REST que la expone.
 | `Usuario.cambiarContrasena(...)` | PUT | `/api/usuarios/me/contrasena` | COMPRADOR | 204 No Content |
 | `Usuario.darDeBaja()` | PUT | `/api/usuarios/me/baja` | COMPRADOR | 200 OK |
 | `IniciarSesionUseCase` | POST | `/api/auth/login` | Público | 200 OK |
+| `SolicitarRecuperacionContrasenaUseCase` | POST | `/api/auth/olvide-contrasena` | Público | 200 OK |
+| `RestablecerContrasenaUseCase` | POST | `/api/auth/restablecer-contrasena` | Público | 200 OK |
 | `Vendedor.registrar(...)` | POST | `/api/vendedores` | Público | 201 Created |
 | Consultar mi perfil (vendedor) | GET | `/api/vendedores/me` | VENDEDOR | 200 OK |
 | `Vendedor.actualizarPerfil(...)` | PUT | `/api/vendedores/me/perfil` | VENDEDOR | 200 OK |
@@ -109,6 +111,19 @@ El cupón no se aplica con un endpoint propio: se envía como `codigoCupon` en `
 | `MetaRecompensa.actualizarUmbral(...)` | PUT | `/api/metas-recompensa/{id}/umbral` | VENDEDOR | 200 OK |
 | `MetaRecompensa.desactivar()` | PUT | `/api/metas-recompensa/{id}/desactivar` | VENDEDOR | 200 OK |
 
+## Chat comprador–vendedor y asistente de IA
+
+| Operación del dominio | Método HTTP | Endpoint | Rol | Respuesta exitosa |
+|---|---|---|---|---|
+| `IniciarConversacionChatUseCase` | POST | `/api/chat/conversaciones` | COMPRADOR | 200 OK |
+| `ListarConversacionesChatUseCase` | GET | `/api/chat/conversaciones` | COMPRADOR y VENDEDOR | 200 OK |
+| `ConsultarHistorialChatUseCase` | GET | `/api/chat/conversaciones/{id}/mensajes` | COMPRADOR y VENDEDOR | 200 OK |
+| `EnviarMensajeChatUseCase` | POST | `/api/chat/conversaciones/{id}/mensajes` | COMPRADOR y VENDEDOR | 201 Created |
+| `MarcarLeidosChatUseCase` | PUT | `/api/chat/conversaciones/{id}/leidos` | COMPRADOR y VENDEDOR | 200 OK |
+| `CanalChatEnVivo` (SSE) | GET | `/api/chat/stream` | COMPRADOR y VENDEDOR | 200 OK (`text/event-stream`) |
+| `ChatAsistenteCompradorUseCase` | POST | `/api/asistente/comprador` | COMPRADOR | 200 OK |
+| `ChatAsistenteVendedorUseCase` | POST | `/api/asistente/vendedor` | VENDEDOR | 200 OK |
+
 ## Reportes
 
 | Caso de uso | Método HTTP | Endpoint | Rol | Respuesta exitosa |
@@ -137,6 +152,13 @@ Estos casos de uso los dispara un `@Scheduled` y no se pueden invocar por HTTP.
 | `PUT /api/usuarios/me/contrasena` | `contrasenaActual`, `contrasenaNueva` (8 a 72 caracteres) |
 | `PUT /api/usuarios/me/baja` | Sin cuerpo |
 | `POST /api/auth/login` | `correo`, `contrasena` (devuelve `token`) |
+| `POST /api/auth/olvide-contrasena` | `correo`. Responde `200` con `mensaje`, exista o no la cuenta; si existe y está activa, envía el enlace por correo (un correo por minuto por cuenta) |
+| `POST /api/auth/restablecer-contrasena` | `token` (el del enlace del correo) y `contrasenaNueva` (8 a 72 caracteres, con mayúscula y número). `422` si el enlace no es válido, venció (30 min) o ya se usó, o si la contraseña no cumple las reglas |
+| `POST /api/chat/conversaciones` | `tipo` (`PRODUCTO` u `ORDEN`), `referenciaId` (el producto o el pedido) y `vendedorId` opcional (solo para órdenes con varios vendedores; con `PRODUCTO` se ignora). Devuelve la conversación existente si ya había una |
+| `GET /api/chat/conversaciones/{id}/mensajes` | Query opcional: `antesDe` (id de mensaje, página hacia atrás), `despuesDe` (id de mensaje, para ponerse al día) y `tamano` (30 por defecto). No se pueden pedir `antesDe` y `despuesDe` a la vez (`422`). Respuesta en orden ascendente, con `hayMas` |
+| `POST /api/chat/conversaciones/{id}/mensajes` | `clienteId` (UUID generado por el cliente, hace idempotente el reintento) y `contenido` (1 a 2000 caracteres) |
+| `PUT /api/chat/conversaciones/{id}/leidos` | Sin cuerpo; responde cuántos mensajes marcó |
+| `POST /api/asistente/comprador` · `/vendedor` | `mensaje` (hasta 1000 caracteres) y `historial` opcional (hasta 10 turnos con `rol` = `user` o `assistant` y `contenido` de hasta 2000 caracteres); devuelve `respuesta`. Errores del proveedor: `429`, `502`, `503`, `504` |
 | `POST /api/vendedores` | `nombre`, `correo`, `tipo`, `documento`, `contrasena` |
 | `PUT /api/vendedores/me/perfil` | `nombre`, `correo` |
 | `PUT /api/vendedores/me/contrasena` | `contrasenaActual`, `contrasenaNueva` (8 a 72 caracteres) |
@@ -177,6 +199,9 @@ Estos casos de uso los dispara un `@Scheduled` y no se pueden invocar por HTTP.
 
 ## Notas
 
+- **Chat y asistente:** las rutas `/api/chat/**` y `/api/asistente/**` exigen token y rol. Solo el comprador inicia una conversación; solo los dos participantes la consultan o escriben (`403` si no participa, `404` si no existe). `GET /api/chat/stream` mantiene una conexión SSE por usuario (timeout y latido configurables) y emite mensajes nuevos y confirmaciones de lectura. El asistente responde `503` si no hay `OPENROUTER_API_KEY`.
+- **Recuperación de contraseña:** `POST /api/auth/olvide-contrasena` responde siempre igual, exista o no el correo; el enlace vence a los 30 minutos y es de un solo uso.
+- **Correos de notificación:** ocho tipos de notificación se reenvían además por correo (ver README, sección 8); es de mejor esfuerzo y se apaga con `NOTIFICACIONES_CORREO_HABILITADO=false`.
 - **Autenticación:** `POST /api/auth/login` devuelve un JWT (HS256, 2 horas por defecto) con el id, el correo y el rol. Todas las rutas `/api/**` exigen `Authorization: Bearer {JWT}`, salvo `/api/auth/**`, `POST /api/usuarios`, `POST /api/vendedores` y las tres consultas del catálogo, que son **públicas** (un visitante puede ver pero no comprar): `GET /api/productos`, `GET /api/combos` y `GET /api/preventas`. El filtro JWT comprueba en cada petición que la cuenta siga activa: una cuenta dada de baja recibe `401` con `codigo: "CUENTA_INACTIVA"` aunque su token no haya expirado.
 - **Roles:** `COMPRADOR` y `VENDEDOR`. Un rol que no corresponde a la ruta recibe 403. Los controllers toman el id del `Authentication`; un `usuarioId` o `vendedorId` enviado en el body o en la URL se ignora.
 - **Contraseñas:** mínimo 8 caracteres, una mayúscula y un número; se guardan con BCrypt.
