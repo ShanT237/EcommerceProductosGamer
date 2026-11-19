@@ -58,14 +58,14 @@ El proyecto está desplegado en tres servicios independientes:
 | Capa | Plataforma | URL |
 | :--- | :--- | :--- |
 | Frontend (Angular) | **Vercel** | https://ecommerce-productos-gamer.vercel.app/ |
-| Backend (Spring Boot) | **Render** | `https://TU-BACKEND.onrender.com` |
+| Backend (Spring Boot) | **Render** | `https://gamerzone-backend-2tlc.onrender.com` |
 | Base de datos | **Aiven** | Servicio gestionado (credenciales por variables de entorno) |
 
 ```text
 Navegador ──► Vercel (Angular) ──HTTPS──► Render (Spring Boot, perfil mariadb) ──JDBC/SSL──► Aiven (BD)
 ```
 
-- Swagger en producción: `https://TU-BACKEND.onrender.com/swagger-ui.html`
+- Swagger en producción: `https://gamerzone-backend-2tlc.onrender.com/swagger-ui.html`
 - Probar la demo: entra a la URL del frontend y regístrate (ver nota abajo).
 
 ### Configuración por servicio
