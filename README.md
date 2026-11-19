@@ -14,30 +14,6 @@ Sistema e-commerce descentralizado enfocado en productos y accesorios del mundo 
  
 ---
 
-## 🚀 Entrega 3: probar el frontend publicado
-
-**Frontend:** https://ecommerce-productos-gamer.vercel.app
-
-Quien lo revise puede crear sus propias cuentas directamente en el enlace, sin usuarios previos: en `/registro` están las dos pestañas, **Quiero comprar** (rol `COMPRADOR`) y **Quiero vender** (rol `VENDEDOR`). Con esas cuentas se puede probar todo el flujo: iniciar sesión, ver el catálogo, buscar, cambiar de página, comprar o publicar un producto y ver el aviso. Los usuarios de la sección 3 existen solo al correr el backend en local (perfil H2). En Render gratuito la primera petición puede tardar unos segundos mientras el servicio despierta.
-
-### Mínimos de la Entrega 3: dónde está cada uno
-
-| Mínimo | Dónde verlo |
-| :--- | :--- |
-| 2.1 Conexión al backend | `frontend/src/app/servicios/` (un servicio por grupo de endpoints), `modelos/modelos.ts` (interfaces espejo de los DTO), `environments/` |
-| 2.2 Login con JWT | `componentes/login/login.ts`, `servicios/auth.service.ts` (token en `localStorage`, clave `gamerzone.token`) |
-| 2.3 Interceptor | `core/auth.interceptor.ts` (agrega `Bearer` y maneja el 401) |
-| 2.4 Guards | `core/guards.ts` y `app.routes.ts` |
-| 2.5 Catálogo paginado y con búsqueda | `componentes/catalogo/` y `ProductoService.buscar` (envía `page`, `size` y `texto`) |
-| 2.6 Operación de negocio con formulario | `componentes/formulario-publicar/` (publicar) y `componentes/carrito/` (comprar) |
-| 2.7 Avisos | `servicios/toast.service.ts` |
-| 2.8 Bootstrap | `angular.json` (estilos) y clases `row-cols`, `card`, `form-control`, `btn` |
-| 2.9 Funcionalidad propia | Combos, cupones, wishlist, regalos por meta, preventas, chat en vivo y asistente de IA |
-
-**Extras:** MariaDB en Aiven, despliegue en la nube, imágenes en Cloudinary, variables de entorno (`environment.ts`) y búsqueda reactiva con signals y `debounceTime`.
-
----
-
 ## 📋 Tabla de Contenidos
 1. [Integrantes y nicho](#1-integrantes-y-nicho)
 2. [Despliegue](#2-despliegue)
@@ -47,17 +23,16 @@ Quien lo revise puede crear sus propias cuentas directamente en el enlace, sin u
     - [Carrito, pedido y cupones](#carrito-pedido-y-cupones)
     - [Panel del vendedor](#panel-del-vendedor)
 4. [Endpoints principales](#4-endpoints-principales)
-5. [Correcciones de la Entrega 1](#5-correcciones-de-la-entrega-1)
-6. [¿Quién compra y por qué?](#6-quién-compra-y-por-qué)
-7. [¿Qué hace único a sus vendedores?](#7-qué-hace-único-a-sus-vendedores)
-8. [Lenguaje Ubicuo (DDD)](#8-lenguaje-ubicuo-ddd)
-9. [Reglas de Negocio e Invariantes del Dominio](#9-reglas-de-negocio-e-invariantes-del-dominio)
-10. [Casos de Uso del Sistema (72 Casos de Uso)](#10-casos-de-uso-del-sistema-72-casos-de-uso)
-11. [Arquitectura del Software (Clean Architecture)](#11-arquitectura-del-software-clean-architecture)
-12. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#12-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño)
-13. [Cómo ejecutar las pruebas](#13-cómo-ejecutar-las-pruebas)
-14. [Pruebas avanzadas](#14-pruebas-avanzadas)
-15. [Gestión del Proyecto (Trello)](#15-gestión-del-proyecto-trello)
+5. [¿Quién compra y por qué?](#5-quién-compra-y-por-qué)
+6. [¿Qué hace único a sus vendedores?](#6-qué-hace-único-a-sus-vendedores)
+7. [Lenguaje Ubicuo (DDD)](#7-lenguaje-ubicuo-ddd)
+8. [Reglas de Negocio e Invariantes del Dominio](#8-reglas-de-negocio-e-invariantes-del-dominio)
+9. [Casos de Uso del Sistema (72 Casos de Uso)](#9-casos-de-uso-del-sistema-72-casos-de-uso)
+10. [Arquitectura del Software (Clean Architecture)](#10-arquitectura-del-software-clean-architecture)
+11. [Seguridad, Base de Datos, Limitaciones y Decisiones de diseño](#11-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño)
+12. [Cómo ejecutar las pruebas](#12-cómo-ejecutar-las-pruebas)
+13. [Pruebas avanzadas](#13-pruebas-avanzadas)
+14. [Gestión del Proyecto (Trello)](#14-gestión-del-proyecto-trello)
 
 ---
 
@@ -105,11 +80,11 @@ Navegador ──► Vercel (Angular) ──HTTPS──► Render (Spring Boot, p
 | `DB_USERNAME` / `DB_PASSWORD` | Credenciales de Aiven |
 | `JWT_SECRET` | Secreto JWT de producción (mínimo 32 caracteres) |
 | `CORS_ALLOWED_ORIGINS` | Orígenes permitidos, separados por comas (debe incluir la URL de Vercel) |
-| `CLOUDINARY_*` o `CLOUDINARY_URL` | Opcional: subida de imágenes (ver sección 12) |
+| `CLOUDINARY_*` o `CLOUDINARY_URL` | Opcional: subida de imágenes (ver sección 11) |
 | `FRONTEND_URL` | URL pública del frontend, sin barra final (`https://ecommerce-productos-gamer.vercel.app`): a ella apuntan los enlaces de los correos |
-| `BREVO_API_KEY` · `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` | Opcional: envío de correos con Brevo (recuperación de contraseña y notificaciones; ver sección 12). El remitente debe estar verificado en Brevo; el nombre es opcional (`GamerZone` por defecto) |
+| `BREVO_API_KEY` · `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` | Opcional: envío de correos con Brevo (recuperación de contraseña y notificaciones; ver sección 11). El remitente debe estar verificado en Brevo; el nombre es opcional (`GamerZone` por defecto) |
 | `NOTIFICACIONES_CORREO_HABILITADO` | Opcional: `false` desactiva los correos de notificación (por defecto `true`) |
-| `OPENROUTER_API_KEY` · `OPENROUTER_MODEL` · `OPENROUTER_BASE_URL` | Opcional: asistente de IA (ver sección 12). Sin la clave, el asistente responde `503` |
+| `OPENROUTER_API_KEY` · `OPENROUTER_MODEL` · `OPENROUTER_BASE_URL` | Opcional: asistente de IA (ver sección 11). Sin la clave, el asistente responde `503` |
 
 **Frontend (Vercel).** Se despliega desde la carpeta `frontend`. La URL del backend se define en `frontend/src/app/config.ts` (`API_URL`) y debe apuntar a la URL de Render.
 
@@ -136,7 +111,7 @@ Por defecto usa **H2 en memoria** y carga `data.sql` al arrancar. Cuando aparezc
 - Consola H2: http://localhost:8080/h2-console (URL JDBC: `jdbc:h2:mem:marketplacedb`, usuario `SA`)
 
 Si el puerto 8080 está ocupado: `.\gradlew.bat bootRun --args="--server.port=8081"`.
-Para MariaDB, ver la sección [12](#12-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño). Para la versión desplegada (Vercel, Render y Aiven), ver la sección [2](#2-despliegue).
+Para MariaDB, ver la sección [11](#11-seguridad-base-de-datos-limitaciones-y-decisiones-de-diseño). Para la versión desplegada (Vercel, Render y Aiven), ver la sección [2](#2-despliegue).
 
 ### Usuarios de prueba (perfil H2 por defecto)
 
@@ -242,11 +217,11 @@ En **Mi tienda → Publicar**, el vendedor llena un formulario reactivo que vali
 
 ### Tipo de producto: físico o digital
 
-El vendedor elige el tipo al publicar (**Físico** por defecto). El comprador lo ve con una etiqueta en la tarjeta del catálogo, en favoritos, en el detalle del producto, en el carrito y en «Mis compras» (el panel del vendedor muestra la misma etiqueta). El detalle de un producto digital aclara que no se envía nada físico y que se descarga desde «Mis compras» cuando el pago está confirmado; solo los productos digitales permiten marcar la compra como descargada (ver sección 9). Un producto sin tipo se trata como físico.
+El vendedor elige el tipo al publicar (**Físico** por defecto). El comprador lo ve con una etiqueta en la tarjeta del catálogo, en favoritos, en el detalle del producto, en el carrito y en «Mis compras» (el panel del vendedor muestra la misma etiqueta). El detalle de un producto digital aclara que no se envía nada físico y que se descarga desde «Mis compras» cuando el pago está confirmado; solo los productos digitales permiten marcar la compra como descargada (ver sección 8). Un producto sin tipo se trata como físico.
 
 ### Recuperación de contraseña
 
-Desde el login, **¿Olvidaste tu contraseña?** lleva a `/olvide-contrasena`, donde la persona escribe el correo de su cuenta (de comprador o de vendedor). Si el correo pertenece a una cuenta activa, recibe un correo con un enlace a `/restablecer?token=…` en el frontend desplegado; allí elige su contraseña nueva y vuelve al login. Detalles de seguridad y de configuración del correo en la sección 12.
+Desde el login, **¿Olvidaste tu contraseña?** lleva a `/olvide-contrasena`, donde la persona escribe el correo de su cuenta (de comprador o de vendedor). Si el correo pertenece a una cuenta activa, recibe un correo con un enlace a `/restablecer?token=…` en el frontend desplegado; allí elige su contraseña nueva y vuelve al login. Detalles de seguridad y de configuración del correo en la sección 11.
 
 ### Chat comprador–vendedor
 
@@ -256,7 +231,7 @@ Los mensajes llegan en vivo por **Server-Sent Events** (`GET /api/chat/stream`),
 
 ### Asistente de IA
 
-Un botón flotante abre un chat con el asistente en cualquier pantalla con sesión. Para el **comprador** da recomendaciones de compra, apoyado en sus compras completadas, sus favoritos, los más vendidos, el catálogo con stock y los combos. Para el **vendedor** analiza su tienda (ventas, más vendidos, stock bajo y reseñas). El asistente usa un modelo de [OpenRouter](https://openrouter.ai) y guarda el hilo solo en la pantalla: el cliente reenvía hasta los 10 turnos anteriores en cada pregunta. Al modelo no se le envía nada que identifique a la persona (ni correo, ni nombre, ni ids). Sin `OPENROUTER_API_KEY` el endpoint responde `503` con «El asistente de IA no está configurado» (configuración en la sección 12).
+Un botón flotante abre un chat con el asistente en cualquier pantalla con sesión. Para el **comprador** da recomendaciones de compra, apoyado en sus compras completadas, sus favoritos, los más vendidos, el catálogo con stock y los combos. Para el **vendedor** analiza su tienda (ventas, más vendidos, stock bajo y reseñas). El asistente usa un modelo de [OpenRouter](https://openrouter.ai) y guarda el hilo solo en la pantalla: el cliente reenvía hasta los 10 turnos anteriores en cada pregunta. Al modelo no se le envía nada que identifique a la persona (ni correo, ni nombre, ni ids). Sin `OPENROUTER_API_KEY` el endpoint responde `503` con «El asistente de IA no está configurado» (configuración en la sección 11).
 
 ### Mensajes de error
 
@@ -398,23 +373,7 @@ El recorrido completo (publicar, comprar con carrito y cupón, errores de negoci
 
 ---
 
-## 5. Correcciones de la Entrega 1
-
-| Observación que nos dieron | Qué cambiamos | Dónde se ve |
-| :--- | :--- | :--- |
-| Las entidades del dominio tenían el **constructor público**: cualquiera podía crear un objeto sin pasar por las validaciones y dejarlo en estado inválido. | Los constructores pasaron a `private`. La creación se hace solo con métodos de fábrica estáticos que validan las invariantes (`Producto.publicar`, `Usuario.registrar`, `Compra.realizar`, `Wishlist.crear`, `Vendedor.registrar`, `Combo.crear`, `Preventa.programar`...). | Rama `fix/corrections` (PR #18). Commits del 11/10: `e61f066` (Producto), `04e75f5` (Usuario), `0b14a99` (Compra), `5376af7` (Wishlist), `e1b7def` (Vendedor), `40ba7ed` (Combo), `8c2f707` (Preventa). Código actual en `domain/entity/`. |
-
-**Por qué es mejor:** la regla de negocio queda en un solo punto, dentro del propio objeto del dominio, y es imposible saltársela desde un caso de uso o un controller.
-
-**Consecuencia para la persistencia:** como el constructor es privado, el mapper JPA no puede crear la entidad directamente. Por eso se agregó un método `reconstruir(...)` en cada entidad (commits del 19 al 21/10), que rehidrata el objeto desde la base de datos sin abrir el constructor al resto del código.
-
-**Entidades posteriores:** las entidades que se añadieron o ampliaron después (`Cupon` con dueño opcional, `Regalo`, `MetaRecompensa`, `Promocion` y `Compra` con `pedidoId` y datos de combo) mantienen el mismo patrón: constructor `private`, fábrica estática que valida (`Cupon.crear`, `Regalo.crear`, `MetaRecompensa.crear`, `Promocion.programar`, `Compra.realizar` con sus sobrecargas) y `reconstruir(...)` solo para la persistencia.
-
-**Value Objects:** los VO (`Precio`, `Puntos`, `Unidades`, `Calificacion`...) son `record` de Java. Su constructor canónico es público, pero es seguro porque el `record` es inmutable y valida sus invariantes en el constructor compacto: un VO inválido nunca llega a existir.
-
----
-
-## 6. ¿Quién compra y por qué?
+## 5. ¿Quién compra y por qué?
 
 El marketplace está diseñado conceptualmente para atender las necesidades específicas de la comunidad gamer:
 
@@ -423,7 +382,7 @@ El marketplace está diseñado conceptualmente para atender las necesidades espe
 - 🕹️ **Jugadores Casuales:** buscan productos accesibles que garanticen confort, entretenimiento y una experiencia de juego amigable en su tiempo libre.
 ---
 
-## 7. ¿Qué hace único a sus vendedores?
+## 6. ¿Qué hace único a sus vendedores?
 
 El sistema opera como un **marketplace multi-vendedor**, donde diversos comercios independientes pueden registrarse, gestionar su reputación y publicar su propia oferta comercial.
 
@@ -436,7 +395,7 @@ Categorías habilitadas en el catálogo:
 - 🎁 **Combos Gamer:** paquetes promocionales de 2 o más productos ofrecidos a precio preferencial.
 ---
 
-## 8. Lenguaje Ubicuo (DDD)
+## 7. Lenguaje Ubicuo (DDD)
 
 | Término | Definición en el Dominio |
 | :--- | :--- |
@@ -480,7 +439,7 @@ Categorías habilitadas en el catálogo:
 **Reenvío por correo.** Ocho de estos avisos se mandan también por correo (el resto son solo internos): para el comprador, `DESCUENTO`, `STOCK_DISPONIBLE` y `PREVENTA_DISPONIBLE`; para el vendedor, `STOCK_BAJO`, `STOCK_AGOTADO`, `REEMBOLSO_SOLICITADO`, `NUEVA_RESENA` y `NUEVA_VALORACION`. El correo es de mejor esfuerzo (si falla, la notificación interna queda igual), solo sale cuando la transacción se confirma, no se envía a cuentas dadas de baja y se puede apagar con `NOTIFICACIONES_CORREO_HABILITADO=false`.
 ---
 
-## 9. Reglas de Negocio e Invariantes del Dominio
+## 8. Reglas de Negocio e Invariantes del Dominio
 
 | # | Regla | Dónde se garantiza | Estado |
 |---|---|---|---|
@@ -535,7 +494,7 @@ Categorías habilitadas en el catálogo:
 - Los errores de dominio responden 422, la duplicidad 409 y las validaciones de datos 400; 401 y 403 devuelven un cuerpo JSON.
 ---
 
-## 10. Casos de Uso del Sistema (72 Casos de Uso)
+## 9. Casos de Uso del Sistema (72 Casos de Uso)
 
 ✅ Implementado (caso de uso y pruebas) · 🟡 Parcial · ⏳ Especificado, pendiente de implementar.
 
@@ -663,7 +622,7 @@ Además de estos casos de uso, `GET /api/chat/stream` abre el canal en vivo (SSE
  
 ---
 
-## 11. Arquitectura del Software (Clean Architecture)
+## 10. Arquitectura del Software (Clean Architecture)
 
 El backend en Java 21 / Spring Boot implementa **Clean Architecture** estructurado en capas desacopladas.
 
@@ -685,7 +644,7 @@ backend/src/main/java/com/uniquindio/backend/
 │   ├── service/             # Puertos del dominio (EmisorToken, HashContrasena, SesionToken, VerificadorCuentaActiva)
 │   └── exception/           # Excepciones de Negocio (ReglaDominioException, ConflictoException, AutenticacionException, AccesoProhibidoException → 403)
 ├── application/             # Capa de Aplicación (Casos de Uso)
-│   ├── usecase/             # Lógica de Orquestación (87 clases *UseCase = 72 casos de uso; ver sección 10)
+│   ├── usecase/             # Lógica de Orquestación (87 clases *UseCase = 72 casos de uso; ver sección 9)
 │   │   ├── Compras:   RealizarCompra, ConfirmarCompra, CancelarCompra, SolicitarReembolso, MarcarDescargaCompra,
 │   │   │              ExpirarComprasPendientes (automático), ConsultarHistorialCompras
 │   │   ├── Pedidos:   CrearPedido (+ ItemPedido), ConfirmarPedido, CancelarPedido, SolicitarReembolsoPedido
@@ -740,7 +699,7 @@ Estructura del frontend (`frontend/src/app/`):
  
 ---
 
-## 12. Seguridad, Base de Datos, Limitaciones y Decisiones de diseño
+## 11. Seguridad, Base de Datos, Limitaciones y Decisiones de diseño
 
 ### Seguridad
 
@@ -813,7 +772,7 @@ El vendedor publica primero el producto y luego sube su imagen a `POST /api/prod
 
 ### Correo (Brevo): recuperación de contraseña y notificaciones
 
-El correo se envía por la API HTTPS de **Brevo**, no por SMTP: el plan gratuito de Render bloquea los puertos SMTP salientes. Lo usan la recuperación de contraseña y los correos de notificación (ver «Tipos de notificación», sección 8). Para habilitarlo, crea una cuenta en Brevo, verifica el correo remitente (Senders), genera una API key y define estas variables (en Render, en el panel del servicio; en local, en `backend/.env`):
+El correo se envía por la API HTTPS de **Brevo**, no por SMTP: el plan gratuito de Render bloquea los puertos SMTP salientes. Lo usan la recuperación de contraseña y los correos de notificación (ver «Tipos de notificación», sección 7). Para habilitarlo, crea una cuenta en Brevo, verifica el correo remitente (Senders), genera una API key y define estas variables (en Render, en el panel del servicio; en local, en `backend/.env`):
 
 | Variable | Descripción |
 | :--- | :--- |
@@ -864,7 +823,7 @@ El chat usa Server-Sent Events. Dos ajustes opcionales, en milisegundos: `CHAT_S
 
 ---
 
-## 13. Cómo ejecutar las pruebas
+## 12. Cómo ejecutar las pruebas
 
 ```powershell
 cd backend
@@ -881,7 +840,7 @@ npx ng build
  
 ---
 
-## 14. Pruebas avanzadas
+## 13. Pruebas avanzadas
 
 En esta parte agregamos pruebas para revisar que el backend no solo funcione por encima, sino que también guarde bien la información y responda como debe cuando alguien intenta hacer algo que no puede. Para organizarlas usamos el patrón AAA: primero preparamos los datos, después ejecutamos la acción y al final revisamos si pasó lo que esperábamos. Las pruebas se ejecutan con `./gradlew test`.
 
@@ -954,7 +913,7 @@ El chat se verifica con `backend/scripts/verificar-chat.sh`, un script de Bash q
 
 ---
 
-## 15. Gestión del Proyecto (Trello)
+## 14. Gestión del Proyecto (Trello)
 
 El avance del proyecto se gestiona en un tablero público de Trello:
 
@@ -971,4 +930,4 @@ El avance del proyecto se gestiona en un tablero público de Trello:
 
 **Etiquetas:** `Caso de Uso`, `Comprador`, `Vendedor` e `Infraestructura`.
 
-**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 10 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
+**Convención de códigos:** cada tarjeta de caso de uso se llama `[CU-xx] Nombre` y usa el mismo código de la sección 9 de este README (por ejemplo, `[CU-22] Aplicar Descuento a Producto`). Las tareas técnicas llevan un prefijo propio, como `[PERSISTENCIA]`, `[DTO]`, `[Dominio]` o `[Doc]`.
